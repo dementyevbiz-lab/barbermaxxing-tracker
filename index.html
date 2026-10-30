@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Barbermaxxing</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&display=swap">
@@ -15,49 +17,388 @@
   --lime: linear-gradient(var(--dir), #BBFF68 0%, #F1FF6E 100%);
   --bg: linear-gradient(var(--dir), #000000 0%, #1C1E1C 100%);
   --card: linear-gradient(var(--dir), #3D403D 0%, #1C1F1C 100%);
+  --row: linear-gradient(var(--dir), #262626 0%, #121212 100%);
   --card-stroke: rgba(255,255,255,.08);
+  --plate-white: linear-gradient(var(--dir), #FFFFFF 0%, #DBDBDB 100%);
   --ink-on-dark: linear-gradient(var(--dir), #FFFFFF 0%, #999999 100%);
   --ink-dim: linear-gradient(var(--dir), #A6A6A6 0%, #6E6E6E 100%);
+  --ink-on-lime: linear-gradient(var(--dir), #0F0F0F 0%, #4D4D4D 100%);
+  --empty: linear-gradient(var(--dir), rgba(255,255,255,.12) 0%, rgba(255,255,255,.04) 100%);
+  --red: linear-gradient(var(--dir), #F26161 0%, #D12E33 100%);
   --font: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --ease: cubic-bezier(.2,.7,.2,1);
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:#000;color:#fff;font-family:var(--font);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased}
+html,body{min-height:100%;margin:0}
+body{background:#000;color:#fff;font-family:var(--font);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+@media (min-width:701px){body{font-size:17px}}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;text-align:left}
+button:focus-visible,input:focus-visible{outline:2px solid #BBFF68;outline-offset:3px}
+h1,p{margin:0}
 .bg{position:fixed;inset:0;background:var(--bg);z-index:-2}
 .tex{position:fixed;inset:0;background:url("assets/bg-texture.jpg") center/cover no-repeat;z-index:-1}
-.wrap{min-height:100%;display:grid;place-items:center;
+.wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
   padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-.card{width:min(440px,100%);background:var(--card);border:1px solid var(--card-stroke);border-radius:56px;padding:44px 32px;
-  display:flex;flex-direction:column;gap:14px;text-align:center}
-.ink,.dim,.limet{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.wrap.top{justify-content:flex-start}
+.card{width:min(560px,100%);background:var(--card);border:1px solid var(--card-stroke);border-radius:48px;padding:32px 26px;display:flex;flex-direction:column;gap:16px}
+.card.center{width:min(440px,100%);border-radius:56px;padding:44px 32px;text-align:center;gap:14px}
+.ink,.dim,.limet,.onlime{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .ink{background-image:var(--ink-on-dark)}
 .dim{background-image:var(--ink-dim)}
 .limet{background-image:var(--lime)}
+.onlime{background-image:var(--ink-on-lime)}
+.cap{font-size:14px}
 .brand{font-weight:700;font-size:14px;letter-spacing:-.02em}
-.logo{width:180px;height:180px;align-self:center;border-radius:50px;padding:2px;background:linear-gradient(var(--dir),#BBFF68 0%,#F1FF6E 100%)}
+.logo{width:160px;height:160px;align-self:center;border-radius:50px;padding:2px;background:var(--lime)}
 .logo img{display:block;width:100%;height:100%;border-radius:48px;object-fit:cover}
-h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-p{margin:0;font-size:14px}
+h1{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.h{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:-.02em}
+.h .grow{flex:1}
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;width:100%;background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:14px 20px;transition:transform 200ms var(--ease)}
+.row:active{transform:scale(.98)}
+.row .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row .t{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate{display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;background:var(--plate-white);
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:-.02em;white-space:nowrap;flex:none}
+.plate.lime{background:var(--lime)}
+.plate.dimp{background:var(--empty)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 24px;border-radius:999px;
+  background:var(--row);border:1px solid var(--card-stroke);font-weight:700;white-space:nowrap;transition:transform 200ms var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--lime);border-color:transparent}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.empty{padding:6px 4px}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity 260ms var(--ease);z-index:50}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:540px;max-height:88vh;overflow:auto;z-index:51;
+  background:var(--card);border:1px solid var(--card-stroke);border-bottom:0;border-radius:44px 44px 0 0;
+  padding:14px max(24px,env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
+  transform:translateY(105%);transition:transform 300ms var(--ease);display:flex;flex-direction:column;gap:16px}
+.sheet.open{transform:none}
+.grab{width:44px;height:5px;border-radius:5px;background:var(--empty);align-self:center;margin-bottom:6px}
+@media (min-width:701px){
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;width:min(540px,calc(100vw - 48px));border-bottom:1px solid var(--card-stroke);
+    border-radius:48px;padding:34px;transform:translate(-50%,-47%);opacity:0;pointer-events:none;transition:transform 280ms var(--ease),opacity 280ms var(--ease)}
+  .sheet.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+  .grab{display:none}
+}
+.sh-title{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.field{width:100%;height:56px;border-radius:999px;background:var(--row);border:1px solid var(--card-stroke);padding:0 22px;
+  color:#fff;-webkit-text-fill-color:#fff;font:inherit;font-size:17px}
+.field::placeholder{color:#7a7a7a;-webkit-text-fill-color:#7a7a7a}
+.field[type=date]{color-scheme:dark}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{height:44px;padding:0 18px;border-radius:999px;background:var(--row);border:1px solid var(--card-stroke);font-weight:500;white-space:nowrap}
+.pill.on{background:var(--lime);border-color:transparent}
+.pill.on span{background-image:var(--ink-on-lime);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.link{word-break:break-all;background:var(--row);border-radius:30px;padding:14px 20px;font-size:14px;user-select:all;-webkit-user-select:all}
+.lbl{font-size:14px;padding-left:6px}
+
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));z-index:60;background:var(--row);border:1px solid var(--card-stroke);
+  border-radius:999px;padding:12px 22px;min-height:48px;display:flex;align-items:center;transform:translate(-50%,12px);opacity:0;pointer-events:none;
+  transition:transform 240ms var(--ease),opacity 240ms var(--ease);max-width:calc(100vw - 32px)}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.spin{width:36px;height:36px;border-radius:50%;align-self:center;background:conic-gradient(from 0deg,#BBFF68,#F1FF6E,transparent 70%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spin 900ms linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <div class="bg"></div><div class="tex"></div>
-<div class="wrap">
-  <div class="card">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="gOnLime" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F0F0F"/><stop offset="1" stop-color="#4D4D4D"/></linearGradient>
+</defs></svg>
+
+<div class="wrap" id="wrap">
+  <div class="card center" id="hello">
     <div class="logo"><img src="assets/logo.webp" alt="Трекер прогресса"></div>
     <span class="brand limet">BARBERMAXXING</span>
     <h1><span class="ink" id="hi">Привет</span></h1>
-    <p><span class="dim" id="sub">Открой приложение через бота в Telegram</span></p>
+    <p class="cap"><span class="dim" id="sub">Загружаем</span></p>
+    <div class="spin" id="spin"></div>
+  </div>
+
+  <div class="card" id="adminCard" hidden>
+    <div class="h"><span class="ink grow">Ученики</span><span class="dim" id="count"></span></div>
+    <div class="rows" id="students"></div>
+    <button class="btn pri wide" id="addBtn"><span class="onlime">Добавить ученика</span></button>
+    <div class="btns">
+      <button class="btn" id="demoAdd"><span class="ink">Создать демо</span></button>
+      <button class="btn" id="demoDel"><span class="ink">Удалить демо</span></button>
+    </div>
   </div>
 </div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody" style="display:flex;flex-direction:column;gap:16px"></div></div>
+<div class="toast" id="toast"><span class="ink" id="toastText"></span></div>
+
 <script>
-  const tg = window.Telegram && window.Telegram.WebApp;
-  const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-  if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.setBackgroundColor('#000000'); } catch (e) {} }
-  if (user) {
-    document.getElementById('hi').textContent = 'Привет, ' + (user.first_name || 'друг');
-    document.getElementById('sub').textContent = 'Трекер скоро будет здесь';
+const CFG = window.BMX_CONFIG;
+const tg = window.Telegram && window.Telegram.WebApp;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: false, autoRefreshToken: true } });
+
+let me = null;          // ответ функции входа
+let tariffs = [];
+let students = [];
+
+if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.setBackgroundColor('#000000'); } catch (e) {} }
+
+function setHello(title, sub, loading) {
+  $('hi').textContent = title;
+  $('sub').textContent = sub;
+  $('spin').hidden = !loading;
+}
+
+let toastTimer;
+function toast(text) {
+  $('toastText').textContent = text;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2000);
+}
+
+function openSheet(html) {
+  $('sheetBody').innerHTML = html;
+  $('scrim').classList.add('open');
+  $('sheet').classList.add('open');
+}
+function closeSheet() { $('scrim').classList.remove('open'); $('sheet').classList.remove('open'); }
+$('scrim').addEventListener('click', closeSheet);
+
+// ===== вход =====
+async function login(attempt = 0) {
+  const initData = tg && tg.initData;
+  if (!initData) {
+    setHello('Привет', 'Открой приложение через бота в Telegram', false);
+    return;
   }
+  let res, body;
+  try {
+    res = await fetch(CFG.supabaseUrl + '/functions/v1/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseKey },
+      body: JSON.stringify({ initData }),
+    });
+    body = await res.json().catch(() => ({}));
+  } catch (e) { res = null; }
+
+  if (!res || res.status >= 500) {
+    // база могла уснуть: просим подождать и повторяем
+    setHello('Секунду', 'Обновляем данные, зайди через минуту', true);
+    if (attempt < 6) setTimeout(() => login(attempt + 1), 5000 + attempt * 5000);
+    return;
+  }
+  if (res.status === 429) { setHello('Подожди немного', 'Слишком много попыток входа, попробуй через час', false); return; }
+  if (res.status === 401) { setHello('Не получилось войти', 'Закрой приложение и открой снова через бота', false); return; }
+  if (!body.access) {
+    setHello('Доступ по приглашению', 'Попроси ссылку у команды программы', false);
+    $('sub').insertAdjacentHTML('afterend', '<p class="cap"><span class="dim">Твой ID ' + esc(body.telegram_id) + '</span></p>');
+    return;
+  }
+
+  me = body;
+  const { error } = await sb.auth.setSession(body.session);
+  if (error) { setHello('Не получилось войти', 'Закрой приложение и открой снова', false); return; }
+  await render();
+}
+
+function weekInfo(p, t) {
+  if (!p.start_date || !t) return '';
+  const start = new Date(p.start_date + 'T00:00:00');
+  const days = Math.floor((Date.now() - start.getTime()) / 86400000);
+  if (days < 0) return 'Старт ' + start.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const w = Math.floor(days / 7) + 1;
+  return w > t.weeks ? 'Программа пройдена' : 'Неделя ' + w + ' из ' + t.weeks;
+}
+
+async function render() {
+  const { data: tr } = await sb.from('tariffs').select('*').order('id');
+  tariffs = tr || [];
+  const name = me.first_name || 'друг';
+
+  if (me.is_student) {
+    const { data: p } = await sb.from('profiles').select('*').eq('id', (await sb.auth.getUser()).data.user.id).maybeSingle();
+    const t = p && tariffs.find((x) => x.id === p.tariff_id);
+    setHello('Привет, ' + name, [t && t.name, p && weekInfo(p, t)].filter(Boolean).join(' · ') || 'Скоро здесь будет твой трекер', false);
+  } else {
+    setHello('Привет, ' + name, 'Админка', false);
+  }
+
+  if (me.role === 'admin') {
+    $('wrap').classList.add('top');
+    $('adminCard').hidden = false;
+    await loadStudents();
+  }
+}
+
+// ===== админка: ученики =====
+function inviteLink(code) { return 'https://t.me/' + CFG.botUsername + '?startapp=' + code; }
+const STATUS = { invited: 'Ждёт входа', active: 'Активен', paused: 'Пауза', finished: 'Закончил', disabled: 'Доступ закрыт' };
+
+async function loadStudents() {
+  const { data, error } = await sb.from('profiles').select('*').order('created_at');
+  if (error) { toast('Не удалось загрузить список'); return; }
+  students = data || [];
+  $('count').textContent = students.length ? String(students.length) : '';
+  $('students').innerHTML = students.length ? students.map((p) => {
+    const t = tariffs.find((x) => x.id === p.tariff_id);
+    const details = [t && t.name, weekInfo(p, t), STATUS[p.status]].filter(Boolean).join(' · ');
+    return '<button class="row" data-id="' + p.id + '"><span class="grow"><span class="t ink">' + esc(p.display_name) +
+      '</span><span class="cap dim">' + esc(details) + '</span></span>' + (p.demo ? '<span class="plate dimp"><span class="ink">Демо</span></span>' : '') + '</button>';
+  }).join('') : '<p class="empty cap"><span class="dim">Пока никого. Добавьте первого ученика</span></p>';
+}
+
+$('students').addEventListener('click', (e) => {
+  const row = e.target.closest('.row');
+  if (row) openStudent(row.dataset.id);
+});
+
+async function callAdmin(payload) {
+  const { data: s } = await sb.auth.getSession();
+  const res = await fetch(CFG.supabaseUrl + '/functions/v1/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseKey, Authorization: 'Bearer ' + s.session.access_token },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.message || body.error || 'error');
+  return body;
+}
+
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); toast('Скопировано'); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Скопировано'); } catch (e2) { toast('Выделите ссылку и скопируйте'); }
+    ta.remove();
+  }
+}
+function share(text) {
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(text);
+  if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
+}
+function confirmAsk(text) {
+  return new Promise((resolve) => {
+    if (tg && tg.showConfirm) { try { tg.showConfirm(text, resolve); return; } catch (e) {} }
+    resolve(window.confirm(text));
+  });
+}
+
+function linkBlock(code) {
+  const link = inviteLink(code);
+  return '<div class="link ink">' + esc(link) + '</div>' +
+    '<div class="btns"><button class="btn pri" data-act="copy" data-link="' + esc(link) + '"><span class="onlime">Скопировать</span></button>' +
+    '<button class="btn" data-act="share" data-link="' + esc(link) + '"><span class="ink">Отправить</span></button></div>';
+}
+
+function openStudent(id) {
+  const p = students.find((x) => x.id === id);
+  if (!p) return;
+  const t = tariffs.find((x) => x.id === p.tariff_id);
+  const details = [t && t.name, p.start_date && ('старт ' + new Date(p.start_date + 'T00:00:00').toLocaleDateString('ru-RU')), STATUS[p.status],
+    p.tg_username && ('@' + p.tg_username)].filter(Boolean).join(' · ');
+  openSheet(
+    '<div class="sh-title ink">' + esc(p.display_name) + '</div>' +
+    '<p class="cap"><span class="dim">' + esc(details) + '</span></p>' +
+    (p.invite_code ? '<p class="lbl"><span class="dim">Ссылка-приглашение, одноразовая</span></p>' + linkBlock(p.invite_code)
+                   : '<p class="cap"><span class="dim">Ученик уже вошёл. Новая ссылка отвяжет текущий аккаунт Telegram</span></p>') +
+    '<div class="rows">' +
+      '<button class="row" data-act="reissue" data-id="' + p.id + '"><span class="grow"><span class="t ink">Перевыпустить ссылку</span></span></button>' +
+      (p.status === 'disabled'
+        ? '<button class="row" data-act="status" data-status="active" data-id="' + p.id + '"><span class="grow"><span class="t ink">Открыть доступ</span></span></button>'
+        : '<button class="row" data-act="status" data-status="disabled" data-id="' + p.id + '"><span class="grow"><span class="t ink">Закрыть доступ</span></span></button>') +
+      '<button class="row" data-act="delete" data-id="' + p.id + '"><span class="grow"><span class="t ink">Удалить ученика и все его данные</span></span></button>' +
+    '</div>'
+  );
+}
+
+function openAdd() {
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const opts = tariffs.map((t, i) => '<button class="pill' + (t.code === 'barbermax' ? ' on' : '') + '" data-tariff="' + t.code + '"><span class="ink">' + esc(t.name) + '</span></button>').join('');
+  openSheet(
+    '<div class="sh-title ink">Новый ученик</div>' +
+    '<input class="field" id="fName" placeholder="Имя" autocomplete="off">' +
+    '<p class="lbl"><span class="dim">Тариф</span></p><div class="pills" id="fTariff">' + opts + '</div>' +
+    '<p class="lbl"><span class="dim">Дата старта</span></p><input class="field" id="fStart" type="date" value="' + today + '">' +
+    '<div class="pills"><button class="pill" id="fDemo"><span class="ink">Демо для теста</span></button></div>' +
+    '<button class="btn pri wide" data-act="create"><span class="onlime">Добавить и получить ссылку</span></button>'
+  );
+}
+$('addBtn').addEventListener('click', openAdd);
+
+$('sheetBody').addEventListener('click', async (e) => {
+  const tariffPill = e.target.closest('[data-tariff]');
+  if (tariffPill) {
+    $('fTariff').querySelectorAll('.pill').forEach((x) => x.classList.toggle('on', x === tariffPill));
+    return;
+  }
+  if (e.target.closest('#fDemo')) { $('fDemo').classList.toggle('on'); return; }
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  try {
+    if (act === 'copy') return copy(b.dataset.link);
+    if (act === 'share') return share(b.dataset.link);
+    if (act === 'create') {
+      const name = $('fName').value.trim();
+      if (!name) { toast('Впишите имя'); return; }
+      b.disabled = true;
+      const tariff = $('fTariff').querySelector('.pill.on').dataset.tariff;
+      const { profile } = await callAdmin({ action: 'create_student', display_name: name, tariff_code: tariff,
+        start_date: $('fStart').value, demo: $('fDemo').classList.contains('on') });
+      await loadStudents();
+      openSheet('<div class="sh-title ink">' + esc(profile.display_name) + '</div>' +
+        '<p class="cap"><span class="dim">Отправьте ученику эту ссылку. Она сработает один раз</span></p>' + linkBlock(profile.invite_code));
+      return;
+    }
+    if (act === 'reissue') {
+      const p = students.find((x) => x.id === b.dataset.id);
+      if (p && p.telegram_id && !(await confirmAsk('Ученик уже вошёл. Новая ссылка отвяжет его текущий Telegram. Продолжить?'))) return;
+      await callAdmin({ action: 'reissue_invite', profile_id: b.dataset.id });
+      await loadStudents(); openStudent(b.dataset.id); toast('Новая ссылка готова');
+      return;
+    }
+    if (act === 'status') {
+      await callAdmin({ action: 'set_status', profile_id: b.dataset.id, status: b.dataset.status });
+      await loadStudents(); openStudent(b.dataset.id);
+      toast(b.dataset.status === 'disabled' ? 'Доступ закрыт' : 'Доступ открыт');
+      return;
+    }
+    if (act === 'delete') {
+      if (!(await confirmAsk('Удалить ученика и все его данные без возможности вернуть?'))) return;
+      await callAdmin({ action: 'delete_student', profile_id: b.dataset.id });
+      closeSheet(); await loadStudents(); toast('Удалено');
+      return;
+    }
+  } catch (err) {
+    b.disabled = false;
+    toast('Не получилось, попробуйте ещё раз');
+    console.error(err);
+  }
+});
+
+$('demoAdd').addEventListener('click', async () => {
+  try { await callAdmin({ action: 'create_demo' }); await loadStudents(); toast('Демо-ученики добавлены'); }
+  catch (e) { toast('Не получилось'); }
+});
+$('demoDel').addEventListener('click', async () => {
+  if (!students.some((p) => p.demo)) { toast('Демо-учеников нет'); return; }
+  if (!(await confirmAsk('Удалить всех демо-учеников и их данные?'))) return;
+  try { const r = await callAdmin({ action: 'delete_demo' }); await loadStudents(); toast('Удалено: ' + r.deleted); }
+  catch (e) { toast('Не получилось'); }
+});
+
+login();
 </script>
 </body>
 </html>
