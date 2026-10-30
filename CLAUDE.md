@@ -7,7 +7,8 @@
 - Хостинг: GitHub Pages из ветки `main`, корень. Адрес: https://dementyevbiz-lab.github.io/barbermaxxing-tracker/
 - Бот: @barbermaxxing_tracker_bot. Main Mini App и Menu Button «Открыть» указывают на адрес выше
 - Supabase: проект `barbermaxxing`, регион Frankfurt, https://nltremspmuuasksxbqtk.supabase.co. Открытые ключи в `config.js`
-- Токен Supabase для CLI/Management API ожидается в переменной окружения `SUPABASE_ACCESS_TOKEN`
+- Доступ к Supabase Management API: токен хранится как сетевой секрет окружения (Bearer, хост `api.supabase.com`), прокси сам подставляет заголовок Authorization. Токен в коде и в чате не нужен: просто вызывать `curl https://api.supabase.com/v1/projects/nltremspmuuasksxbqtk/...` (SQL через `/database/query`, функции через `/functions/deploy`, секреты функций через `/secrets`). Project ref: `nltremspmuuasksxbqtk`
+- Токен бота заказчик вставит сам в секреты функций Supabase (Edge Functions → Secrets, имя `TELEGRAM_BOT_TOKEN`), в чат его не просить
 - `index.html` — приложение, `prototype/today.html` — демо экрана «Сегодня» (одобрен), `assets/` — фон и логотип от заказчика
 
 ## Ход работы
