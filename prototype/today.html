@@ -1,0 +1,779 @@
+<title>Barbermaxxing Сегодня</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&display=swap">
+<style>
+/* Раскладка: телефон — один столбец и нижняя панель; компьютер — левая колонка 240px и две колонки контента до 1100px.
+   Стиль презентации Barbermaxxing: всё на диагональных градиентах 135°, без теней и плоских заливок. Тема только тёмная. */
+:root{
+  color-scheme: dark;
+  --dir:135deg;
+  --lime: linear-gradient(var(--dir), #BBFF68 0%, #F1FF6E 100%);
+  --lime-dim: linear-gradient(var(--dir), #3D4A1A 0%, #576624 100%);
+  --bg: linear-gradient(var(--dir), #000000 0%, #1C1E1C 100%);
+  --card: linear-gradient(var(--dir), #3D403D 0%, #1C1F1C 100%);
+  --row: linear-gradient(var(--dir), #262626 0%, #121212 100%);
+  --card-stroke: rgba(255,255,255,.08);
+  --plate-white: linear-gradient(var(--dir), #FFFFFF 0%, #DBDBDB 100%);
+  --ink-on-dark: linear-gradient(var(--dir), #FFFFFF 0%, #999999 100%);
+  --ink-dim: linear-gradient(var(--dir), #A6A6A6 0%, #6E6E6E 100%);
+  --ink-on-lime: linear-gradient(var(--dir), #0F0F0F 0%, #4D4D4D 100%);
+  --done: var(--lime);
+  --partial: linear-gradient(var(--dir), #FFD95A 0%, #FFB020 100%);
+  --empty: linear-gradient(var(--dir), rgba(255,255,255,.12) 0%, rgba(255,255,255,.04) 100%);
+  --future: linear-gradient(var(--dir), rgba(255,255,255,.05) 0%, rgba(255,255,255,.015) 100%);
+  --stroke-soft: linear-gradient(var(--dir), rgba(255,255,255,.38) 0%, rgba(255,255,255,.10) 100%);
+  --red: linear-gradient(var(--dir), #F26161 0%, #D12E33 100%);
+  --base-solid: #0B0C0B;
+  --font: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --gap: 24px;
+}
+html{background:var(--base-solid);height:100%}
+body{background:var(--base-solid);color:#fff;font-family:var(--font);font-size:16px;line-height:1.4;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;min-height:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:#000}
+.bgfx{position:fixed;inset:0;background:var(--bg);z-index:-1}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;text-align:left}
+button:focus-visible,input:focus-visible{outline:2px solid #BBFF68;outline-offset:3px}
+h1,h2,h3,p{margin:0}
+.word{white-space:nowrap}
+
+/* градиентный текст */
+.ink,.dim,.onlime,.limet{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.ink{background-image:var(--ink-on-dark)}
+.dim{background-image:var(--ink-dim)}
+.onlime{background-image:var(--ink-on-lime)}
+.limet{background-image:var(--lime)}
+.cap{font-size:14px}
+
+/* градиентная обводка через маску */
+.gstroke{position:relative}
+.gstroke::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:var(--stroke-soft);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+
+/* ===== каркас ===== */
+.app{min-height:100%}
+.main{max-width:1100px;margin:0 auto;padding-block:16px calc(104px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.today{display:flex;flex-direction:column;gap:var(--gap)}
+.col{display:contents}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
+  background:var(--row);border-top:1px solid var(--card-stroke);
+  padding:8px max(8px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.brand{display:none}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;min-width:60px;border-radius:999px}
+.tab svg{width:26px;height:26px;fill:none;stroke:url(#gDim);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab.on svg{stroke:url(#gLimeBox)}
+.tab .lbl{font-size:11px;font-weight:500}
+
+@media (min-width:701px){
+  body{font-size:17px}
+  .app{display:grid;grid-template-columns:240px minmax(0,1fr)}
+  .tabs{position:sticky;top:0;height:100vh;flex-direction:column;justify-content:flex-start;gap:6px;
+    border-top:0;border-right:1px solid var(--card-stroke);padding:32px 16px}
+  .brand{display:block;font-weight:700;font-size:19px;letter-spacing:-.02em;padding:0 14px 28px}
+  .tab{flex-direction:row;gap:14px;padding:12px 16px;min-width:0}
+  .tab.on{background:var(--card)}
+  .tab svg{width:24px;height:24px}
+  .tab .lbl{font-size:16px}
+  .main{padding-block:32px 56px;padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+}
+@media (min-width:980px){
+  .today{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:var(--gap)}
+}
+
+/* ===== компоненты ===== */
+.card{background:var(--card);border:1px solid var(--card-stroke);border-radius:48px;padding:28px 26px;display:flex;flex-direction:column;gap:16px}
+.h{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:-.02em}
+.h .grow{flex:1}
+.qbtn{width:28px;height:28px;border-radius:50%;background:var(--row);display:grid;place-items:center;font-size:14px;font-weight:700;flex:none}
+.plate{display:inline-flex;align-items:center;height:28px;padding:0 14px;border-radius:999px;background:var(--plate-white);
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:-.02em;white-space:nowrap;align-self:flex-start}
+.plate.lime{background:var(--lime)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;
+  background:var(--row);font-weight:700;white-space:nowrap;transition:transform 200ms var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--lime)}
+.btn.wide{width:100%}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+
+/* шапка */
+.hdr{display:flex;align-items:center;gap:14px}
+.lvl{width:54px;height:54px;border-radius:50%;background:var(--lime);display:grid;place-items:center;flex:none;text-align:center}
+.lvl span{font-weight:700;font-size:23px;letter-spacing:-.02em}
+.hdr-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+.rank{font-weight:700;font-size:21px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;line-height:1.15}
+.xpbar{height:4px;border-radius:4px;background:var(--empty);overflow:hidden}
+.xpbar i{display:block;height:100%;width:0;background:var(--lime);border-radius:4px;transition:width 300ms var(--ease)}
+
+/* полоска недель */
+.strip{display:flex;gap:8px}
+.wk{flex:1 1 0;max-width:52px;aspect-ratio:1;border-radius:14px;background:var(--empty);display:grid;place-items:center;position:relative;
+  font-size:13px;font-weight:700;transition:transform 200ms var(--ease)}
+.wk:active{transform:scale(.94)}
+.wk.full{background:var(--done)}
+.wk.partial{background:var(--partial)}
+.wk.future{background:var(--future)}
+.wk.cur::after{content:"";position:absolute;inset:-5px;border-radius:18px;padding:2px;background:var(--lime);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.strip-wrap{display:flex;flex-direction:column;gap:12px;padding:5px 5px 0}
+
+/* путь */
+.path-svg{width:100%;height:auto;display:block;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px}
+.lg{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+.goal{font-size:17px;font-weight:500;line-height:1.35}
+
+/* действия */
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:8px 6px 8px 18px;
+  transition:opacity 250ms var(--ease)}
+.ico{font-size:22px;line-height:1;flex:none;width:26px;text-align:center}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 0}
+.row-main .t{font-weight:500}
+.row.done .row-main{opacity:.5}
+.chk{width:44px;height:44px;flex:none;position:relative;display:grid;place-items:center;border-radius:50%}
+.chk::before,.chk::after{content:"";position:absolute;inset:6px;border-radius:50%}
+.chk::before{padding:2px;background:var(--stroke-soft);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.chk::after{background:var(--lime);opacity:0;transform:scale(.7);transition:opacity 220ms var(--ease),transform 220ms var(--ease)}
+.chk svg{position:relative;z-index:1;width:32px;height:32px;fill:none;stroke:url(#gOnLime);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset 260ms 80ms var(--ease)}
+.chk.on::after{opacity:1;transform:none}
+.chk.on svg{stroke-dashoffset:0}
+.sec{display:flex;flex-direction:column;gap:14px}
+
+/* видео */
+.video{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.video .cap{text-align:center}
+
+/* цитата и прочие карточки */
+.quote{font-size:20px;font-weight:500;line-height:1.35;letter-spacing:-.01em}
+.title2{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+.call-btn{display:flex;flex-direction:column;gap:6px;width:100%}
+
+/* окна */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity 260ms var(--ease);z-index:50}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:540px;max-height:86vh;overflow:auto;z-index:51;
+  background:var(--card);border:1px solid var(--card-stroke);border-bottom:0;border-radius:44px 44px 0 0;
+  padding:14px max(24px,env(safe-area-inset-right,0px)) calc(30px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px));
+  transform:translateY(105%);transition:transform 300ms var(--ease);display:flex;flex-direction:column;gap:16px}
+.sheet.open{transform:none}
+.sheet:not(.open){visibility:hidden;transition:transform 300ms var(--ease),opacity 280ms var(--ease),visibility 0s 300ms}
+.grab{width:44px;height:5px;border-radius:5px;background:var(--empty);align-self:center;margin-bottom:8px}
+@media (min-width:701px){
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;width:min(540px,calc(100vw - 48px));border-bottom:1px solid var(--card-stroke);
+    border-radius:48px;padding:34px;transform:translate(-50%,-47%);opacity:0;pointer-events:none;transition:transform 280ms var(--ease),opacity 280ms var(--ease)}
+  .sheet.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+  .grab{display:none}
+}
+.sh-title{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.opt{display:flex;align-items:center;gap:14px;width:100%;background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:16px 20px;font-weight:500;
+  transition:transform 200ms var(--ease)}
+.opt:active{transform:scale(.98)}
+.opt .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.field{width:100%;height:56px;border-radius:999px;background:var(--row);border:1px solid var(--card-stroke);padding:0 22px;
+  color:#fff;-webkit-text-fill-color:#fff;font:inherit;font-size:17px}
+.field::placeholder{color:#7a7a7a;-webkit-text-fill-color:#7a7a7a}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;background:var(--row);border-radius:30px}
+.qlist{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.qlist li{background:var(--row);border-radius:30px;padding:14px 20px}
+
+/* тост */
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:14px;
+  background:var(--row);border:1px solid var(--card-stroke);border-radius:999px;padding:12px 12px 12px 22px;min-height:48px;
+  transform:translate(-50%,12px);opacity:0;pointer-events:none;transition:transform 240ms var(--ease),opacity 240ms var(--ease);max-width:calc(100vw - 32px)}
+.toast.only{padding-right:22px}
+.toast.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.toast .undo{height:34px;padding:0 16px;border-radius:999px;background:var(--lime);font-size:14px;font-weight:700;white-space:nowrap}
+@media (min-width:701px){.toast{bottom:36px;left:calc(50% + 120px)}}
+
+/* новое звание */
+.rank-modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;
+  transition:opacity 280ms var(--ease);padding:24px}
+.rank-modal.open{opacity:1;pointer-events:auto}
+.rank-card{width:min(420px,100%);background:var(--card);border:1px solid var(--card-stroke);border-radius:56px;padding:44px 30px;
+  display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;transform:scale(.95);transition:transform 300ms var(--ease)}
+.rank-modal.open .rank-card{transform:none}
+.rank-card .plate{align-self:center}
+.rank-name{font-size:46px;font-weight:700;letter-spacing:-.03em;line-height:1.05;white-space:nowrap;max-width:100%;overflow:hidden}
+.rank-ring{width:96px;height:96px;border-radius:50%;background:var(--lime);display:grid;place-items:center}
+.rank-ring span{font-size:42px;font-weight:700}
+
+/* демо */
+.demo{display:flex;align-items:center;gap:10px;align-self:flex-start;margin-bottom:var(--gap);padding:6px 16px 6px 6px;border-radius:999px;background:var(--row);border:1px solid var(--card-stroke)}
+
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gLimeBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BBFF68"/><stop offset="1" stop-color="#F1FF6E"/></linearGradient>
+    <linearGradient id="gLimePath" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="320" y2="200"><stop offset="0" stop-color="#BBFF68"/><stop offset="1" stop-color="#F1FF6E"/></linearGradient>
+    <linearGradient id="gLimeDim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D4A1A"/><stop offset="1" stop-color="#576624"/></linearGradient>
+    <linearGradient id="gOnLime" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F0F0F"/><stop offset="1" stop-color="#4D4D4D"/></linearGradient>
+    <linearGradient id="gInk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#999999"/></linearGradient>
+    <linearGradient id="gDim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A8A8A"/><stop offset="1" stop-color="#5A5A5A"/></linearGradient>
+    <linearGradient id="gRow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#262626"/><stop offset="1" stop-color="#121212"/></linearGradient>
+  </defs>
+</svg>
+
+<div class="bgfx"></div>
+<div class="app">
+  <nav class="tabs" id="tabs" aria-label="Разделы">
+    <div class="brand"><span class="limet">BARBERMAXXING</span></div>
+    <button class="tab on" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.2M12 19v2.2M2.8 12H5M19 12h2.2M5.5 5.5l1.6 1.6M16.9 16.9l1.6 1.6M5.5 18.5l1.6-1.6M16.9 7.1l1.6-1.6"/></svg><span class="lbl limet">Сегодня</span></button>
+    <button class="tab" data-tab="path"><svg viewBox="0 0 24 24"><circle cx="5" cy="18.5" r="2"/><circle cx="19" cy="5.5" r="2"/><path d="M6.8 17.4c3-1.6 1.2-5.6 5.2-6.4s2.6-3.9 5.3-4.6"/></svg><span class="lbl dim">Путь</span></button>
+    <button class="tab" data-tab="program"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="4"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg><span class="lbl dim">Программа</span></button>
+    <button class="tab" data-tab="notes"><svg viewBox="0 0 24 24"><path d="M5 19.5h4l10-10a2.8 2.8 0 0 0-4-4l-10 10z"/><path d="M13.5 7l3.5 3.5"/></svg><span class="lbl dim">Выводы</span></button>
+    <button class="tab" data-tab="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20c1.2-3.6 4-5.3 7.2-5.3s6 1.7 7.2 5.3"/></svg><span class="lbl dim">Профиль</span></button>
+  </nav>
+
+  <main class="main" id="main">
+    <button class="demo" id="demoBtn"><span class="plate lime"><span class="onlime">Демо</span></span><span class="dim cap" id="demoLbl"></span></button>
+
+    <div class="today" id="today">
+      <div class="col">
+        <!-- 1 шапка -->
+        <section class="hdr" id="bHeader" style="order:1">
+          <button class="lvl" id="lvlBtn" aria-label="Уровень"><span class="onlime" id="lvlNum">1</span></button>
+          <div class="hdr-mid">
+            <div class="rank" id="rankWrap"><span class="ink" id="rankName"></span></div>
+            <div class="xpbar"><i id="xpFill"></i></div>
+          </div>
+          <span class="plate" id="weekChip"><span class="onlime" id="weekChipTxt"></span></span>
+        </section>
+
+        <!-- 2 полоска недель -->
+        <section class="strip-wrap" id="bStrip" style="order:2">
+          <div class="strip" id="strip"></div>
+        </section>
+
+        <!-- 4 действия недели -->
+        <section class="sec" id="bActions" style="order:4">
+          <div class="h"><span class="ink">Эта неделя</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div>
+          <div class="rows" id="actList"></div>
+        </section>
+
+        <!-- 5 снял видео -->
+        <section class="video" id="bVideo" style="order:5">
+          <button class="btn pri wide" id="videoBtn"><span class="onlime">Снял видео</span></button>
+          <span class="dim cap" id="videoCap"></span>
+        </section>
+      </div>
+
+      <div class="col">
+        <!-- 3 путь -->
+        <section class="card" id="bPath" style="order:3">
+          <div class="h"><span class="ink">Путь от А к Б</span><span class="grow"></span><button class="qbtn" id="pathQ" aria-label="Что это"><span class="dim">?</span></button></div>
+          <svg class="path-svg" viewBox="0 0 320 204" id="pathSvg" role="img" aria-label="Путь от точки А к точке Б">
+            <path id="pPath" d="M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32" fill="none" stroke="url(#gLimePath)" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
+            <circle cx="26" cy="170" r="10" fill="url(#gLimeDim)" stroke="url(#gLimeBox)" stroke-width="2"/>
+            <circle cx="294" cy="32" r="12" fill="url(#gLimeBox)"/>
+            <text x="20" y="200" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="15" fill="url(#gInk)">А</text>
+            <text x="288" y="12" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="15" fill="url(#gInk)">Б</text>
+            <circle id="mNow" r="8.5" fill="url(#gLimeBox)" stroke="url(#gRow)" stroke-width="3" cx="26" cy="170"/>
+            <circle id="mPace" r="13" fill="none" stroke="url(#gLimeBox)" stroke-width="2.2" stroke-dasharray="4 4" cx="26" cy="170"/>
+          </svg>
+          <div class="legend">
+            <span class="lg" id="lgNow"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="url(#gLimeBox)"/></svg><span class="dim">Сейчас</span></span>
+            <span class="lg"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="none" stroke="url(#gLimeBox)" stroke-width="1.6" stroke-dasharray="3 3"/></svg><span class="dim">Куда ведёт текущий темп</span></span>
+          </div>
+          <p class="goal ink" id="goalTxt"></p>
+        </section>
+
+        <!-- 6 цитата -->
+        <section class="card" id="bQuote" style="order:6">
+          <p class="quote ink" id="quoteTxt"></p>
+          <span class="dim cap" id="quoteAuthor"></span>
+        </section>
+
+        <!-- 7 следующий шаг -->
+        <section class="card" id="bNext" style="order:7">
+          <span class="plate"><span class="onlime" id="nextKind"></span></span>
+          <p class="title2 ink" id="nextTitle"></p>
+          <p class="dim cap" id="nextWhy"></p>
+        </section>
+
+        <!-- 8 предложенный вопрос -->
+        <section class="card" id="bQuestion" style="order:8">
+          <span class="plate"><span class="onlime">Можно спросить</span></span>
+          <p class="title2 ink" id="qTxt"></p>
+          <div class="btns">
+            <button class="btn pri" id="qSave"><span class="onlime">Сохранить в вопросы</span></button>
+            <button class="btn" id="qHide"><span class="ink">Скрыть</span></button>
+          </div>
+        </section>
+
+        <!-- 9 срок замера -->
+        <section class="card" id="bCheck" style="order:9">
+          <span class="plate lime"><span class="onlime" id="checkPlate"></span></span>
+          <p class="title2 ink" id="checkTitle"></p>
+          <p class="dim cap">Цифры и скриншоты, минут на 10</p>
+          <button class="btn pri" id="checkBtn" style="align-self:flex-start"><span class="onlime">Заполнить</span></button>
+        </section>
+
+        <!-- 10 к созвону -->
+        <section class="card" id="bCall" style="order:10">
+          <button class="call-btn" id="callBtn">
+            <span class="title2 ink" id="callTitle"></span>
+            <span class="dim cap" id="callSub"></span>
+          </button>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="ink" id="toastTxt"></span><button class="undo" id="toastUndo" hidden><span class="onlime">Вернуть</span></button></div>
+<div class="rank-modal" id="rankModal">
+  <div class="rank-card">
+    <span class="plate lime"><span class="onlime">Новое звание</span></span>
+    <div class="rank-ring"><span class="onlime" id="rmLvl"></span></div>
+    <div class="rank-name" id="rmWrap"><span class="limet" id="rmName"></span></div>
+    <span class="dim cap">Опыт копится сам из твоих отметок</span>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('bmx.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('bmx.' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor && tg.setHeaderColor('#000000'); tg.setBackgroundColor && tg.setBackgroundColor('#000000'); } catch (e) {} }
+  const haptic = () => { try { tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred('light'); } catch (e) {} };
+
+  /* ===== механика: значения из раздела 9, в рабочей версии лежат в settings ===== */
+  const SET = {
+    k: 0.6,
+    w: { lesson: 1, live: 1, homework: 2, video: 1, notes: 0.5 },
+    xp: { homework: 30, notes: 10, video: 15, videoPerDay: 3 },
+    ranks: [[1,'Новичок'],[3,'Подмастерье'],[5,'Барбер'],[7,'Опытный барбер'],[9,'Профи'],[12,'Мастер'],[15,'Мастер кресла'],[18,'Эксперт'],[22,'Бренд'],[26,'Лидер мнений'],[31,'Топ-мастер'],[40,'Легенда'],[50,'Барбермаксер']]
+  };
+  const lvlBase = L => 50 * (L - 1) * L;
+  const levelOf = xp => { let L = 1; while (lvlBase(L + 1) <= xp) L++; return L; };
+  const rankOf = L => { let r = SET.ranks[0][1]; for (const [l, n] of SET.ranks) if (L >= l) r = n; return r; };
+  const itemXp = it => it.kind === 'homework' ? SET.xp.homework
+    : (it.kind === 'lesson' || it.kind === 'live') ? (it.min ? Math.min(30, Math.round(it.min / 3)) : 10)
+    : (it.xp || 10);
+  const ICON = { lesson: '📺', live: '🎙️', homework: '📝', short: '⚡' };
+  const KIND = { lesson: 'Урок', live: 'Эфир', homework: 'Домашка', short: 'Короткое задание' };
+  const VKIND = { client: 'С клиентом', expert: 'Экспертное', life: 'Лайф' };
+
+  /* ===== даты ===== */
+  const day0 = new Date(); day0.setHours(0, 0, 0, 0);
+  const addDays = n => { const d = new Date(day0); d.setDate(d.getDate() + n); return d; };
+  const fmtDay = d => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const fmtNum = n => Number(n).toLocaleString('ru-RU');
+  const daysWord = n => n === 0 ? 'сегодня' : n === 1 ? 'завтра' : 'через ' + n + ' ' + (n < 5 ? 'дня' : 'дней');
+
+  /* ===== демо-сценарии ===== */
+  const SCEN = {
+    mid: () => ({
+      label: 'Середина программы', tariff: 'Личное сопровождение', weeks: 8, week: 4, xp: 985,
+      past: ['full', 'full', 'partial'],
+      R: 0.32, prevExpW: 12, prevDoneW: 9, prevNotes: 2, prevVideos: 4,
+      goal: 'Средний чек 3 500 ₽ и пять рабочих дней вместо шести',
+      weekEnd: 2,
+      items: [
+        { id: 'l1', ord: 1, kind: 'lesson', title: 'Демо-урок: цена и ценность стрижки', min: 25, required: true, hasNotes: true, done: true, notes: false },
+        { id: 'v1', ord: 2, kind: 'live', title: 'Демо-эфир с Саней', min: 60, required: true, hasNotes: true, done: false, notes: false },
+        { id: 'h1', ord: 3, kind: 'homework', title: 'Демо-домашка недели', min: 40, required: true, done: false },
+        { id: 's1', ord: 4, kind: 'short', title: 'Демо-задание на 15 минут', min: 15, xp: 20, required: false, done: false }
+      ],
+      videos: [{ id: 'x1', kind: 'client', xp: 15, today: false }, { id: 'x2', kind: 'expert', xp: 15, today: false }],
+      quote: { text: 'Место для цитаты дня. Показываем только проверенные цитаты с автором и источником', author: 'Подборку пришлёте вы' },
+      next: { kind: 'Фильм', title: 'Название фильма, год', why: 'Почему он подходит барберу и в какой ситуации. Показывается, только когда совпала метка ситуации' },
+      question: { text: 'Что мешает снять видео в направлении Лайф?' },
+      checkpoint: { inDays: 2 },
+      call: { inDays: 2, time: '19:00', kind: 'Стратегическая сессия', questions: ['Как поднять цену постоянным клиентам и не потерять запись?', 'Снимать каждый день или реже, но длиннее?'] }
+    }),
+    start: () => ({
+      label: 'Первая неделя', tariff: 'Барбермаксер', weeks: 7, week: 1, xp: 40,
+      past: [], R: null, prevExpW: 0, prevDoneW: 0, prevNotes: 0, prevVideos: 0,
+      goal: 'Полная запись на неделю вперёд и первые клиенты из TikTok',
+      weekEnd: 5,
+      items: [
+        { id: 'l1', ord: 1, kind: 'lesson', title: 'Демо-урок: точка А', min: 20, required: true, hasNotes: true, done: false, notes: false },
+        { id: 'h1', ord: 2, kind: 'homework', title: 'Демо-домашка первой недели', min: 30, required: true, done: false }
+      ],
+      videos: [],
+      quote: { text: 'Место для цитаты дня. Показываем только проверенные цитаты с автором и источником', author: 'Подборку пришлёте вы' },
+      next: null, question: null, checkpoint: null, call: null
+    }),
+    empty: () => ({
+      label: 'Пустая программа', tariff: 'Барбермаксер', weeks: 7, week: 2, xp: 160,
+      past: ['partial'], R: null, prevExpW: 0, prevDoneW: 0, prevNotes: 0, prevVideos: 1,
+      goal: 'Средний чек 2 500 ₽ и три дня в неделю без окон',
+      weekEnd: 2,
+      items: [], videos: [],
+      quote: null, next: null, question: null,
+      checkpoint: { inDays: 2 }, call: null
+    })
+  };
+
+  let scenKey = store.get('scen', 'mid'); if (!SCEN[scenKey]) scenKey = 'mid';
+  let S;
+  const cur = { now: null, pace: null };
+
+  /* ===== расчёты ===== */
+  function calcP() {
+    const w = SET.w;
+    let exp = S.prevExpW + (S.week - 1) * 2;
+    let done = S.prevDoneW + S.prevVideos * w.video + S.prevNotes * w.notes;
+    for (const it of S.items) {
+      if (it.kind === 'short') continue;
+      const wt = w[it.kind] || 0;
+      if (it.required) exp += wt;
+      if (it.done) done += wt;
+      if (it.notes) done += w.notes;
+    }
+    done += S.videos.length * w.video;
+    const D = exp > 0 ? Math.min(1, done / exp) : 0;
+    const R = S.R == null ? 0 : S.R;
+    return Math.min(1, Math.max(R, R + (1 - R) * SET.k * D));
+  }
+  function weekState() {
+    const req = S.items.filter(i => i.required);
+    const any = S.items.some(i => i.done || i.notes) || S.videos.length > 0;
+    if (req.length) return req.every(i => i.done) ? 'full' : any ? 'partial' : 'none';
+    return S.videos.length >= 2 ? 'full' : any ? 'partial' : 'none';
+  }
+
+  /* ===== опыт ===== */
+  function addXp(d) {
+    const L0 = levelOf(S.xp), r0 = rankOf(L0);
+    S.xp = Math.max(0, S.xp + d);
+    const L1 = levelOf(S.xp), r1 = rankOf(L1);
+    renderHeader();
+    if (L1 > L0 && r1 !== r0) { setTimeout(() => showRank(r1, L1), 420); return 'rank'; }
+    if (L1 > L0) return 'level';
+    return null;
+  }
+
+  /* ===== отрисовка ===== */
+  function fit(wrap, max) {
+    if (!wrap) return;
+    let size = max; wrap.style.fontSize = size + 'px';
+    while (wrap.scrollWidth > wrap.clientWidth + 1 && size > 12) { size--; wrap.style.fontSize = size + 'px'; }
+  }
+  function renderHeader() {
+    const L = levelOf(S.xp), base = lvlBase(L), next = lvlBase(L + 1);
+    $('#lvlNum').textContent = L;
+    $('#rankName').textContent = rankOf(L);
+    $('#xpFill').style.width = Math.max(2, Math.min(100, (S.xp - base) / (next - base) * 100)) + '%';
+    $('#weekChipTxt').textContent = 'Неделя ' + S.week + ' из ' + S.weeks;
+    fit($('#rankWrap'), 21);
+  }
+  function renderStrip() {
+    const el = $('#strip'); el.innerHTML = '';
+    for (let w = 1; w <= S.weeks; w++) {
+      let st = w < S.week ? (S.past[w - 1] || 'none') : w === S.week ? weekState() : 'future';
+      const b = document.createElement('button');
+      b.className = 'wk ' + st + (w === S.week ? ' cur' : '');
+      b.dataset.week = w;
+      b.setAttribute('aria-label', 'Неделя ' + w);
+      const t = document.createElement('span');
+      t.className = st === 'full' || st === 'partial' ? 'onlime' : 'dim';
+      t.textContent = w;
+      b.appendChild(t);
+      el.appendChild(b);
+    }
+  }
+  function pointAt(t) {
+    const p = $('#pPath'); const len = p.getTotalLength();
+    return p.getPointAtLength(Math.max(0, Math.min(1, t)) * len);
+  }
+  function setMarker(el, t) { const pt = pointAt(t); el.setAttribute('cx', pt.x.toFixed(1)); el.setAttribute('cy', pt.y.toFixed(1)); }
+  function renderPath(animate) {
+    const hasR = S.R != null;
+    $('#mNow').style.display = hasR ? '' : 'none';
+    $('#lgNow').hidden = !hasR;
+    $('#goalTxt').textContent = S.goal;
+    const target = { now: hasR ? S.R : 0, pace: calcP() };
+    try {
+      if (!animate || reduced || cur.pace == null) {
+        cur.now = target.now; cur.pace = target.pace;
+        setMarker($('#mNow'), cur.now); setMarker($('#mPace'), cur.pace); return;
+      }
+      const from = { now: cur.now, pace: cur.pace }, t0 = performance.now(), dur = 320;
+      const ease = x => 1 - Math.pow(1 - x, 3);
+      const step = ts => {
+        const k = ease(Math.min(1, (ts - t0) / dur));
+        cur.now = from.now + (target.now - from.now) * k;
+        cur.pace = from.pace + (target.pace - from.pace) * k;
+        setMarker($('#mNow'), cur.now); setMarker($('#mPace'), cur.pace);
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    } catch (e) {}
+  }
+  function rowDetail(it) {
+    const parts = [];
+    if (it.min) parts.push(it.min + ' мин');
+    if (it.kind === 'short') parts.push('короткое задание');
+    else if (it.required) parts.push('до ' + fmtDay(addDays(S.weekEnd)));
+    if (it.hasNotes && it.notes) parts.push('конспект есть');
+    return parts.join(' · ');
+  }
+  function makeRow(it) {
+    const r = document.createElement('div');
+    r.className = 'row'; r.dataset.id = it.id;
+    r.innerHTML = '<span class="ico" aria-hidden="true">' + ICON[it.kind] + '</span>' +
+      '<button class="row-main" data-open><span class="t"><span class="ink"></span></span><span class="d cap"><span class="dim"></span></span></button>' +
+      '<button class="chk" data-chk><svg viewBox="0 0 32 32"><path d="M10 16.5l4.2 4.2L22.5 12"/></svg></button>';
+    return r;
+  }
+  function updateRow(el, it) {
+    el.classList.toggle('done', it.done);
+    el.querySelector('.t .ink').textContent = it.title;
+    el.querySelector('.d .dim').textContent = rowDetail(it);
+    const c = el.querySelector('.chk'); c.classList.toggle('on', it.done);
+    c.setAttribute('aria-pressed', it.done ? 'true' : 'false');
+    c.setAttribute('aria-label', it.done ? 'Снять отметку' : 'Отметить');
+  }
+  function sortRows() {
+    const list = $('#actList'); const els = [...list.children];
+    const first = new Map(els.map(e => [e, e.getBoundingClientRect().top]));
+    [...S.items].sort((a, b) => (a.done - b.done) || (a.ord - b.ord))
+      .forEach(it => list.appendChild(list.querySelector('[data-id="' + it.id + '"]')));
+    if (reduced) return;
+    els.forEach(e => {
+      const dy = first.get(e) - e.getBoundingClientRect().top;
+      if (Math.abs(dy) > 1 && e.animate) e.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'translateY(0)' }], { duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    });
+  }
+  let sortTimer;
+  function renderActions(defer) {
+    const sec = $('#bActions'), list = $('#actList');
+    if (!S.items.length) { sec.hidden = true; list.innerHTML = ''; return; }
+    sec.hidden = false;
+    for (const it of S.items) {
+      let el = list.querySelector('[data-id="' + it.id + '"]');
+      if (!el) { el = makeRow(it); list.appendChild(el); }
+      updateRow(el, it);
+    }
+    const req = S.items.filter(i => i.required);
+    $('#actCount').textContent = req.length ? req.filter(i => i.done).length + ' из ' + req.length : '';
+    clearTimeout(sortTimer);
+    if (defer) sortTimer = setTimeout(sortRows, 420); else sortRows();
+  }
+  function renderVideo() {
+    const n = S.videos.length;
+    const by = k => S.videos.filter(v => v.kind === k).length;
+    $('#videoCap').textContent = n ? 'На этой неделе ' + n + ' · с клиентом ' + by('client') + ', экспертных ' + by('expert') + ', лайф ' + by('life') : '';
+    $('#videoCap').hidden = !n;
+  }
+  function renderCards() {
+    const q = S.quote; $('#bQuote').hidden = !q;
+    if (q) { $('#quoteTxt').textContent = q.text; $('#quoteAuthor').textContent = q.author; }
+    const n = S.next; $('#bNext').hidden = !n;
+    if (n) { $('#nextKind').textContent = n.kind; $('#nextTitle').textContent = n.title; $('#nextWhy').textContent = n.why; }
+    const qq = S.question; $('#bQuestion').hidden = !qq;
+    if (qq) $('#qTxt').textContent = qq.text;
+    const c = S.checkpoint; $('#bCheck').hidden = !c;
+    if (c) { $('#checkPlate').textContent = 'Замер ' + daysWord(c.inDays); $('#checkTitle').textContent = 'Замер до ' + fmtDay(addDays(c.inDays)); }
+    const call = S.call; $('#bCall').hidden = !call;
+    if (call) {
+      $('#callTitle').textContent = 'К созвону вопросов: ' + call.questions.length;
+      $('#callSub').textContent = call.kind + ' · ' + fmtDay(addDays(call.inDays)) + ', ' + call.time;
+    }
+  }
+  function renderAll(animatePath) {
+    renderHeader(); renderStrip(); renderPath(animatePath); renderActions(false); renderVideo(); renderCards();
+    $('#demoLbl').textContent = S.label;
+  }
+
+  /* ===== тост ===== */
+  let toastT;
+  function toast(msg, undo) {
+    const t = $('#toast'), u = $('#toastUndo');
+    $('#toastTxt').textContent = msg;
+    u.hidden = !undo; t.classList.toggle('only', !undo);
+    u.onclick = undo ? () => { hideToast(); undo(); } : null;
+    t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(hideToast, 2000);
+  }
+  function hideToast() { $('#toast').classList.remove('show'); }
+
+  /* ===== окна ===== */
+  let onSheetClose = null;
+  function openSheet(html, mount) {
+    const sh = $('#sheet');
+    sh.innerHTML = '<div class="grab" aria-hidden="true"></div>' + html;
+    mount && mount(sh);
+    $('#scrim').classList.add('open'); sh.classList.add('open');
+  }
+  function closeSheet() { $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); onSheetClose && onSheetClose(); onSheetClose = null; }
+  $('#scrim').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); closeRank(); } });
+
+  function showRank(name, L) {
+    $('#rmName').textContent = name; $('#rmLvl').textContent = L;
+    $('#rankModal').classList.add('open'); haptic();
+    requestAnimationFrame(() => fit($('#rmWrap'), 46));
+  }
+  function closeRank() { $('#rankModal').classList.remove('open'); }
+  $('#rankModal').addEventListener('click', closeRank);
+
+  /* ===== действия ===== */
+  function toggleItem(id, fromSheet) {
+    const it = S.items.find(i => i.id === id); if (!it) return;
+    it.done = !it.done; haptic();
+    const res = addXp(it.done ? itemXp(it) : -itemXp(it));
+    renderActions(true); renderStrip(); renderPath(true);
+    if (it.done) toast(res === 'level' ? 'Засчитано · уровень ' + levelOf(S.xp) : 'Засчитано');
+    else toast('Отметка снята');
+    if (fromSheet) itemSheet(id, true);
+  }
+  function toggleNotes(id) {
+    const it = S.items.find(i => i.id === id); if (!it) return;
+    it.notes = !it.notes; haptic();
+    addXp(it.notes ? SET.xp.notes : -SET.xp.notes);
+    renderActions(false); renderStrip(); renderPath(true);
+    toast(it.notes ? 'Конспект засчитан' : 'Отметка снята');
+    itemSheet(id, true);
+  }
+  function itemSheet(id, refresh) {
+    const it = S.items.find(i => i.id === id); if (!it) return;
+    const head = [KIND[it.kind], it.min ? it.min + ' мин' : '', itemXp(it) + ' опыта'].filter(Boolean).join(' · ');
+    let html = '<span class="dim cap">' + head + '</span>' +
+      '<h2 class="sh-title"><span class="ink"></span></h2>' +
+      '<p class="dim">Демо-описание. Настоящий текст вы добавите в админке</p>';
+    if (it.kind === 'homework') html += '<p class="cap"><span class="dim">Проверяется публично, отмечаешь сам</span></p>';
+    html += '<div class="btns" style="margin-top:6px">' +
+      '<button class="btn ' + (it.done ? '' : 'pri') + '" data-a="toggle"><span class="' + (it.done ? 'ink' : 'onlime') + '">' + (it.done ? 'Снять отметку' : 'Отметить') + '</span></button>';
+    if (it.hasNotes) html += '<button class="btn" data-a="notes"><span class="ink">' + (it.notes ? 'Конспект сделан ✓' : 'Конспект сделан') + '</span></button>';
+    html += '</div>';
+    const mount = sh => {
+      sh.querySelector('.sh-title .ink').textContent = it.title;
+      sh.querySelector('[data-a="toggle"]').onclick = () => toggleItem(id, true);
+      const nb = sh.querySelector('[data-a="notes"]'); if (nb) nb.onclick = () => toggleNotes(id);
+    };
+    if (refresh && $('#sheet').classList.contains('open')) { const sh = $('#sheet'); sh.innerHTML = '<div class="grab" aria-hidden="true"></div>' + html; mount(sh); }
+    else openSheet(html, mount);
+  }
+  $('#actList').addEventListener('click', e => {
+    const row = e.target.closest('.row'); if (!row) return;
+    if (e.target.closest('[data-chk]')) toggleItem(row.dataset.id);
+    else if (e.target.closest('[data-open]')) itemSheet(row.dataset.id);
+  });
+
+  function logVideo(kind, views) {
+    const todayCount = S.videos.filter(v => v.today && v.xp > 0).length;
+    const xp = todayCount < SET.xp.videoPerDay ? SET.xp.video : 0;
+    const v = { id: 'v' + Date.now(), kind, views, xp, today: true };
+    S.videos.push(v); haptic();
+    const res = xp ? addXp(xp) : null;
+    renderVideo(); renderStrip(); renderPath(true);
+    toast(res === 'level' ? 'Видео засчитано · уровень ' + levelOf(S.xp) : xp ? 'Видео засчитано' : 'Видео записано', () => {
+      S.videos = S.videos.filter(x => x.id !== v.id);
+      if (v.xp) addXp(-v.xp);
+      renderVideo(); renderStrip(); renderPath(true);
+      toast('Отметка снята');
+    });
+  }
+  $('#videoBtn').addEventListener('click', () => {
+    openSheet(
+      '<h2 class="sh-title"><span class="ink">Какое видео</span></h2>' +
+      '<input class="field" id="viewsIn" type="number" inputmode="numeric" min="0" placeholder="Просмотры, если уже есть">' +
+      '<div class="rows">' +
+      Object.entries({ client: '✂️', expert: '🎓', life: '☕' }).map(([k, ico]) =>
+        '<button class="opt" data-v="' + k + '"><span class="ico" aria-hidden="true">' + ico + '</span><span class="grow"><span class="ink">' + VKIND[k] + '</span></span></button>').join('') +
+      '</div>',
+      sh => sh.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+        const raw = sh.querySelector('#viewsIn').value; const views = raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0);
+        closeSheet(); logVideo(b.dataset.v, views);
+      })
+    );
+  });
+
+  $('#qSave').addEventListener('click', () => {
+    const q = S.question; if (!q) return;
+    S.question = null; if (S.call) S.call.questions.push(q.text);
+    renderCards(); haptic();
+    toast('Сохранено в вопросы', () => { S.question = q; if (S.call) S.call.questions = S.call.questions.filter(x => x !== q.text); renderCards(); });
+  });
+  $('#qHide').addEventListener('click', () => {
+    const q = S.question; if (!q) return;
+    S.question = null; renderCards();
+    toast('Скрыто на 14 дней', () => { S.question = q; renderCards(); });
+  });
+  $('#checkBtn').addEventListener('click', () => toast('Форма замера будет на этапе 4'));
+  $('#callBtn').addEventListener('click', () => {
+    const c = S.call; if (!c) return;
+    openSheet(
+      '<span class="dim cap">' + c.kind + ' · ' + fmtDay(addDays(c.inDays)) + ', ' + c.time + '</span>' +
+      '<h2 class="sh-title"><span class="ink">Вопросы к созвону</span></h2><ul class="qlist" id="ql"></ul>',
+      sh => { const ul = sh.querySelector('#ql'); c.questions.forEach(t => { const li = document.createElement('li'); const s = document.createElement('span'); s.className = 'ink'; s.textContent = t; li.appendChild(s); ul.appendChild(li); }); }
+    );
+  });
+  $('#lvlBtn').addEventListener('click', () => {
+    const L = levelOf(S.xp);
+    openSheet(
+      '<h2 class="sh-title"><span class="ink">Уровень ' + L + ' · ' + rankOf(L) + '</span></h2>' +
+      '<div class="kv"><span class="dim">Опыт</span><span class="ink">' + fmtNum(S.xp) + '</span></div>' +
+      '<div class="kv"><span class="dim">До ' + (L + 1) + '-го уровня</span><span class="ink">' + fmtNum(lvlBase(L + 1) - S.xp) + '</span></div>' +
+      '<p class="dim cap">Опыт приходит за уроки, домашки, видео, замеры и выводы. Он никогда не отнимается</p>'
+    );
+  });
+  $('#pathQ').addEventListener('click', () => {
+    openSheet(
+      '<h2 class="sh-title"><span class="ink">Как читать путь</span></h2>' +
+      '<div class="kv" style="justify-content:flex-start"><span class="ink">Сейчас: где ты по цифрам последнего замера</span></div>' +
+      '<div class="kv" style="justify-content:flex-start"><span class="ink">Куда ведёт текущий темп: куда приводят уроки, домашки и видео, если продолжать так же</span></div>' +
+      '<p class="dim cap">Это ориентир и не обещание. Главное, что ты двигаешься от точки А' + (S.R == null ? '. Маркер Сейчас появится после первого замера' : '') + '</p>'
+    );
+  });
+  $('#strip').addEventListener('click', e => {
+    const b = e.target.closest('.wk'); if (!b) return;
+    toast('Неделя ' + b.dataset.week + ' откроется в Программе');
+  });
+  $('#tabs').addEventListener('click', e => {
+    const b = e.target.closest('.tab'); if (!b || b.dataset.tab === 'today') return;
+    toast('Эта вкладка будет на следующих этапах');
+  });
+
+  /* ===== демо-режим ===== */
+  function loadScen(k, animate) {
+    scenKey = k; store.set('scen', k);
+    S = SCEN[k](); $('#actList').innerHTML = '';
+    renderAll(animate);
+  }
+  $('#demoBtn').addEventListener('click', () => {
+    const meta = {
+      mid: 'Неделя 4 из 8, все блоки. Отметь домашку и получишь новое звание',
+      start: 'До первого замера: на пути только маркер темпа',
+      empty: 'Уроков ещё нет. Пустые блоки скрыты'
+    };
+    openSheet(
+      '<h2 class="sh-title"><span class="ink">Демо-режим</span></h2>' +
+      '<p class="dim cap">Цифры и тексты учеников выдуманы для показа. Уроки, цитаты и фильмы пришлёте вы, пока на их месте пометки</p>' +
+      '<div class="rows">' + Object.keys(SCEN).map(k =>
+        '<button class="opt" data-s="' + k + '"><span class="grow"><span class="ink">' + SCEN[k]().label + '</span><span class="cap"><span class="dim">' + meta[k] + '</span></span></span>' +
+        (k === scenKey ? '<span class="plate lime"><span class="onlime">Сейчас</span></span>' : '') + '</button>').join('') + '</div>',
+      sh => sh.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { closeSheet(); loadScen(b.dataset.s, false); window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); })
+    );
+  });
+
+  /* ===== приложение помнит место ===== */
+  let scrollT;
+  window.addEventListener('scroll', () => { clearTimeout(scrollT); scrollT = setTimeout(() => store.set('scroll', window.scrollY), 150); }, { passive: true });
+  window.addEventListener('resize', () => { fit($('#rankWrap'), 21); renderPath(false); });
+
+  loadScen(scenKey, false);
+  const y = store.get('scroll', 0); if (y) requestAnimationFrame(() => window.scrollTo(0, y));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fit($('#rankWrap'), 21); renderPath(false); });
+})();
+</script>

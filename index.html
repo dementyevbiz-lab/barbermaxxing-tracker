@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Barbermaxxing</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --dir:135deg;
+  --lime: linear-gradient(var(--dir), #BBFF68 0%, #F1FF6E 100%);
+  --bg: linear-gradient(var(--dir), #000000 0%, #1C1E1C 100%);
+  --card: linear-gradient(var(--dir), #3D403D 0%, #1C1F1C 100%);
+  --card-stroke: rgba(255,255,255,.08);
+  --ink-on-dark: linear-gradient(var(--dir), #FFFFFF 0%, #999999 100%);
+  --ink-dim: linear-gradient(var(--dir), #A6A6A6 0%, #6E6E6E 100%);
+  --font: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:#000;color:#fff;font-family:var(--font);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased}
+.bg{position:fixed;inset:0;background:var(--bg);z-index:-2}
+.tex{position:fixed;inset:0;background:url("assets/bg-texture.jpg") center/cover no-repeat;z-index:-1}
+.wrap{min-height:100%;display:grid;place-items:center;
+  padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.card{width:min(440px,100%);background:var(--card);border:1px solid var(--card-stroke);border-radius:56px;padding:44px 32px;
+  display:flex;flex-direction:column;gap:14px;text-align:center}
+.ink,.dim,.limet{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.ink{background-image:var(--ink-on-dark)}
+.dim{background-image:var(--ink-dim)}
+.limet{background-image:var(--lime)}
+.brand{font-weight:700;font-size:14px;letter-spacing:-.02em}
+h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+p{margin:0;font-size:14px}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="tex"></div>
+<div class="wrap">
+  <div class="card">
+    <span class="brand limet">BARBERMAXXING</span>
+    <h1><span class="ink" id="hi">Привет</span></h1>
+    <p><span class="dim" id="sub">Открой приложение через бота в Telegram</span></p>
+  </div>
+</div>
+<script>
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.setBackgroundColor('#000000'); } catch (e) {} }
+  if (user) {
+    document.getElementById('hi').textContent = 'Привет, ' + (user.first_name || 'друг');
+    document.getElementById('sub').textContent = 'Трекер скоро будет здесь';
+  }
+</script>
+</body>
+</html>
