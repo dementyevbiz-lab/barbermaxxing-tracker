@@ -42,6 +42,10 @@ export async function makeStudent(c, { name, tariff = 'barbermax', startDaysAgo 
 export async function cleanupE2E(c) {
   const { data } = await c.admin.from('profiles').select('id').like('display_name', 'E2E %');
   for (const p of data || []) await c.admin.auth.admin.deleteUser(p.id);
+  await c.admin.from('program_items').delete().like('title', 'E2E %');
+  await c.admin.from('admins').delete().eq('telegram_id', 900000009);
+  const { data: au } = await c.admin.auth.admin.listUsers({ perPage: 200 });
+  for (const u of au?.users || []) if (/^bmx-e2e-/.test(u.email || '')) await c.admin.auth.admin.deleteUser(u.id);
   await c.admin.from('quotes').delete().like('author', 'E2E %');
   await c.admin.from('movies').delete().like('title', 'E2E %');
   await c.admin.from('challenges').update({ active: false }).eq('code', 'quick_booking');
@@ -52,3 +56,10 @@ export const ledgerSum = async (c, uid, kind) => {
   if (kind) q = q.eq('kind', kind);
   const { data } = await q; return (data || []).reduce((s, r) => s + r.xp, 0);
 };
+
+export async function makeAdmin(c) {
+  const { data: au, error } = await c.admin.auth.admin.createUser({ email: `bmx-e2e-admin-${Math.random().toString(36).slice(2)}@example.com`, email_confirm: true, app_metadata: { telegram_id: 900000009 } });
+  if (error) throw error;
+  await c.admin.from('admins').insert({ telegram_id: 900000009, name: 'E2E админ', user_id: au.user.id });
+  return au.user;
+}

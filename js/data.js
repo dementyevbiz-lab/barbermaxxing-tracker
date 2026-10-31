@@ -269,7 +269,7 @@ export async function saveFile(blob, name) {
   const browserSave = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000); };
   if (tg && tg.downloadFile && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0')) {
     try {
-      const path = `${state.D.profile.id}/${name}`;
+      const path = `${state.userId}/${name}`;
       const up = await sb.storage.from('exports').upload(path, blob, { upsert: true, contentType: blob.type });
       if (up.error) throw up.error;
       const { data } = await sb.storage.from('exports').createSignedUrl(path, 600, { download: name });
