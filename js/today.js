@@ -6,6 +6,7 @@ import { bus } from './data.js';
 import { ICON, KIND, VIDEO_ICON, checkSvg, pathSvg, pathLegend, placeMarkers, pathHelpSheet, plate } from './ui.js';
 import { openCheckpoint } from './forms.js';
 import { itemSheet } from './program.js';
+import { progressHtml } from './progress.js';
 
 export const CALL_KIND = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
 const hiddenBlock = (name) => (state.D.profile.ui_overrides?.hide || []).includes(name);
@@ -73,8 +74,9 @@ export function renderToday(root) {
     ${m.readOnly || hiddenBlock('video') || info.state !== 'active' ? '' : `<section class="video" style="order:50"><button class="btn pri wide" id="videoBtn"><span class="onlime">Снял видео</span></button><span class="dim cap" id="videoCap"></span></section>`}
   </div><div class="col">
     ${bannerHtml(m)}
+    ${progressHtml(D, info, m.items, L.calcR(D).rows)}
     <section class="card" id="bPath" style="order:30">
-      <div class="h"><span class="ink">Путь от А к Б</span><span class="grow"></span><button class="qbtn" id="pathQ" aria-label="Что это"><span class="dim">?</span></button></div>
+      <div class="h"><span class="ink">Мой путь</span><span class="grow"></span><button class="qbtn" id="pathQ" aria-label="Что это"><span class="dim">?</span></button></div>
       ${pathSvg('t')}${pathLegend(hasNow)}
       ${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}
     </section>

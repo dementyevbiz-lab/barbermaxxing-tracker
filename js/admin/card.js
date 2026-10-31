@@ -2,7 +2,7 @@
 import { $, esc, sb, state, callFn, openSheet, closeSheet, toast, confirmBox, uuid } from '../core.js';
 import * as L from '../logic.js';
 import { openPage, closePage, pathSvg, pathLegend, placeMarkers, fmtMetric, sparkline, SCREEN_KINDS } from '../ui.js';
-import { A, summarize, formSheet, fmtDT, toLocalInput, dbOk } from './common.js';
+import { A, summarize, formSheet, fmtDT, toLocalInput, dbOk, visTariffs } from './common.js';
 import { linkSheet } from './students.js';
 
 const CK = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
@@ -37,10 +37,10 @@ export function openCard(id) {
       ${link ? `<div class="link-box">${esc(link)}</div>` : ''}</div>
 
     ${s.expected.length || s.cp || fired.length || s.inactive ? `<div class="card"><div class="h"><span class="ink">На что нацелить внимание</span></div><div class="stack-s">
-      ${s.lagging ? `<div class="hint ink">Сделано ${Math.round(s.share * 100)}% обязательного к этой неделе</div>` : ''}
-      ${s.inactive ? '<div class="hint ink">Давно не заходил в приложение</div>' : ''}
-      ${s.cpState === 'overdue' ? `<div class="hint ink">Замер ${s.cp.idx} просрочен: срок был ${L.fmtDay(L.parseDay(s.cp.due_date))}</div>` : ''}
-      ${fired.map((f) => `<div class="hint ink">${esc((A.triggers.find((t) => t.code === f.code) || {}).title || f.code)}${f.metric ? ': ' + esc(f.metric.name) : ''}${f.direction ? ': ' + esc(L.VIDEO_KINDS[f.direction]) : ''}</div>`).join('')}
+      ${s.lagging ? `<div class="hint"><span class="ink">Сделано ${Math.round(s.share * 100)}% обязательного к этой неделе</span></div>` : ''}
+      ${s.inactive ? '<div class="hint"><span class="ink">Давно не заходил в приложение</span></div>' : ''}
+      ${s.cpState === 'overdue' ? `<div class="hint"><span class="ink">Замер ${s.cp.idx} просрочен: срок был ${L.fmtDay(L.parseDay(s.cp.due_date))}</span></div>` : ''}
+      ${fired.map((f) => `<div class="hint"><span class="ink">${esc((A.triggers.find((t) => t.code === f.code) || {}).title || f.code)}${f.metric ? ': ' + esc(f.metric.name) : ''}${f.direction ? ': ' + esc(L.VIDEO_KINDS[f.direction]) : ''}</span></div>`).join('')}
       ${!s.lagging && !s.inactive && !fired.length && s.cpState !== 'overdue' ? '<p class="dim">Тревожных меток нет</p>' : ''}</div></div>` : ''}
 
     <div class="card"><div class="h"><span class="ink">Метрики</span></div>
@@ -115,7 +115,7 @@ export function openCard(id) {
     body.querySelectorAll('[data-call]').forEach((b) => b.onclick = () => callForm(A.calls.find((x) => x.id === b.dataset.call)));
     act('#rewGive', async () => { await dbOk(sb.from('challenge_results').update({ reward_status: 'given' }).eq('user_id', id).eq('challenge_id', ch.id)); toast('Отмечено'); callForm(); });
     act('#rewBack', async () => { await dbOk(sb.from('challenge_results').update({ reward_status: 'earned' }).eq('user_id', id).eq('challenge_id', ch.id)); toast('Возвращено'); reload(); });
-    act('#aTariff', () => formSheet({ title: 'Тариф и старт', fields: [{ k: 'tariff_id', label: 'Тариф', type: 'select', options: A.tariffs.map((t) => [t.id, t.name]) }, { k: 'start_date', label: 'Дата старта', type: 'date' }],
+    act('#aTariff', () => formSheet({ title: 'Тариф и старт', fields: [{ k: 'tariff_id', label: 'Тариф', type: 'select', options: visTariffs(p.tariff_id).map((t) => [t.id, t.name]) }, { k: 'start_date', label: 'Дата старта', type: 'date' }],
       initial: { tariff_id: p.tariff_id, start_date: p.start_date }, extra: '<p class="dim cap">История сохранится, пересчитаются только недели, сроки замеров и видимость пунктов</p>',
       onSave: (v) => patch({ tariff_id: Number(v.tariff_id), start_date: v.start_date }) }));
     act('#aShift', () => {
@@ -161,7 +161,7 @@ export function itemForm(preset, after, existing) {
       { k: 'why', label: 'Зачем (короткое задание)', type: 'text' }, { k: 'how', label: 'Как (короткое задание)', type: 'area' }, { k: 'result', label: 'Что считать результатом', type: 'text' },
       { k: 'required', label: 'Обязательный пункт недели', type: 'check' }, { k: 'has_notes', label: 'Можно отметить конспект', type: 'check' },
       { k: 'tags', label: 'Метки ситуации и код челленджа', type: 'tags', hint: 'Для задач Быстрой записи: quick_booking' },
-      { k: 'tariffs', label: 'Тарифы', type: 'checks', options: A.tariffs.map((t) => [t.code, t.name]) },
+      { k: 'tariffs', label: 'Тарифы', type: 'checks', options: visTariffs().concat(A.tariffs.filter((t) => (init.tariffs || []).includes(t.code) && t.features?.hidden)).map((t) => [t.code, t.name]) },
       { k: 'user_id', label: 'Только для ученика', type: 'select', options: [['', 'Для всех'], ...students] },
       { k: 'active', label: 'Показывать ученикам', type: 'check' },
     ],

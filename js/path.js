@@ -4,6 +4,7 @@ import * as L from './logic.js';
 import * as data from './data.js';
 import { pathSvg, pathLegend, placeMarkers, pathHelpSheet, fmtMetric, unitOf, sparkline, SCREEN_KINDS } from './ui.js';
 import { openCheckpoint } from './forms.js';
+import { progressHtml } from './progress.js';
 
 const CP_NAME = (cp) => (cp.idx === 0 ? 'Точка А' : cp.kind === 'final' ? 'Итоговый замер' : 'Замер ' + cp.idx);
 
@@ -19,8 +20,8 @@ export function renderPath(root) {
   const all = L.videoCounts(D);
 
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Путь</span></h1></div>
-    <div class="grid-cards"><section class="card">
-      <div class="h"><span class="ink">От А к Б</span><span class="grow"></span><button class="qbtn" id="pQ"><span class="dim">?</span></button></div>
+    <div class="grid-cards">${progressHtml(D, info, L.visibleItems(D), rows, 0)}<section class="card">
+      <div class="h"><span class="ink">Мой путь</span><span class="grow"></span><button class="qbtn" id="pQ"><span class="dim">?</span></button></div>
       ${pathSvg('q')}${pathLegend(hasNow)}${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}</section>
     ${all.total ? `<section class="card"><div class="h"><span class="ink">Видео</span></div>
       <div class="stat-grid">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<div class="stat"><span class="dim cap">${t}</span><span class="big-num ink">${all[k]}</span><span class="dim cap">за неделю ${wkVideos[k]}</span></div>`).join('')}</div>

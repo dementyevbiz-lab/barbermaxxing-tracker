@@ -1,7 +1,7 @@
 // Админка: список учеников, добавление, демо
 import { $, esc, state, callFn, openSheet, closeSheet, toast, confirmBox, copyText, store } from '../core.js';
 import * as L from '../logic.js';
-import { A, summarize, formSheet } from './common.js';
+import { A, summarize, formSheet, visTariffs } from './common.js';
 import { openCard } from './card.js';
 
 const SORTS = [['lag', 'По отставанию'], ['name', 'По имени'], ['xp', 'По опыту']];
@@ -38,8 +38,8 @@ export function renderStudents(root) {
   });
   $('#addSt', root).onclick = () => formSheet({
     title: 'Новый ученик', saveLabel: 'Создать приглашение',
-    fields: [{ k: 'display_name', label: 'Имя', type: 'text', required: true }, { k: 'tariff_code', label: 'Тариф', type: 'select', options: A.tariffs.map((t) => [t.code, t.name]) }, { k: 'start_date', label: 'Дата старта', type: 'date', hint: 'От неё считаются недели и сроки замеров' }],
-    initial: { tariff_code: 'barbermax', start_date: L.ymd(new Date()) },
+    fields: [{ k: 'display_name', label: 'Имя', type: 'text', required: true }, { k: 'tariff_code', label: 'Тариф', type: 'select', options: visTariffs().map((t) => [t.code, t.name]) }, { k: 'start_date', label: 'Дата старта', type: 'date', hint: 'От неё считаются недели и сроки замеров. У всех потока одна дата' }],
+    initial: { tariff_code: 'barbermax', start_date: A.settings.default_start_date || L.ymd(new Date()) },
     onSave: async (v) => {
       const r = await callFn('admin', { action: 'create_student', ...v }, true);
       if (!r.ok) throw new Error(r.message || 'Не получилось');

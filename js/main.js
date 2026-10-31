@@ -84,7 +84,7 @@ function startStudent() {
     screen('Привет', '', { loading: true });
     return runOnboarding(() => startStudent());
   }
-  root.innerHTML = `<div class="app"><nav class="tabs" id="tabs"><div class="brand"><span class="limet">BARBERMAXXING</span></div>
+  root.innerHTML = `<div class="app"><nav class="tabs" id="tabs"><div class="brand"><span class="logo-s"><img src="assets/logo.webp" alt=""></span><span class="limet">BARBERMAXXING</span></div>
     ${TABS.map(([k, t, svg]) => `<button class="tab" data-tab="${k}"><svg viewBox="0 0 24 24">${svg}</svg><span class="lbl dim">${t}</span></button>`).join('')}</nav>
     <main class="main" id="main"></main></div>`;
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) go(b.dataset.tab); });
@@ -108,7 +108,7 @@ function go(tab, restore) {
   closeSheet();
   state.tab = tab; store.set('tab', tab);
   $$tabs(tab);
-  const main = $('#main'); main.innerHTML = '';
+  const main = $('#main'); main.innerHTML = '<div class="appbar"><span class="logo-s"><img src="assets/logo.webp" alt=""></span><span class="brand-t limet">BARBERMAXXING</span></div>';
   const holder = document.createElement('div'); main.appendChild(holder);
   cleanup = SCREENS[tab](holder) || null;
   const y = restore || same ? store.get('scroll.' + tab, 0) : 0;

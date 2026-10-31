@@ -55,16 +55,16 @@ try {
   await page.waitForSelector('#pageBody .card'); await wait(600);
   await page.locator('tr[data-a="avg_check"]').click(); await page.waitForSelector('#f_a'); await page.fill('#f_a', '1600'); await page.click('#fSave');
   ok('админ меняет точку А', await until(async () => (await c.admin.from('goals').select('a_value').eq('user_id', st1.id).eq('metric_key', 'avg_check').single()).data.a_value == 1600));
-  await page.waitForSelector('#callAdd'); await page.click('#callAdd'); await page.waitForSelector('#f_at');
+  await wait(2000); await page.waitForSelector('#callAdd'); await page.click('#callAdd'); await page.waitForSelector('#f_at');
   const dt = new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16); await page.fill('#f_at', dt); await page.click('#fSave');
   ok('дата созвона записана', await until(async () => (await c.admin.from('calls').select('*').eq('user_id', st1.id)).data.length === 1));
-  await page.waitForSelector('#aShift'); await page.click('#aShift'); await page.waitForSelector('#f_due'); await page.fill('#f_due', new Date(Date.now() + 5 * 864e5).toISOString().slice(0, 10)); await page.click('#fSave');
+  await wait(2000); await page.waitForSelector('#aShift'); await page.click('#aShift'); await page.waitForSelector('#f_due'); await page.fill('#f_due', new Date(Date.now() + 5 * 864e5).toISOString().slice(0, 10)); await page.click('#fSave');
   ok('срок замера сдвинут и не перезатирается', await until(async () => { const r = (await c.admin.from('checkpoints').select('*').eq('user_id', st1.id).eq('idx', 1).single()).data; return r.due_shifted === true && r.due_date > new Date().toISOString().slice(0, 10); }));
-  await page.waitForSelector('#aTariff'); await page.click('#aTariff'); await page.waitForSelector('#f_tariff_id'); await page.selectOption('#f_tariff_id', { label: 'Личное сопровождение' }); await page.click('#fSave');
+  await wait(2000); await page.waitForSelector('#aTariff'); await page.click('#aTariff'); await page.waitForSelector('#f_tariff_id'); await page.selectOption('#f_tariff_id', { label: 'Личное сопровождение' }); await page.click('#fSave');
   ok('смена тарифа пересчитала замеры', await until(async () => (await c.admin.from('checkpoints').select('id').eq('user_id', st1.id)).data.length === 5));
-  await page.waitForSelector('#aBlocks'); await page.click('#aBlocks'); await page.waitForSelector('[data-check="quote"]'); await page.click('[data-check="quote"]'); await page.click('#fSave');
+  await wait(2000); await page.waitForSelector('#aBlocks'); await page.click('#aBlocks'); await page.waitForSelector('[data-check="quote"]'); await page.click('[data-check="quote"]'); await page.click('#fSave');
   ok('блок интерфейса выключен у ученика', await until(async () => (await c.admin.from('profiles').select('ui_overrides').eq('id', st1.id).single()).data.ui_overrides.hide?.includes('quote')));
-  await page.waitForSelector('#aStatus'); await page.click('#aStatus');
+  await wait(2000); await page.waitForSelector('#aStatus'); await page.click('#aStatus');
   ok('пауза ставится', await until(async () => (await c.admin.from('profiles').select('status').eq('id', st1.id).single()).data.status === 'paused'));
   await wait(1800); await page.click('.back'); await page.waitForSelector('#page:not(.open)'); await wait(400);
 

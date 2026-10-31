@@ -31,12 +31,13 @@ export function renderContent(root) {
 }
 
 // ---------- общий список в странице ----------
-function listPage(title, rows, { add, edit, importer, note }) {
-  openPage(`<div class="btns">${add ? '<button class="btn pri" id="lAdd"><span class="onlime">Добавить</span></button>' : ''}${importer ? '<button class="btn" id="lImp"><span class="ink">Импорт</span></button>' : ''}</div>${note ? `<p class="dim cap">${note}</p>` : ''}
+function listPage(title, rows, { add, edit, importer, note, verifyAll }) {
+  openPage(`<div class="btns">${add ? '<button class="btn pri" id="lAdd"><span class="onlime">Добавить</span></button>' : ''}${importer ? '<button class="btn" id="lImp"><span class="ink">Импорт</span></button>' : ''}${verifyAll ? '<button class="btn" id="lVer"><span class="ink">Отметить все проверенными</span></button>' : ''}</div>${note ? `<p class="dim cap">${note}</p>` : ''}
     <div class="stack-s">${rows.map((r) => `<button class="note-card" data-r="${esc(r.id)}"><span class="body ink">${esc(r.title)}</span><span class="dim cap">${esc(r.sub || '')}</span></button>`).join('') || '<p class="dim empty-note">Пока пусто</p>'}</div>`,
   (body) => {
     if (add) body.querySelector('#lAdd').onclick = add;
     if (importer) body.querySelector('#lImp').onclick = importer;
+    if (verifyAll) body.querySelector('#lVer').onclick = async () => { if (!window.confirm('Отметить все как проверенные? Ученики сразу их увидят')) return; await verifyAll(); toast('Готово'); await state.app.reload(); closePage(); };
     body.querySelectorAll('[data-r]').forEach((b) => b.onclick = () => edit(b.dataset.r));
   }, { title });
 }
@@ -65,7 +66,8 @@ function quotes() {
   const open = () => listPage('Цитаты', A.quotes.map((q) => ({ id: q.id, title: q.text, sub: `${q.author}${q.source ? ', ' + q.source : ''} · ${q.verified ? 'проверена' : 'не проверена, ученикам не показывается'}` })), {
     add: () => quoteForm(), edit: (id) => quoteForm(A.quotes.find((q) => q.id === id)),
     importer: () => importGeneric('Импорт цитат', 'JSON-список или CSV с колонками text, author, source, tags, verified. Показываются только проверенные', (r) => ({ text: r.text, author: r.author, source: r.source || null, tags: tagList(r.tags), verified: yes(r.verified) }), 'quotes', open),
-    note: 'До 200 знаков, с автором и проверяемым источником. Ученикам показываются только проверенные',
+    note: 'До 200 знаков, с автором и проверяемым источником. Ученикам показываются только проверенные. Черновики из подборки не проверены: сверьте источник и отметьте',
+    verifyAll: async () => { await dbOk(sb.from('quotes').update({ verified: true }).eq('verified', false)); },
   });
   const quoteForm = (q) => formSheet({ title: q ? 'Цитата' : 'Новая цитата', fields: [{ k: 'text', label: 'Текст', type: 'area', max: 200, required: true }, { k: 'author', label: 'Автор', type: 'text', required: true }, { k: 'source', label: 'Источник', type: 'text' }, { k: 'tags', label: 'Метки ситуации', type: 'tags' }, { k: 'verified', label: 'Проверена', type: 'check' }],
     initial: q || { verified: false, tags: [] }, onSave: async (v) => { const row = { text: v.text, author: v.author, source: v.source || null, tags: v.tags, verified: !!v.verified }; await dbOk(q ? sb.from('quotes').update(row).eq('id', q.id) : sb.from('quotes').insert(row)); await afterSave(open); },
@@ -77,7 +79,8 @@ function movies() {
   const open = () => listPage('Фильмы', A.movies.map((m) => ({ id: m.id, title: `${m.title}${m.year ? ', ' + m.year : ''}`, sub: `${m.why} · метки: ${(m.tags || []).join(', ') || 'нет'} · ${m.verified ? 'проверен' : 'не проверен'}` })), {
     add: () => form(), edit: (id) => form(A.movies.find((m) => m.id === id)),
     importer: () => importGeneric('Импорт фильмов', 'JSON-список или CSV с колонками title, year, why, tags, verified', (r) => ({ title: r.title, year: Number(r.year) || null, why: r.why, tags: tagList(r.tags), verified: yes(r.verified) }), 'movies', open),
-    note: 'Показываются в «Следующем шаге» только при совпадении метки ситуации. Метки это коды триггеров, например no_checkpoint или metric_flat',
+    note: 'Показываются в «Следующем шаге» только при совпадении метки ситуации. Метки это коды триггеров, например no_checkpoint или metric_flat. Тексты «почему подходит» черновые: утвердите их',
+    verifyAll: async () => { await dbOk(sb.from('movies').update({ verified: true }).eq('verified', false)); },
   });
   const form = (m) => formSheet({ title: m ? 'Фильм' : 'Новый фильм', fields: [{ k: 'title', label: 'Название', type: 'text', required: true }, { k: 'year', label: 'Год', type: 'number' }, { k: 'why', label: 'Почему подходит барберу и в какой ситуации', type: 'area', required: true }, { k: 'tags', label: 'Метки ситуации', type: 'tags' }, { k: 'verified', label: 'Проверен', type: 'check' }],
     initial: m || { tags: [] }, onSave: async (v) => { const row = { title: v.title, year: v.year, why: v.why, tags: v.tags, verified: !!v.verified }; await dbOk(m ? sb.from('movies').update(row).eq('id', m.id) : sb.from('movies').insert(row)); await afterSave(open); },

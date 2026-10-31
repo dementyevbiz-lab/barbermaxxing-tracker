@@ -10,7 +10,11 @@ const QSTAT = { open: 'Открытые', asked: 'Заданные', dropped: '�
 export function renderNotes(root) {
   const D = state.D;
   let seg = store.get('notes.seg', 'insights'), view = store.get('notes.view', 'cal'), qst = 'open';
-  const now = new Date(); let ym = { y: now.getFullYear(), m: now.getMonth() }, selDay = L.ymd(now);
+  const limit = L.parseDay(D.settings.calendar_until || '2027-01-31'); // календарь открыт только до этой даты
+  const now = new Date(); const startCal = now > limit ? limit : now;
+  let ym = { y: startCal.getFullYear(), m: startCal.getMonth() }, selDay = L.ymd(startCal);
+  const minD = D.profile.start_date ? L.parseDay(D.profile.start_date) : null;
+  const minYm = minD && minD < now ? minD.getFullYear() * 12 + minD.getMonth() : now.getFullYear() * 12 + now.getMonth();
 
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Выводы</span></h1></div>
     <div class="seg" id="seg"><button data-s="insights">Выводы</button><button data-s="questions">Вопросы</button></div><div id="body"></div></div>`;
@@ -26,12 +30,12 @@ export function renderNotes(root) {
     const first = new Date(ym.y, ym.m, 1), lead = (first.getDay() + 6) % 7, days = new Date(ym.y, ym.m + 1, 0).getDate();
     const cells = [...Array(lead).fill('<span class="e"></span>'), ...Array.from({ length: days }, (_, k) => {
       const d = k + 1, key = `${ym.y}-${L.pad(ym.m + 1)}-${L.pad(d)}`;
-      return `<button data-d="${key}" class="${key === L.ymd(now) ? 'today ' : ''}${key === selDay ? 'sel' : ''}"><span class="${key === selDay ? 'onlime' : 'ink'}">${d}</span>${byDay.has(key) ? '<i class="dot"></i>' : ''}</button>`; })];
+      return `<button data-d="${key}" class="${key === L.ymd(now) ? 'is-today ' : ''}${key === selDay ? 'sel ' : ''}${L.parseDay(key) > limit ? 'dis' : ''}"><span class="${key === selDay ? 'onlime' : 'ink'}">${d}</span>${byDay.has(key) ? '<i class="dot"></i>' : ''}</button>`; })];
     const dayList = live().filter((i) => i.entry_date === selDay).sort((a, b) => b.created_at.localeCompare(a.created_at));
     const all = live().sort((a, b) => b.entry_date.localeCompare(a.entry_date) || b.created_at.localeCompare(a.created_at));
     body.innerHTML = `<div class="stack"><div class="btns"><button class="btn pri" id="addIns" style="flex:1"><span class="onlime">Записать вывод</span></button>
       <button class="btn" id="tglView"><span class="ink">${view === 'cal' ? 'Список' : 'Календарь'}</span></button></div>
-      ${view === 'cal' ? `<div class="grid-cards"><div class="card"><div class="cal-nav"><button data-nav="-1" aria-label="Назад"><span class="ink">‹</span></button><span class="title2 ink">${MONTHS[ym.m]} ${ym.y}</span><button data-nav="1" aria-label="Вперёд"><span class="ink">›</span></button></div>
+      ${view === 'cal' ? `<div class="grid-cards cal-grid"><div class="card"><div class="cal-nav"><button data-nav="-1" aria-label="Назад" ${ym.y * 12 + ym.m <= minYm ? 'disabled' : ''}><span class="ink">‹</span></button><span class="title2 ink">${MONTHS[ym.m]} ${ym.y}</span><button data-nav="1" aria-label="Вперёд" ${ym.y * 12 + ym.m >= limit.getFullYear() * 12 + limit.getMonth() ? 'disabled' : ''}><span class="ink">›</span></button></div>
         <div class="cal">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((x) => `<span class="dow dim">${x}</span>`).join('')}${cells.join('')}</div></div>
         <div class="stack-s"><span class="dim cap">${L.fmtDay(L.parseDay(selDay))}</span>${dayList.map(entryCard).join('') || '<p class="dim empty-note">В этот день записей нет</p>'}</div></div>`
       : `<div class="stack-s">${all.map(entryCard).join('') || '<p class="dim empty-note">Здесь будут твои выводы после созвонов, эфиров и уроков</p>'}</div>`}</div>`;
@@ -50,7 +54,7 @@ export function renderNotes(root) {
     const i = id ? D.insights.find((x) => x.id === id) : { entry_date: selDay, source: 'other', title: '', body: '' };
     let src = i.source;
     openSheet(`<h2 class="sh-title"><span class="ink">${id ? 'Правка' : 'Новый вывод'}</span></h2>
-      <input class="field" type="date" id="iDate" value="${esc(i.entry_date)}" max="${L.ymd(new Date())}">
+      <input class="field" type="date" id="iDate" value="${esc(i.entry_date)}" max="${L.ymd(now < limit ? now : limit)}">
       <div class="btns" id="iSrc">${Object.entries(SOURCES).map(([k, t]) => `<button class="btn sm ${k === src ? 'pri' : ''}" data-src="${k}"><span class="${k === src ? 'onlime' : 'ink'}">${t}</span></button>`).join('')}</div>
       <input class="field" id="iTitle" maxlength="120" placeholder="Заголовок, если нужен" value="${esc(i.title || '')}">
       <textarea class="field area" id="iBody" maxlength="4000" placeholder="Что понял, что хочешь запомнить">${esc(i.body || '')}</textarea>
@@ -78,7 +82,7 @@ export function renderNotes(root) {
     openSheet(`<h2 class="sh-title"><span class="ink">Новый вопрос</span></h2>
       ${hints.length ? `<span class="dim cap">Можно начать с этого</span><div class="stack-s">${hints.map((h) => `<button class="opt" data-h="${esc(h.text)}" data-c="${h.code}"><span class="grow"><span class="ink">${esc(h.text)}</span></span></button>`).join('')}</div>` : ''}
       <textarea class="field area" id="qBody" maxlength="500" placeholder="Что хочешь спросить у эксперта"></textarea>
-      ${ctx.length || openN ? `<div class="hint dim">${ctx.length ? 'Твои цифры: ' + esc(ctx.join(' · ')) + '. ' : ''}${openN ? 'Открытых вопросов: ' + openN : ''}</div>` : ''}
+      ${ctx.length || openN ? `<div class="hint"><span class="dim">${ctx.length ? 'Твои цифры: ' + esc(ctx.join(' · ')) + '. ' : ''}${openN ? 'Открытых вопросов: ' + openN : ''}</span></div>` : ''}
       <button class="btn pri wide" id="qSaveBtn"><span class="onlime">Сохранить</span></button>`,
     (sh) => {
       let code = null;
@@ -109,7 +113,7 @@ export function renderNotes(root) {
     if (e.target.closest('#addIns')) return insightSheet();
     if (e.target.closest('#tglView')) { view = view === 'cal' ? 'list' : 'cal'; store.set('notes.view', view); return draw(); }
     const d = e.target.closest('[data-d]'); if (d) { selDay = d.dataset.d; return draw(); }
-    const nv = e.target.closest('[data-nav]'); if (nv) { const t = new Date(ym.y, ym.m + Number(nv.dataset.nav), 1); ym = { y: t.getFullYear(), m: t.getMonth() }; return draw(); }
+    const nv = e.target.closest('[data-nav]'); if (nv && !nv.disabled) { const t = new Date(ym.y, ym.m + Number(nv.dataset.nav), 1); ym = { y: t.getFullYear(), m: t.getMonth() }; return draw(); }
     const ed = e.target.closest('[data-ed]'); if (ed) return insightSheet(ed.dataset.ed);
     if (e.target.closest('#addQ')) return addQuestionSheet();
     const qs = e.target.closest('[data-q]'); if (qs && qs.closest('#qseg')) { qst = qs.dataset.q; return draw(); }

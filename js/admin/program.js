@@ -2,7 +2,7 @@
 import { $, esc, sb, state, openSheet, closeSheet, setSheet, toast, haptic } from '../core.js';
 import * as L from '../logic.js';
 import { ICON, KIND } from '../ui.js';
-import { A, summarize, dbOk, csvParse, formSheet } from './common.js';
+import { A, summarize, dbOk, csvParse, formSheet, visTariffs } from './common.js';
 import { itemForm } from './card.js';
 
 let selWeek = null;
@@ -56,7 +56,7 @@ export function renderProgramAdmin(root) {
       const fake = { profile: { id: 'preview', tariff: { code } }, items: A.items };
       const list = L.visibleItems(fake).filter((i) => i.week === week && !i.user_id);
       return `<h2 class="sh-title"><span class="ink">Как видит ученик</span></h2>
-        <div class="btns">${A.tariffs.map((t) => `<button class="btn sm ${t.code === code ? 'pri' : ''}" data-t="${t.code}"><span class="${t.code === code ? 'onlime' : 'ink'}">${esc(t.name)}</span></button>`).join('')}</div>
+        <div class="btns">${visTariffs().map((t) => `<button class="btn sm ${t.code === code ? 'pri' : ''}" data-t="${t.code}"><span class="${t.code === code ? 'onlime' : 'ink'}">${esc(t.name)}</span></button>`).join('')}</div>
         <div class="btns"><button class="btn sm" data-wk="-1"><span class="ink">←</span></button><span class="pill">Неделя ${week}</span><button class="btn sm" data-wk="1"><span class="ink">→</span></button></div>
         ${list.map((i) => `<div class="row static"><span class="ico">${ICON[i.kind]}</span><span class="row-main"><span class="ink t">${esc(i.title)}</span><span class="dim cap">${KIND[i.kind]}${i.est_minutes ? ' · ' + i.est_minutes + ' мин' : ''}${i.required ? '' : ' · по желанию'}</span></span></div>`).join('') || '<p class="dim">Задания этой недели появятся позже</p>'}`;
     };

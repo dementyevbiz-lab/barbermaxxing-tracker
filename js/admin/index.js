@@ -16,7 +16,7 @@ const TABS = [
 const SCREENS = { students: renderStudents, summary: renderSummary, program: renderProgramAdmin, content: renderContent };
 
 export async function startAdmin(root, r) {
-  root.innerHTML = `<div class="app"><nav class="tabs" id="tabs"><div class="brand"><span class="limet">BARBERMAXXING</span></div>
+  root.innerHTML = `<div class="app"><nav class="tabs" id="tabs"><div class="brand"><span class="logo-s"><img src="assets/logo.webp" alt=""></span><span class="limet">BARBERMAXXING</span></div>
     ${TABS.map(([k, t, svg]) => `<button class="tab" data-tab="${k}"><svg viewBox="0 0 24 24">${svg}</svg><span class="lbl dim">${t}</span></button>`).join('')}</nav>
     <main class="main" id="main"><div class="loading-line"></div></main></div>`;
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) go(b.dataset.tab); });
@@ -33,7 +33,7 @@ function go(tab, restore) {
   closeSheet(); if (pageOpen()) closePage();
   state.tab = tab; store.set('atab', tab);
   document.querySelectorAll('#tabs .tab').forEach((b) => { const on = b.dataset.tab === tab; b.classList.toggle('on', on); b.querySelector('.lbl').className = 'lbl ' + (on ? 'limet' : 'dim'); });
-  const main = $('#main'); main.innerHTML = ''; const h = document.createElement('div'); main.appendChild(h);
+  const main = $('#main'); main.innerHTML = '<div class="appbar"><span class="logo-s"><img src="assets/logo.webp" alt=""></span><span class="brand-t limet">BARBERMAXXING</span></div>'; const h = document.createElement('div'); main.appendChild(h);
   SCREENS[tab](h);
   const y = restore || same ? store.get('ascroll.' + tab, 0) : 0; requestAnimationFrame(() => window.scrollTo(0, y));
 }

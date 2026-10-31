@@ -70,10 +70,10 @@ export async function buildPdf() {
       </div>
       <div style="display:flex;gap:18px">
         <div style="flex:1.1;background:${CARD};border-radius:36px;padding:20px 22px;border:1px solid rgba(255,255,255,.08)">
-          <div style="font-weight:700;font-size:12px;text-transform:uppercase;margin-bottom:6px">Путь от А к Б</div>
+          <div style="font-weight:700;font-size:12px;text-transform:uppercase;margin-bottom:6px">Мой путь</div>
           <svg viewBox="0 0 320 204" width="100%"><path d="M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32" fill="none" stroke="${LIME}" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
             <circle cx="26" cy="170" r="10" fill="#3D4A1A" stroke="${LIME}" stroke-width="2"/><circle cx="294" cy="32" r="12" fill="${LIME}"/>
-            <text x="20" y="200" font-weight="700" font-size="15" fill="#fff">А</text><text x="288" y="12" font-weight="700" font-size="15" fill="#fff">Б</text>
+            <text x="8" y="199" font-weight="700" font-size="14" fill="#fff">Старт</text><text x="262" y="12" font-weight="700" font-size="14" fill="#fff">Цель</text>
             ${ptR ? `<circle cx="${ptR.x.toFixed(1)}" cy="${ptR.y.toFixed(1)}" r="8.5" fill="${LIME}" stroke="#121212" stroke-width="3"/>` : ''}
             <circle cx="${ptP.x.toFixed(1)}" cy="${ptP.y.toFixed(1)}" r="13" fill="none" stroke="${LIME}" stroke-width="2.2" stroke-dasharray="4 4"/></svg>
           <div style="font-size:12px;color:#A6A6A6;display:flex;gap:16px">${R != null ? `<span>● Итог</span>` : ''}<span>◌ Куда ведёт темп</span></div>

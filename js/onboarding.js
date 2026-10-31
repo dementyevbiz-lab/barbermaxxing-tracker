@@ -53,7 +53,7 @@ export function runOnboarding(onFinish) {
     el.querySelector('[data-next]').onclick = async () => { await data.saveGoalText(el.querySelector('#goalIn').value); go(3); };
   }
   function pointA(el) {
-    el.innerHTML = `<div class="card"><span class="plate"><span class="onlime">Точка А</span></span><p class="dim cap">Где ты сейчас. Любую цифру можно пропустить</p><div class="stack-s" id="mf"></div></div>${nav()}`;
+    el.innerHTML = `<div class="card"><span class="plate"><span class="onlime">Где ты сейчас</span></span><p class="dim cap">Это твоя точка А, старт. Любую цифру можно пропустить</p><div class="stack-s" id="mf"></div></div>${nav()}`;
     metricFields(el.querySelector('#mf'), {
       getVal: (k) => D.goals[k]?.a,
       onSave: (k, v) => { data.saveGoal(k, 'a', v); data.saveCpValue(cp0.id, k, v); },
@@ -61,14 +61,14 @@ export function runOnboarding(onFinish) {
     el.querySelector('[data-next]').onclick = () => go(4);
   }
   function shotsA(el) {
-    el.innerHTML = `<div class="card"><span class="plate"><span class="onlime">Скриншоты точки А</span></span>
+    el.innerHTML = `<div class="card"><span class="plate"><span class="onlime">Скриншоты со старта</span></span>
       <p class="ink">${esc(D.settings.screenshot_help || '')}</p><div id="sh"></div></div>${nav()}`;
     mountShots(el.querySelector('#sh'), cp0.id);
     el.querySelector('[data-next]').onclick = () => go(5);
   }
   function pointB(el) {
-    el.innerHTML = `<div class="card"><span class="plate lime"><span class="onlime">Точка Б</span></span>
-      <p class="dim cap">Куда хочешь прийти. Это ориентир и обещанием не является. Любую цифру можно пропустить</p><div class="stack-s" id="mf"></div></div>${nav()}`;
+    el.innerHTML = `<div class="card"><span class="plate lime"><span class="onlime">Куда хочешь прийти</span></span>
+      <p class="dim cap">Это твоя точка Б, цель. Это ориентир и обещанием не является. Любую цифру можно пропустить</p><div class="stack-s" id="mf"></div></div>${nav()}`;
     metricFields(el.querySelector('#mf'), { getVal: (k) => D.goals[k]?.b, onSave: (k, v) => data.saveGoal(k, 'b', v) });
     el.querySelector('[data-next]').onclick = () => go(6);
   }

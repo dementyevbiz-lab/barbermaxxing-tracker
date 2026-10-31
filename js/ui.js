@@ -24,8 +24,8 @@ export function pathSvg(p = 'p') {
     <path id="${p}Path" d="M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32" fill="none" stroke="url(#gLimePath)" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
     <circle cx="26" cy="170" r="10" fill="url(#gLimeDim)" stroke="url(#gLimeBox)" stroke-width="2"/>
     <circle cx="294" cy="32" r="12" fill="url(#gLimeBox)"/>
-    <text x="20" y="200" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="15" fill="url(#gInk)">А</text>
-    <text x="288" y="12" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="15" fill="url(#gInk)">Б</text>
+    <text x="8" y="199" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="14" fill="url(#gInk)">Старт</text>
+    <text x="262" y="12" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="14" fill="url(#gInk)">Цель</text>
     <circle id="${p}Now" r="8.5" fill="url(#gLimeBox)" stroke="url(#gRow)" stroke-width="3" cx="26" cy="170"/>
     <circle id="${p}Pace" r="13" fill="none" stroke="url(#gLimeBox)" stroke-width="2.2" stroke-dasharray="4 4" cx="26" cy="170"/>
   </svg>`;

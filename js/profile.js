@@ -41,7 +41,6 @@ export function renderProfile(root) {
     <section class="card"><div class="h"><span class="ink">Настройки</span></div>
       <div class="row static"><span class="row-main"><span class="ink t">Уведомления от бота</span><span class="dim cap">Сроки замеров и даты созвонов</span></span><button class="toggle ${prefs.notifications === false ? '' : 'on'}" id="notifT" aria-label="Уведомления"></button></div>
       <div class="row static"><span class="row-main"><span class="ink t">Валюта среднего чека</span></span><div class="btns"><button class="btn sm ${prefs.currency === 'KZT' ? '' : 'pri'}" data-cur="RUB"><span class="${prefs.currency === 'KZT' ? 'ink' : 'onlime'}">₽</span></button><button class="btn sm ${prefs.currency === 'KZT' ? 'pri' : ''}" data-cur="KZT"><span class="${prefs.currency === 'KZT' ? 'onlime' : 'ink'}">₸</span></button></div></div>
-      <button class="row" id="exportBtn"><span class="row-main"><span class="ink t">Выгрузить мои данные</span></span></button>
       <button class="row" id="trashBtn"><span class="row-main"><span class="ink t">Корзина</span></span></button></section></div>`;
 
   if (support) $('#supportBtn', root).onclick = () => { try { (tg && support.includes('t.me') && tg.openTelegramLink) ? tg.openTelegramLink(support) : window.open(support, '_blank'); } catch (e) { window.open(support, '_blank'); } };
@@ -52,12 +51,6 @@ export function renderProfile(root) {
   };
   $('#notifT', root).onclick = async (e) => { const on = !e.currentTarget.classList.contains('on'); e.currentTarget.classList.toggle('on', on); await data.setPrefs({ notifications: on }); toast(on ? 'Уведомления включены' : 'Уведомления выключены'); };
   root.querySelectorAll('[data-cur]').forEach((b) => b.onclick = async () => { await data.setPrefs({ currency: b.dataset.cur }); state.app.refresh(); });
-  $('#exportBtn', root).onclick = async () => {
-    const out = { profile: { name: D.profile.display_name, tariff: t.name, start_date: D.profile.start_date }, goals: D.goals, goal_text: D.goalText,
-      checkpoints: D.checkpoints.map((c) => ({ idx: c.idx, due: c.due_date, submitted: c.submitted_at, note: c.note, values: D.cpValues[c.id] || {} })),
-      completions: D.completions, videos: D.videos, insights: D.insights.filter((i) => !i.deleted_at), questions: D.questions.filter((q) => !q.deleted_at) };
-    await data.saveFile(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }), 'barbermaxxing-moi-dannye.json');
-  };
   $('#trashBtn', root).onclick = trash;
 
   function trash() {

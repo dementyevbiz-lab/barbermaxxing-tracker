@@ -97,6 +97,8 @@ export function formSheet({ title, fields, initial = {}, saveLabel = 'Сохра
   });
 }
 
+// Тарифы для выбора: скрытые (например, Базовичок) не предлагаем, кроме уже выбранного
+export const visTariffs = (keep) => A.tariffs.filter((t) => !t.features?.hidden || t.id === keep || t.code === keep);
 export const fmtDT = (s) => { if (!s) return ''; const d = new Date(s); return `${L.fmtDay(d)}, ${L.fmtTime(d)}`; };
 export const toLocalInput = (s) => { if (!s) return ''; const d = new Date(s); return `${d.getFullYear()}-${L.pad(d.getMonth() + 1)}-${L.pad(d.getDate())}T${L.pad(d.getHours())}:${L.pad(d.getMinutes())}`; };
 export async function dbOk(p) { const r = await p; if (r.error) throw new Error(r.error.message); return r.data; }
