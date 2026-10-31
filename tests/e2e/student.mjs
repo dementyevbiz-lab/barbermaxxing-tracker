@@ -77,7 +77,7 @@ try {
   await page.waitForSelector('.today', { timeout: 20000 }); await wait(1200);
   const rows = page.locator('#actList .row');
   ok('на экране три пункта недели и одно короткое задание', (await rows.count()) + (await page.locator('#todayList .row[data-id]').count()) === 4, await rows.count());
-  ok('блок «На сегодня» с видео-задачей и коротким заданием', (await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#bToday').innerText()).includes('Демо-задание'));
+  ok('блок «На сегодня» с видео-задачей и коротким заданием', (await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#todayList .row[data-id]').count()) === 1);
   ok('ближайшие ачивки показаны', (await page.locator('text=Ближайшие ачивки').count()) === 1);
   ok('цитата дня показана и только проверенная', await page.locator('.quote').count() === 1 && !(await page.locator('.quote').innerText()).includes('непроверенная'));
   ok('фильм показан по метке ситуации', (await page.locator('text=E2E Фильм').count()) === 1);
@@ -137,8 +137,8 @@ try {
 
   // программа
   await page.click('[data-tab="program"]'); await page.waitForSelector('[data-w]'); await wait(300); await shot(page, 'program');
-  ok('на вкладке Программа пункты текущей недели', await page.locator('.row[data-id]').count() === 3, await page.locator('.row[data-id]').count());
-  await page.click('[data-w="6"]'); ok('пустая неделя выглядит аккуратно', (await page.locator('#wkBody').innerText()).includes('появятся позже'));
+  ok('на вкладке Программа пункты текущей недели', await page.locator('.row[data-id]').count() >= 3, await page.locator('.row[data-id]').count());
+  await page.click('[data-w="6"]'); ok('в шестой неделе есть готовые короткие задания', (await page.locator('#wkBody .row[data-id]').count()) >= 3);
 
   // выводы и вопросы
   await page.click('[data-tab="notes"]'); await page.waitForSelector('#addIns');

@@ -329,7 +329,12 @@ export function pickMovie(D, tags = [], weekN = 1) {
   const all = (D.movies || []).filter((m) => m.verified).sort((a, b) => a.title.localeCompare(b.title));
   const hit = all.find((m) => (m.tags || []).some((x) => tags.includes(x)));
   if (hit) return { movie: hit, byTag: true };
-  if (D.settings?.movies_fallback !== false && all.length) return { movie: all[(Math.max(1, weekN) - 1) % all.length], byTag: false };
+  if (D.settings?.movies_fallback !== false && all.length) {
+    // нечётные недели фильм, чётные книга
+    const w = Math.max(1, weekN), kind = w % 2 === 1 ? 'film' : 'book';
+    const pool = all.filter((m) => (m.kind || 'film') === kind), list = pool.length ? pool : all;
+    return { movie: list[Math.floor((w - 1) / 2) % list.length], byTag: false };
+  }
   return null;
 }
 

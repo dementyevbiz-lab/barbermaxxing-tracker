@@ -4,7 +4,7 @@ import { startServer, launch, openApp, wait } from './browser.mjs';
 const root = new URL('../../', import.meta.url).pathname; const pre = process.argv[2] || 'l';
 const c = await connect(); const srv = await startServer(root, 8095); const browser = await launch();
 try {
-  const p = await makeStudent(c, { name: 'E2E Осмотр', startDaysAgo: 3, onboardingDone: true });
+  const p = await makeStudent(c, { name: 'E2E Осмотр', startDaysAgo: Number(process.argv[3] || 3), onboardingDone: true });
   const { data: cps } = await c.admin.from('checkpoints').select('*').eq('user_id', p.id).order('idx');
   await c.admin.from('checkpoints').update({ submitted_at: new Date(Date.now() - 3 * 864e5).toISOString() }).eq('id', cps[0].id);
   await c.admin.from('checkpoint_values').insert([{ checkpoint_id: cps[0].id, metric_key: 'avg_check', value: 1500 }]);
@@ -16,7 +16,7 @@ try {
   for (const [tag, w, h, mobile] of [['d', 1440, 900, false], ['m', 390, 844, true]]) {
     const { page, errors } = await openApp(browser, srv.url, session, { w, h, mobile });
     await page.waitForSelector('.today', { timeout: 20000 }); await wait(1200);
-    await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-today.png` });
+    await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-today.png`, fullPage: true });
     await page.click('[data-tab="notes"]'); await page.waitForSelector('#seg'); await wait(600);
     await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-notes.png` });
     await page.click('[data-tab="path"]'); await wait(800); await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-path.png` });

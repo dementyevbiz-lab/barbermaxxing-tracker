@@ -83,7 +83,7 @@ export function renderToday(root) {
     <section class="strip-wrap" id="bStrip" style="order:20"><div class="strip" id="strip"></div></section>
     <section class="sec" id="bToday" style="order:35"><div class="h"><span class="ink">На сегодня</span><span class="grow"></span><span class="dim cap" id="todayCount"></span></div><div class="rows" id="todayList">${videoRowHtml(m)}</div></section>
     <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">${info.state === 'before' ? 'Скоро, неделя 1' : 'Эта неделя'}</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
-    ${challenge ? `<section class="card" id="bChallenge" style="order:45"><div class="h"><span class="ink">${esc(challenge.c.title)}</span><span class="grow"></span><span class="dim cap" id="chProg"></span></div><div class="rows" id="chList"></div>
+    ${challenge ? `<section class="card" id="bChallenge" style="order:45"><div class="h"><span class="ink">${esc(challenge.c.title)}</span><span class="grow"></span><span class="dim cap" id="chProg"></span></div>${challenge.c.rules ? `<p class="dim cap">${esc(challenge.c.rules)}</p>` : ''}<div class="rows" id="chList"></div>
       <p class="dim cap">${challenge.result?.reward_status === 'given' ? 'Награда получена: ' : challenge.result?.completed_at ? 'Пройден. Награда: ' : 'Награда: '}${esc(challenge.c.reward_text || '')}</p></section>` : ''}
   </div><div class="col">
     ${bannerHtml(m)}
@@ -95,7 +95,7 @@ export function renderToday(root) {
       ${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}
     </section>
     ${quote ? `<section class="card" style="order:60"><p class="quote ink">${esc(quote.quote.text)}</p><span class="dim cap">${esc(quote.quote.author)}${quote.quote.source ? ', ' + esc(quote.quote.source) : ''}</span></section>` : ''}
-    ${movie ? `<section class="card" style="order:70"><span class="plate"><span class="onlime">${movieHit.byTag ? 'Следующий шаг' : 'Фильм недели'}</span></span><p class="title2 ink">${esc(movie.title)}${movie.year ? ', ' + movie.year : ''}</p><p class="dim cap">${esc(movie.why)}</p></section>` : ''}
+    ${movie ? `<section class="card" style="order:70"><span class="plate"><span class="onlime">${movieHit.byTag ? 'Следующий шаг' : movie.kind === 'book' ? 'Книга недели' : 'Фильм недели'}</span></span><p class="title2 ink">${esc(movie.title)}${movie.author ? ' · ' + esc(movie.author) : ''}${movie.year ? ', ' + movie.year : ''}</p><p class="dim cap">${esc(movie.why)}</p></section>` : ''}
     ${sug ? `<section class="card" id="bQuestion" style="order:80"><span class="plate"><span class="onlime">Можно спросить</span></span><p class="title2 ink">${esc(sug.text)}</p>
       ${sug.trigger.metric ? `<span class="dim cap">${esc(sug.trigger.metric.name)}</span>` : ''}
       <div class="btns"><button class="btn pri" id="qSave"><span class="onlime">Сохранить в вопросы</span></button><button class="btn" id="qHide"><span class="ink">Скрыть</span></button></div></section>` : ''}
@@ -122,7 +122,7 @@ export function renderToday(root) {
     for (let w = 1; w <= info.weeks; w++) {
       const st = L.weekState(D, w, info, m.items);
       const b = document.createElement('button');
-      b.className = 'wk ' + st + (info.state === 'active' && w === info.n ? ' cur' : ''); b.dataset.week = w; b.setAttribute('aria-label', 'Неделя ' + w);
+      b.className = 'wk ' + st + ((info.state === 'active' && w === info.n) || (info.state === 'before' && w === 1) ? ' cur' : ''); b.dataset.week = w; b.setAttribute('aria-label', 'Неделя ' + w);
       b.innerHTML = `<span class="${st === 'full' || st === 'partial' ? 'onlime' : 'dim'}">${w}</span>`;
       el.appendChild(b);
     }

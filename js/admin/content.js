@@ -76,14 +76,14 @@ function quotes() {
 }
 // ---------- фильмы ----------
 function movies() {
-  const open = () => listPage('Фильмы', A.movies.map((m) => ({ id: m.id, title: `${m.title}${m.year ? ', ' + m.year : ''}`, sub: `${m.why} · метки: ${(m.tags || []).join(', ') || 'нет'} · ${m.verified ? 'проверен' : 'не проверен'}` })), {
+  const open = () => listPage('Фильмы', A.movies.map((m) => ({ id: m.id, title: `${m.kind === 'book' ? 'Книга: ' : ''}${m.title}${m.author ? ', ' + m.author : ''}${m.year ? ', ' + m.year : ''}`, sub: `${m.why} · метки: ${(m.tags || []).join(', ') || 'нет'} · ${m.verified ? 'проверен' : 'не проверен'}` })), {
     add: () => form(), edit: (id) => form(A.movies.find((m) => m.id === id)),
-    importer: () => importGeneric('Импорт фильмов', 'JSON-список или CSV с колонками title, year, why, tags, verified', (r) => ({ title: r.title, year: Number(r.year) || null, why: r.why, tags: tagList(r.tags), verified: yes(r.verified) }), 'movies', open),
+    importer: () => importGeneric('Импорт фильмов', 'JSON-список или CSV с колонками title, year, why, tags, verified', (r) => ({ kind: r.kind === 'book' ? 'book' : 'film', author: r.author || null, title: r.title, year: Number(r.year) || null, why: r.why, tags: tagList(r.tags), verified: yes(r.verified) }), 'movies', open),
     note: 'Показываются в «Следующем шаге» только при совпадении метки ситуации. Метки это коды триггеров, например no_checkpoint или metric_flat. Тексты «почему подходит» черновые: утвердите их',
     verifyAll: async () => { await dbOk(sb.from('movies').update({ verified: true }).eq('verified', false)); },
   });
-  const form = (m) => formSheet({ title: m ? 'Фильм' : 'Новый фильм', fields: [{ k: 'title', label: 'Название', type: 'text', required: true }, { k: 'year', label: 'Год', type: 'number' }, { k: 'why', label: 'Почему подходит барберу и в какой ситуации', type: 'area', required: true }, { k: 'tags', label: 'Метки ситуации', type: 'tags' }, { k: 'verified', label: 'Проверен', type: 'check' }],
-    initial: m || { tags: [] }, onSave: async (v) => { const row = { title: v.title, year: v.year, why: v.why, tags: v.tags, verified: !!v.verified }; await dbOk(m ? sb.from('movies').update(row).eq('id', m.id) : sb.from('movies').insert(row)); await afterSave(open); },
+  const form = (m) => formSheet({ title: m ? 'Фильм' : 'Новый фильм', fields: [{ k: 'kind', label: 'Что это', type: 'select', options: [['film', 'Фильм'], ['book', 'Книга']] }, { k: 'title', label: 'Название', type: 'text', required: true }, { k: 'author', label: 'Автор (для книги)', type: 'text' }, { k: 'year', label: 'Год', type: 'number' }, { k: 'why', label: 'Почему подходит барберу и в какой ситуации', type: 'area', required: true }, { k: 'tags', label: 'Метки ситуации', type: 'tags' }, { k: 'verified', label: 'Проверен', type: 'check' }],
+    initial: m || { tags: [], kind: 'film' }, onSave: async (v) => { const row = { kind: v.kind, author: v.author || null, title: v.title, year: v.year, why: v.why, tags: v.tags, verified: !!v.verified }; await dbOk(m ? sb.from('movies').update(row).eq('id', m.id) : sb.from('movies').insert(row)); await afterSave(open); },
     danger: m ? { label: 'Удалить', confirm: 'Удалить фильм?', run: async () => { await dbOk(sb.from('movies').delete().eq('id', m.id)); await afterSave(open); } } : null });
   open();
 }
@@ -130,8 +130,8 @@ function metrics() {
 function challenges() {
   const open = () => listPage('Челленджи', A.challenges.map((c) => ({ id: c.id, title: c.title, sub: `с недели ${c.start_week}${c.end_week ? ' по ' + c.end_week : ''} · награда: ${c.reward_text || 'нет'} · ${c.active ? 'включён' : 'выключен'} · задач: ${A.items.filter((i) => i.kind === 'challenge_task' && !i.deleted_at && (i.tags || []).includes(c.code)).length}` })), {
     edit: (id) => { const c = A.challenges.find((x) => x.id === id);
-      formSheet({ title: c.title, fields: [{ k: 'title', label: 'Название', type: 'text', required: true }, { k: 'start_week', label: 'Со недели', type: 'number', required: true }, { k: 'end_week', label: 'По неделю', type: 'number' }, { k: 'reward_text', label: 'Награда', type: 'text' }, { k: 'completion_xp', label: 'Опыт за прохождение', type: 'number' }, { k: 'active', label: 'Включён', type: 'check', hint: 'Блок появится у учеников, только если есть задачи с меткой ' + c.code }], initial: c,
-        onSave: async (v) => { await dbOk(sb.from('challenges').update({ title: v.title, start_week: v.start_week, end_week: v.end_week, reward_text: v.reward_text || null, completion_xp: v.completion_xp ?? 0, active: !!v.active }).eq('id', id)); await afterSave(open); } }); },
+      formSheet({ title: c.title, fields: [{ k: 'title', label: 'Название', type: 'text', required: true }, { k: 'rules', label: 'Правила для учеников', type: 'area' }, { k: 'start_week', label: 'Со недели', type: 'number', required: true }, { k: 'end_week', label: 'По неделю', type: 'number' }, { k: 'reward_text', label: 'Награда', type: 'text' }, { k: 'completion_xp', label: 'Опыт за прохождение', type: 'number' }, { k: 'active', label: 'Включён', type: 'check', hint: 'Блок появится у учеников, только если есть задачи с меткой ' + c.code }], initial: c,
+        onSave: async (v) => { await dbOk(sb.from('challenges').update({ rules: v.rules || null, title: v.title, start_week: v.start_week, end_week: v.end_week, reward_text: v.reward_text || null, completion_xp: v.completion_xp ?? 0, active: !!v.active }).eq('id', id)); await afterSave(open); } }); },
     note: 'Задачи челленджа добавляются в разделе Программа: тип «Задача челленджа», метка с кодом челленджа' });
   open();
 }
