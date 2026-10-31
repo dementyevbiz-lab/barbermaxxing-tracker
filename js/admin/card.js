@@ -157,7 +157,7 @@ export function itemForm(preset, after, existing) {
     fields: [
       { k: 'kind', label: 'Тип', type: 'select', options: [['lesson', 'Урок'], ['live', 'Эфир'], ['homework', 'Домашка'], ['short_task', 'Короткое задание'], ['challenge_task', 'Задача челленджа']] },
       { k: 'week', label: 'Неделя', type: 'number', required: true }, { k: 'title', label: 'Название', type: 'text', required: true }, { k: 'description', label: 'Описание', type: 'area' },
-      { k: 'est_minutes', label: 'Минуты', type: 'number' }, { k: 'xp', label: 'Опыт (для коротких заданий и задач челленджа)', type: 'number' },
+      { k: 'on_date', label: 'Дата (если пункт на конкретный день)', type: 'date', hint: 'В этот день пункт появится в блоке «На сегодня»' }, { k: 'est_minutes', label: 'Минуты', type: 'number' }, { k: 'xp', label: 'Опыт (для коротких заданий и задач челленджа)', type: 'number' },
       { k: 'why', label: 'Зачем (короткое задание)', type: 'text' }, { k: 'how', label: 'Как (короткое задание)', type: 'area' }, { k: 'result', label: 'Что считать результатом', type: 'text' },
       { k: 'required', label: 'Обязательный пункт недели', type: 'check' }, { k: 'has_notes', label: 'Можно отметить конспект', type: 'check' },
       { k: 'tags', label: 'Метки ситуации и код челленджа', type: 'tags', hint: 'Для задач Быстрой записи: quick_booking' },
@@ -167,7 +167,7 @@ export function itemForm(preset, after, existing) {
     ],
     initial: init, saveLabel: existing ? 'Сохранить' : 'Добавить',
     onSave: async (v) => {
-      const row = { kind: v.kind, week: Number(v.week), title: v.title, description: v.description || null, est_minutes: v.est_minutes, xp: v.xp ?? 10, why: v.why || null, how: v.how || null, result: v.result || null,
+      const row = { kind: v.kind, week: Number(v.week), title: v.title, description: v.description || null, on_date: v.on_date || null, est_minutes: v.est_minutes, xp: v.xp ?? 10, why: v.why || null, how: v.how || null, result: v.result || null,
         required: !!v.required, has_notes: !!v.has_notes, tags: v.tags || [], tariffs: v.tariffs || [], user_id: v.user_id || null, active: !!v.active, updated_at: new Date().toISOString() };
       if (!existing) { const same = A.items.filter((i) => i.week === row.week && !i.deleted_at); row.ord = same.length ? Math.max(...same.map((i) => i.ord)) + 1 : 1; }
       await dbOk(existing ? sb.from('program_items').update(row).eq('id', existing.id) : sb.from('program_items').insert(row));

@@ -325,8 +325,42 @@ export function pickShortTask(D, info, tags = []) {
   return open.find((i) => (i.tags || []).some((x) => tags.includes(x))) || open[0] || null;
 }
 
-export function pickMovie(D, tags = []) {
-  return (D.movies || []).filter((m) => m.verified && (m.tags || []).some((x) => tags.includes(x))).sort((a, b) => a.title.localeCompare(b.title))[0] || null;
+export function pickMovie(D, tags = [], weekN = 1) {
+  const all = (D.movies || []).filter((m) => m.verified).sort((a, b) => a.title.localeCompare(b.title));
+  const hit = all.find((m) => (m.tags || []).some((x) => tags.includes(x)));
+  if (hit) return { movie: hit, byTag: true };
+  if (D.settings?.movies_fallback !== false && all.length) return { movie: all[(Math.max(1, weekN) - 1) % all.length], byTag: false };
+  return null;
+}
+
+// Прогресс по ачивкам: текущее значение счётчика и ближайшая ступень (повторяет серверные счётчики)
+export function achievementProgress(D) {
+  const items = new Map((D.items || []).map((i) => [i.id, i]));
+  const live = (D.completions || []).filter((c) => !c.undone_at);
+  const cnt = (pred) => live.filter((c) => c.kind === 'done' && pred(items.get(c.item_id))).length;
+  const vids = liveVideos(D);
+  const earned = (D.userAch || []).filter((u) => !u.revoked_at);
+  const counter = (key) => {
+    if (key === 'videos') return vids.length;
+    if (key === 'videos_each_dir') return Math.min(...['client', 'expert', 'life'].map((k) => vids.filter((v) => v.kind === k).length));
+    if (key === 'lessons') return cnt((i) => i && ['lesson', 'live'].includes(i.kind));
+    if (key === 'homework') return cnt((i) => i && i.kind === 'homework');
+    if (key === 'notes') return live.filter((c) => c.kind === 'notes').length;
+    if (key === 'checkpoints_ontime') return (D.checkpoints || []).filter((c) => c.submitted_at && c.submitted_at.slice(0, 10) <= c.due_date).length;
+    if (key === 'insights') return (D.insights || []).filter((i) => !i.deleted_at).length;
+    if (key === 'questions_asked') return (D.questions || []).filter((q) => q.status === 'asked' && !q.deleted_at).length;
+    if (key.startsWith('challenge:')) { const code = key.slice(10); return cnt((i) => i && i.kind === 'challenge_task' && (i.tags || []).includes(code)); }
+    return 0;
+  };
+  const total = (key) => key === 'checkpoints_ontime' ? (D.checkpoints || []).length
+    : key.startsWith('challenge:') ? visibleItems(D).filter((i) => i.kind === 'challenge_task' && (i.tags || []).includes(key.slice(10))).length : 0;
+  return (D.achievements || []).map((a) => {
+    const got = earned.filter((u) => u.code === a.code).map((u) => u.tier), value = counter(a.counter);
+    const tiers = [...a.tiers].sort((x, y) => x.tier - y.tier), next = tiers.find((t) => !got.includes(t.tier));
+    const thr = next ? (next.threshold ?? total(a.counter)) : null;
+    return { a, value, got, top: got.length ? Math.max(...got) : 0, next, thr, complete: !next, secret: a.secret,
+      ratio: next && thr > 0 ? Math.min(1, value / thr) : next ? 0 : 1 };
+  });
 }
 
 // ---------- видео и сопоставление с замерами ----------

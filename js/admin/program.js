@@ -83,7 +83,7 @@ export function parseItems(text) {
     const hasShort = r.why || r.how || r.result;
     const kind = r.kind || r.тип || (hasShort ? 'short_task' : 'short_task');
     if (!['lesson', 'live', 'homework', 'short_task', 'challenge_task'].includes(kind)) throw new Error(`Строка ${i + 1}: неизвестный тип ${kind}`);
-    return { kind, week, title, description: r.description || r.описание || null, why: r.why || null, how: r.how || null, result: r.result || null,
+    return { kind, week, title, on_date: r.date || r.on_date || r.дата || null, description: r.description || r.описание || null, why: r.why || null, how: r.how || null, result: r.result || null,
       est_minutes: Number(r.minutes ?? r.est_minutes) || null, xp: Number(r.xp) || 10, tags: list(r.tags), tariffs: list(r.tariffs).length ? list(r.tariffs) : ['barbermax', 'personal'],
       required: r.required === undefined ? kind !== 'short_task' && kind !== 'challenge_task' : !['false', '0', 'нет', 'no'].includes(String(r.required).toLowerCase()), has_notes: ['true', '1', 'да', 'yes'].includes(String(r.notes ?? r.has_notes).toLowerCase()) };
   });

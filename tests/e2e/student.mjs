@@ -76,8 +76,10 @@ try {
   await page.reload();
   await page.waitForSelector('.today', { timeout: 20000 }); await wait(1200);
   const rows = page.locator('#actList .row');
-  ok('на экране три пункта недели и одно короткое задание', await rows.count() === 4, await rows.count());
-  ok('цитата дня показана и только проверенная', (await page.locator('.quote').innerText()).includes('Первая'));
+  ok('на экране три пункта недели и одно короткое задание', (await rows.count()) + (await page.locator('#todayList .row[data-id]').count()) === 4, await rows.count());
+  ok('блок «На сегодня» с видео-задачей и коротким заданием', (await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#bToday').innerText()).includes('Демо-задание'));
+  ok('ближайшие ачивки показаны', (await page.locator('text=Ближайшие ачивки').count()) === 1);
+  ok('цитата дня показана и только проверенная', await page.locator('.quote').count() === 1 && !(await page.locator('.quote').innerText()).includes('непроверенная'));
   ok('фильм показан по метке ситуации', (await page.locator('text=E2E Фильм').count()) === 1);
   ok('вопрос по триггеру показан', await page.locator('#bQuestion').count() === 1);
   const { data: qs } = await c.admin.from('quote_shown').select('*').eq('user_id', p.id); ok('цитата записана как показанная', qs.length === 1);
@@ -102,7 +104,7 @@ try {
   await page.click('#scrim', { position: { x: 5, y: 5 } }); await wait(500);
 
   // видео
-  await page.click('#videoBtn'); await page.waitForSelector('[data-v="client"]'); await page.fill('#viewsIn', '120'); await page.click('[data-v="client"]');
+  await page.click('#videoRow [data-vopen]'); await page.waitForSelector('[data-v="client"]'); await page.fill('#viewsIn', '120'); await page.click('[data-v="client"]');
   ok('видео записано и даёт 15 опыта', await until(async () => (await ledgerSum(c, p.id, 'video')) === 15));
   const { data: vl } = await c.admin.from('video_logs').select('*').eq('user_id', p.id); ok('просмотры видео сохранены', vl[0]?.views === 120 && vl[0]?.kind === 'client');
   await closeModal(); await page.waitForSelector('#toastUndo:not([hidden])'); await page.click('#toastUndo');
@@ -158,6 +160,25 @@ try {
   ok('PDF пока закрыт', await page.locator('#pdfBtn[disabled]').count() === 1);
   await page.click('[data-cur="KZT"]'); await wait(800);
   ok('валюта среднего чека сохраняется', (await c.admin.from('profiles').select('prefs').eq('id', p.id).single()).data.prefs.currency === 'KZT');
+
+  // ученик до старта программы: уже может отмечать и снимать видео, видит задачу на сегодня
+  {
+    const f = await makeStudent(c, { name: 'E2E До старта', startDaysAgo: -2, onboardingDone: true });
+    const ty = new Date().toISOString().slice(0, 10);
+    await c.admin.from('program_items').insert([{ kind: 'live', week: 1, ord: 1, title: 'E2E Эфир дня', required: true, user_id: f.id, tariffs: ['barbermax'], on_date: ty },
+      { kind: 'lesson', week: 1, ord: 2, title: 'E2E Урок недели', required: true, user_id: f.id, tariffs: ['barbermax'] }]);
+    const fa = await openApp(browser, srv.url, await sessionFor(c, f.id)); const fp = fa.page;
+    await fp.waitForSelector('.today', { timeout: 20000 }); await wait(800);
+    const bt = await fp.locator('#bToday').innerText();
+    ok('до старта в «На сегодня» есть задача дня и видео', bt.includes('E2E Эфир дня') && bt.includes('Снять видео'), bt);
+    ok('до старта видны задания первой недели', (await fp.locator('#bActions').innerText()).includes('E2E Урок недели'));
+    await fp.locator('#todayList .row', { hasText: 'E2E Эфир дня' }).locator('[data-chk]').click();
+    ok('до старта можно отмечать: опыт пришёл', await until(async () => (await ledgerSum(c, f.id, 'completion')) === 10));
+    await fp.click('#videoRow [data-vopen]'); await fp.click('[data-v="expert"]');
+    ok('до старта можно записать видео', await until(async () => (await ledgerSum(c, f.id, 'video')) === 15));
+    await wait(500); ok('галочка видео-задачи встала', await fp.locator('#videoRow .chk.on').count() === 1);
+    ok('до старта без ошибок в консоли', fa.errors.length === 0, fa.errors.join(' | ')); await fa.ctx.close();
+  }
 
   // потеря связи
   await page.click('[data-tab="today"]'); await page.waitForSelector('.today'); await wait(600);

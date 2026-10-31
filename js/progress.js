@@ -33,3 +33,11 @@ export function progressHtml(D, info, items, rows, order = 25) {
   return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Мой прогресс</span></div>${main}${metrics ? `<div class="stack-s" style="gap:14px">${metrics}</div>` : ''}${hint}
     ${vids ? `<div class="kv"><span class="dim">Снято видео</span><span class="ink">${vids}</span></div>` : ''}</section>`;
 }
+
+// Ближайшие ачивки: что ещё до следующей ступени
+export function achievementsHtml(D, order = 28) {
+  const names = D.settings?.tier_names || ['Бронза', 'Серебро', 'Золото', 'Платина'];
+  const list = L.achievementProgress(D).filter((x) => !x.complete && (!x.secret || x.got.length)).sort((a, b) => b.ratio - a.ratio || (a.thr ?? 99) - (b.thr ?? 99)).slice(0, 3);
+  if (!list.length) return '';
+  return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Ближайшие ачивки</span></div><div class="stack-s" style="gap:14px">${list.map((x) => `<div class="prog-row"><div class="top"><span class="ink">${esc(x.a.name)}</span><span class="vals dim">${esc(names[x.next.tier - 1] || '')}: ${x.value} из ${x.thr || '—'}</span></div><div class="progress"><i style="width:${Math.round(x.ratio * 100)}%"></i></div></div>`).join('')}</div></section>`;
+}

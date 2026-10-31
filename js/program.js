@@ -51,7 +51,7 @@ export function renderProgram(root) {
     if (!list.length) { body.innerHTML = '<p class="dim empty-note">Задания этой недели появятся позже</p>'; return; }
     body.innerHTML = `<div class="h"><span class="ink">Неделя ${sel}</span><span class="grow"></span><span class="dim cap">${list.filter((i) => i.required).length ? list.filter((i) => i.required && data.isDone(i.id)).length + ' из ' + list.filter((i) => i.required).length : ''}</span></div>
       <div class="rows">${list.map((it) => {
-        const det = [it.est_minutes ? it.est_minutes + ' мин' : '', it.required ? '' : 'по желанию', data.hasNotes(it.id) ? 'конспект есть' : ''].filter(Boolean).join(' · ');
+        const det = [it.on_date ? L.fmtDay(L.parseDay(it.on_date)) : '', it.est_minutes ? it.est_minutes + ' мин' : '', it.required ? '' : 'по желанию', data.hasNotes(it.id) ? 'конспект есть' : ''].filter(Boolean).join(' · ');
         return `<div class="row${data.isDone(it.id) ? ' done' : ''}" data-id="${it.id}"><span class="ico">${ICON[it.kind]}</span>
           <button class="row-main" data-open><span class="t"><span class="ink">${esc(it.title)}</span></span><span class="d cap"><span class="dim">${esc(KIND[it.kind] + (det ? ' · ' + det : ''))}</span></span></button>
           <button class="chk${data.isDone(it.id) ? ' on' : ''}" data-chk aria-label="Отметить">${checkSvg}</button></div>`; }).join('')}</div>`;

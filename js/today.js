@@ -6,7 +6,7 @@ import { bus } from './data.js';
 import { ICON, KIND, VIDEO_ICON, checkSvg, pathSvg, pathLegend, placeMarkers, pathHelpSheet, plate } from './ui.js';
 import { openCheckpoint } from './forms.js';
 import { itemSheet } from './program.js';
-import { progressHtml } from './progress.js';
+import { progressHtml, achievementsHtml } from './progress.js';
 
 export const CALL_KIND = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
 const hiddenBlock = (name) => (state.D.profile.ui_overrides?.hide || []).includes(name);
@@ -22,19 +22,31 @@ export function todayModel() {
   return { D, today, info, items, R, P: L.calcP(D, R, info, items), fired, tags, readOnly };
 }
 
+// Неделя, по которой показываем задания. До старта это первая неделя: ученик уже видит, что его ждёт, и может отмечать
+export const effWeek = (info) => (info.state === 'active' || info.state === 'finished' ? info.n : info.state === 'before' ? 1 : 0);
 function actionItems(m) {
   const { info, items, D, tags } = m;
-  if (info.state !== 'active') return [];
-  const list = items.filter((i) => i.week === info.n && !['short_task', 'challenge_task'].includes(i.kind));
-  const st = L.pickShortTask(D, info, tags);
+  const wk = info.state === 'active' ? info.n : info.state === 'before' ? 1 : 0;
+  if (!wk) return { today: [], week: [] };
+  const ty = L.ymd(m.today);
+  const base = items.filter((i) => !['short_task', 'challenge_task'].includes(i.kind));
+  const st = L.pickShortTask(D, { state: 'active', n: wk }, tags);
   const doneShort = items.filter((i) => i.kind === 'short_task' && data.isDone(i.id) && L.diffDays(L.startOfDay(), L.startOfDay(new Date(D.completions.find((c) => c.item_id === i.id && !c.undone_at)?.completed_at || 0))) === 0);
-  return [...list, ...(st ? [st] : []), ...doneShort.filter((x) => !st || x.id !== st.id)];
+  const today = [...base.filter((i) => i.on_date === ty), ...(st ? [st] : []), ...doneShort.filter((x) => !st || x.id !== st.id)];
+  const week = base.filter((i) => i.week === wk && i.on_date !== ty);
+  return { today, week };
+}
+
+function videoRowHtml(m) {
+  if (m.readOnly || hiddenBlock('video') || !(m.info.state === 'active' || m.info.state === 'before')) return '';
+  return `<div class="row" id="videoRow"><span class="ico" aria-hidden="true">🎬</span><button class="row-main" data-vopen><span class="t"><span class="ink">Снять видео</span></span><span class="d cap"><span class="dim" id="videoDetail">С клиентом, экспертное или лайф</span></span></button><button class="chk" data-vchk aria-label="Отметить">${checkSvg}</button></div>`;
 }
 
 function rowDetail(it, m) {
   const parts = [];
   if (it.est_minutes) parts.push(it.est_minutes + ' мин');
-  if (it.kind === 'short_task') parts.push('короткое задание');
+  if (it.on_date) parts.push(it.on_date === L.ymd(m.today) ? 'сегодня' : L.fmtDay(L.parseDay(it.on_date)));
+  else if (it.kind === 'short_task') parts.push('короткое задание');
   else if (it.required && m.info.start) parts.push('до ' + L.fmtDay(L.weekEnd(m.info.start, it.week)));
   if (it.has_notes && data.hasNotes(it.id)) parts.push('конспект есть');
   return parts.join(' · ');
@@ -59,7 +71,8 @@ export function renderToday(root) {
   let sug = hiddenBlock('question') ? null : L.pickSuggestion(D, m.fired, m.today);
   let sugLog = sug?.log || null;
   if (sug && !sug.reuse) { data.logTriggerShown(sug.trigger.code); sugLog = D.triggerLog[D.triggerLog.length - 1]; }
-  const movie = hiddenBlock('next') ? null : L.pickMovie(D, m.tags);
+  const movieHit = hiddenBlock('next') ? null : L.pickMovie(D, m.tags, effWeek(info) || 1);
+  const movie = movieHit?.movie || null;
 
   root.innerHTML = `<div class="today"><div class="col">
     <section class="hdr" style="order:10">
@@ -68,20 +81,21 @@ export function renderToday(root) {
       <span class="plate" id="weekChip"><span class="onlime" id="weekChipTxt"></span></span>
     </section>
     <section class="strip-wrap" id="bStrip" style="order:20"><div class="strip" id="strip"></div></section>
-    <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">Эта неделя</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
+    <section class="sec" id="bToday" style="order:35"><div class="h"><span class="ink">На сегодня</span><span class="grow"></span><span class="dim cap" id="todayCount"></span></div><div class="rows" id="todayList">${videoRowHtml(m)}</div></section>
+    <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">${info.state === 'before' ? 'Скоро, неделя 1' : 'Эта неделя'}</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
     ${challenge ? `<section class="card" id="bChallenge" style="order:45"><div class="h"><span class="ink">${esc(challenge.c.title)}</span><span class="grow"></span><span class="dim cap" id="chProg"></span></div><div class="rows" id="chList"></div>
       <p class="dim cap">${challenge.result?.reward_status === 'given' ? 'Награда получена: ' : challenge.result?.completed_at ? 'Пройден. Награда: ' : 'Награда: '}${esc(challenge.c.reward_text || '')}</p></section>` : ''}
-    ${m.readOnly || hiddenBlock('video') || info.state !== 'active' ? '' : `<section class="video" style="order:50"><button class="btn pri wide" id="videoBtn"><span class="onlime">Снял видео</span></button><span class="dim cap" id="videoCap"></span></section>`}
   </div><div class="col">
     ${bannerHtml(m)}
     ${progressHtml(D, info, m.items, L.calcR(D).rows)}
+    ${achievementsHtml(D)}
     <section class="card" id="bPath" style="order:30">
       <div class="h"><span class="ink">Мой путь</span><span class="grow"></span><button class="qbtn" id="pathQ" aria-label="Что это"><span class="dim">?</span></button></div>
       ${pathSvg('t')}${pathLegend(hasNow)}
       ${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}
     </section>
     ${quote ? `<section class="card" style="order:60"><p class="quote ink">${esc(quote.quote.text)}</p><span class="dim cap">${esc(quote.quote.author)}${quote.quote.source ? ', ' + esc(quote.quote.source) : ''}</span></section>` : ''}
-    ${movie ? `<section class="card" style="order:70"><span class="plate"><span class="onlime">Фильм</span></span><p class="title2 ink">${esc(movie.title)}${movie.year ? ', ' + movie.year : ''}</p><p class="dim cap">${esc(movie.why)}</p></section>` : ''}
+    ${movie ? `<section class="card" style="order:70"><span class="plate"><span class="onlime">${movieHit.byTag ? 'Следующий шаг' : 'Фильм недели'}</span></span><p class="title2 ink">${esc(movie.title)}${movie.year ? ', ' + movie.year : ''}</p><p class="dim cap">${esc(movie.why)}</p></section>` : ''}
     ${sug ? `<section class="card" id="bQuestion" style="order:80"><span class="plate"><span class="onlime">Можно спросить</span></span><p class="title2 ink">${esc(sug.text)}</p>
       ${sug.trigger.metric ? `<span class="dim cap">${esc(sug.trigger.metric.name)}</span>` : ''}
       <div class="btns"><button class="btn pri" id="qSave"><span class="onlime">Сохранить в вопросы</span></button><button class="btn" id="qHide"><span class="ink">Скрыть</span></button></div></section>` : ''}
@@ -128,33 +142,42 @@ export function renderToday(root) {
       <p class="dim cap">Опыт приходит за уроки, домашки, видео, замеры и выводы. Он никогда не отнимается</p>`);
   };
 
-  // ----- действия недели -----
-  let sortTimer;
-  const list = q('#actList');
+  // ----- действия: «На сегодня» и «На неделю» -----
   const shown = actionItems(m);
+  const lists = [
+    { el: q('#todayList'), arr: shown.today, sec: q('#bToday'), count: q('#todayCount'), today: true },
+    { el: q('#actList'), arr: shown.week, sec: q('#bActions'), count: q('#actCount') },
+  ];
   function updateRow(el, it) {
     const done = data.isDone(it.id);
     el.classList.toggle('done', done);
     const c = el.querySelector('.chk'); c.classList.toggle('on', done); c.setAttribute('aria-pressed', done); c.setAttribute('aria-label', done ? 'Снять отметку' : 'Отметить');
     el.querySelector('.d .dim').textContent = rowDetail(it, m);
   }
-  function sortRows() {
-    const els = [...list.children], first = new Map(els.map((e) => [e, e.getBoundingClientRect().top]));
-    const order = shown.map((i) => i.id);
-    [...els].sort((a, b) => (a.classList.contains('done') - b.classList.contains('done')) || (order.indexOf(a.dataset.id) - order.indexOf(b.dataset.id))).forEach((e) => list.appendChild(e));
+  function sortList(x) {
+    const els = [...x.el.querySelectorAll('.row[data-id]')], first = new Map(els.map((e) => [e, e.getBoundingClientRect().top]));
+    const order = x.arr.map((i) => i.id), vr = x.el.querySelector('#videoRow');
+    [...els].sort((a, b) => (a.classList.contains('done') - b.classList.contains('done')) || (order.indexOf(a.dataset.id) - order.indexOf(b.dataset.id))).forEach((e) => x.el.insertBefore(e, vr || null));
     if (reduced) return;
     els.forEach((e) => { const dy = first.get(e) - e.getBoundingClientRect().top; if (Math.abs(dy) > 1 && e.animate) e.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], { duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)' }); });
   }
-  function renderActions(defer) {
-    const acts = shown, sec = q('#bActions');
-    if (!acts.length) { sec.hidden = true; list.innerHTML = ''; return; }
-    sec.hidden = false;
-    if (!list.children.length) list.innerHTML = acts.map((i) => rowHtml(i, m)).join('');
-    for (const it of acts) updateRow(list.querySelector(`[data-id="${it.id}"]`) || (list.insertAdjacentHTML('beforeend', rowHtml(it, m)), list.lastElementChild), it);
-    const req = acts.filter((i) => i.required);
-    q('#actCount').textContent = req.length ? `${req.filter((i) => data.isDone(i.id)).length} из ${req.length}` : '';
-    clearTimeout(sortTimer); if (defer) sortTimer = setTimeout(sortRows, 420); else sortRows();
+  const videosToday = () => D.videos.filter((v) => !v.undone_at && v.logged_on === L.ymd(new Date())).length;
+  function renderList(x, defer) {
+    const hasVideo = !!x.el.querySelector('#videoRow');
+    if (!x.arr.length && !hasVideo) { x.sec.hidden = true; return; }
+    x.sec.hidden = false;
+    for (const it of x.arr) {
+      let row = x.el.querySelector(`[data-id="${it.id}"]`);
+      if (!row) { const vr = x.el.querySelector('#videoRow'); vr ? vr.insertAdjacentHTML('beforebegin', rowHtml(it, m)) : x.el.insertAdjacentHTML('beforeend', rowHtml(it, m)); row = x.el.querySelector(`[data-id="${it.id}"]`); }
+      updateRow(row, it);
+    }
+    if (x.today) {
+      const total = x.arr.length + (hasVideo ? 1 : 0), got = x.arr.filter((i) => data.isDone(i.id)).length + (hasVideo && videosToday() ? 1 : 0);
+      x.count.textContent = total ? `${got} из ${total}` : '';
+    } else { const req = x.arr.filter((i) => i.required); x.count.textContent = req.length ? `${req.filter((i) => data.isDone(i.id)).length} из ${req.length}` : ''; }
+    clearTimeout(x.timer); if (defer) x.timer = setTimeout(() => sortList(x), 420); else sortList(x);
   }
+  const renderActions = (defer) => lists.forEach((x) => renderList(x, defer));
   if (challenge) {
     const cl = q('#chList'); cl.innerHTML = challenge.tasks.map((i) => rowHtml(i, m)).join('');
     var chRefresh = () => {
@@ -185,14 +208,15 @@ export function renderToday(root) {
 
   // ----- видео -----
   function renderVideo() {
-    const cap = q('#videoCap'); if (!cap) return;
-    const from = L.weekStart(info.start, info.n), to = L.weekEnd(info.start, info.n);
-    const c = L.videoCounts(D, from, to);
-    cap.textContent = c.total ? `На этой неделе ${c.total} · с клиентом ${c.client}, экспертных ${c.expert}, лайф ${c.life}` : '';
-    cap.hidden = !c.total;
+    const row = q('#videoRow'); if (!row) return;
+    const n = videosToday();
+    row.classList.toggle('done', n > 0); const c = row.querySelector('.chk'); c.classList.toggle('on', n > 0);
+    let week = { total: 0 };
+    if (info.state === 'active') week = L.videoCounts(D, L.weekStart(info.start, info.n), L.weekEnd(info.start, info.n));
+    row.querySelector('#videoDetail').textContent = n || week.total ? `Сегодня ${n} · на этой неделе ${week.total}` : 'С клиентом, экспертное или лайф';
+    renderActions(false);
   }
-  const vb = q('#videoBtn');
-  if (vb) vb.onclick = () => openSheet(`<h2 class="sh-title"><span class="ink">Какое видео</span></h2>
+  const openVideo = () => openSheet(`<h2 class="sh-title"><span class="ink">Какое видео</span></h2>
     <input class="field" id="viewsIn" type="number" inputmode="numeric" min="0" placeholder="Просмотры, если уже есть">
     <div class="rows">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<button class="opt" data-v="${k}"><span class="ico">${VIDEO_ICON[k]}</span><span class="grow"><span class="ink">${t}</span></span></button>`).join('')}</div>`,
     (sh) => sh.querySelectorAll('[data-v]').forEach((b) => b.onclick = async () => {
@@ -203,6 +227,8 @@ export function renderToday(root) {
       const L1 = L.levelOf(data.xpNow(), data.lvlStep());
       toast(L1 > L0 ? 'Видео засчитано · уровень ' + L1 : 'Видео засчитано', async () => { await data.setVideoUndone(row.id, true); renderHeader(); renderStrip(); renderPath(true); renderVideo(); toast('Отметка снята'); });
     }));
+  const vrow = q('#videoRow');
+  if (vrow) vrow.addEventListener('click', (e) => { if (e.target.closest('[data-vopen],[data-vchk]')) openVideo(); });
 
   // ----- карточки -----
   const qs = q('#qSave');
@@ -243,7 +269,7 @@ export function renderToday(root) {
 function bannerHtml(m) {
   const { info, D } = m;
   if (D.profile.status === 'paused') return `<section class="card" style="order:5"><span class="plate"><span class="onlime">Пауза</span></span><p class="title2 ink">Программа на паузе</p><p class="dim cap">Всё сохранено, отмечать пока нельзя</p></section>`;
-  if (info.state === 'before') return `<section class="card" style="order:5"><span class="plate lime"><span class="onlime">Старт ${esc(L.daysWord(info.daysToStart))}</span></span><p class="title2 ink">Программа начнётся ${L.fmtDay(info.start)}</p><p class="dim cap">Пока можно посмотреть профиль и путь</p></section>`;
+  if (info.state === 'before') return `<section class="card" style="order:5"><span class="plate lime"><span class="onlime">Старт ${esc(L.daysWord(info.daysToStart))}</span></span><p class="title2 ink">Программа начнётся ${L.fmtDay(info.start)}</p><p class="dim cap">Уже можно отмечать задания и видео: опыт засчитается</p></section>`;
   if (info.state === 'finished') return `<section class="card" style="order:5"><span class="plate lime"><span class="onlime">Программа пройдена</span></span><p class="title2 ink">Итог можно скачать в профиле</p><button class="btn pri" data-go-profile style="align-self:flex-start"><span class="onlime">Открыть профиль</span></button></section>`;
   return '';
 }

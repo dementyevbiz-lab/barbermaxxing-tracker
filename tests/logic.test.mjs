@@ -134,7 +134,23 @@ assert.equal(L.pickShortTask(D, info, ['no_actions_3d']).id, 's1');
 D.completions.push({ item_id: 's1', kind: 'done', completed_at: new Date().toISOString() });
 assert.equal(L.pickShortTask(D, info, []), null);
 D.movies = [{ title: 'Б', verified: true, tags: ['x'] }, { title: 'А', verified: false, tags: ['x'] }];
-assert.equal(L.pickMovie(D, ['x']).title, 'Б'); assert.equal(L.pickMovie(D, ['y']), null);
+assert.equal(L.pickMovie(D, ['x']).movie.title, 'Б'); assert.equal(L.pickMovie(D, ['x']).byTag, true);
+assert.equal(L.pickMovie(D, ['y']).byTag, false, 'без совпадения метки фильм недели'); assert.equal(L.pickMovie(D, ['y']).movie.title, 'Б');
+D.settings.movies_fallback = false; assert.equal(L.pickMovie(D, ['y']), null, 'запасной показ выключается'); delete D.settings.movies_fallback;
+
+// прогресс по ачивкам
+D.achievements = [
+  { code: 'first_video', name: 'Видео', counter: 'videos', tiers: [{ tier: 1, threshold: 1, xp: 10 }, { tier: 2, threshold: 5, xp: 20 }], secret: false },
+  { code: 'checkpoints', name: 'Замеры', counter: 'checkpoints_ontime', tiers: [{ tier: 1, threshold: 1, xp: 10 }, { tier: 2, threshold: null, xp: 20 }], secret: false },
+  { code: 'lessons', name: 'Уроки', counter: 'lessons', tiers: [{ tier: 1, threshold: 3, xp: 10 }], secret: false },
+];
+D.userAch = [{ code: 'first_video', tier: 1, revoked_at: null }];
+let ap = L.achievementProgress(D);
+const byCode = Object.fromEntries(ap.map((x) => [x.a.code, x]));
+assert.equal(byCode.first_video.value, 2, 'видео в данных: 2'); assert.equal(byCode.first_video.next.tier, 2); assert.equal(byCode.first_video.thr, 5); assert.equal(byCode.first_video.top, 1);
+assert.equal(byCode.checkpoints.thr, 1, 'замеры вовремя: первая ступень 1');
+assert.equal(byCode.lessons.thr, 3); assert.equal(byCode.lessons.ratio, byCode.lessons.value / 3);
+D.userAch.push({ code: 'first_video', tier: 2, revoked_at: null }); assert.equal(L.achievementProgress(D).find((x) => x.a.code === 'first_video').complete, true, 'все ступени пройдены');
 
 // сопоставление видео и замеров
 const vc = L.videoComparison(D);
