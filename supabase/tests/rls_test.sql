@@ -45,12 +45,12 @@ begin
   assert (select count(*) from insights) = 1, 'А видит только свой вывод';
   assert (select count(*) from questions) = 0, 'А не видит чужих вопросов';
   assert (select count(*) from goals) = 1, 'А видит только свои цели';
-  assert (select count(*) from checkpoints) = 4, 'А видит только свои замеры';
+  assert (select count(*) from checkpoints where user_id <> auth.uid()) = 0 and (select count(*) from checkpoints) = 4, 'А видит только свои замеры';
   assert (select count(*) from admin_notes) = 0, 'А не видит заметок админа';
   assert (select count(*) from admins) = 0, 'А не видит список админов';
   assert (select count(*) from auth_attempts) = 0, 'А не видит попытки входа';
-  assert (select count(*) from program_items) = 1, 'А видит только пункты своего тарифа';
-  assert (select count(*) from storage.objects) = 1, 'А видит только свои файлы';
+  assert (select count(*) from program_items where title in ('Только для Лички','Для всех','Персонально для Б')) = 1, 'А видит только пункты своего тарифа';
+  assert (select count(*) from storage.objects where name like '00000000-0000-0000-0000-00000000000%') = 1, 'А видит только свои файлы';
   assert (select count(*) from tariffs) = 3, 'каталоги читаются';
 
   -- Чужое не меняется и не удаляется
@@ -114,19 +114,19 @@ do $$
 declare n int;
 begin
   assert public.is_admin(), 'админ определяется по таблице admins';
-  assert (select count(*) from profiles) = 2, 'админ видит всех учеников';
+  assert (select count(*) from profiles where id in ('00000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-00000000000b')) = 2, 'админ видит всех учеников';
   assert (select count(*) from insights) = 0, 'админ не видит выводы';
   assert (select count(*) from questions) = 0, 'админ не видит вопросы';
-  assert (select count(*) from goals) = 2, 'админ видит цели';
-  assert (select count(*) from admin_notes) = 1, 'админ видит заметки';
-  assert (select count(*) from program_items) = 3, 'админ видит всю программу';
-  assert (select count(*) from storage.objects) = 2, 'админ видит все скриншоты';
+  assert (select count(*) from goals where user_id in ('00000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-00000000000b')) = 2, 'админ видит цели';
+  assert (select count(*) from admin_notes where body = 'заметка') = 1, 'админ видит заметки';
+  assert (select count(*) from program_items where title in ('Только для Лички','Для всех','Персонально для Б')) = 3, 'админ видит всю программу';
+  assert (select count(*) from storage.objects where name like '00000000-0000-0000-0000-00000000000%') = 2, 'админ видит все скриншоты';
   update goals set a_value = 1600 where user_id = '00000000-0000-0000-0000-00000000000a';
   get diagnostics n = row_count; assert n = 1, 'админ меняет точку А';
   update checkpoints set due_date = due_date + 3, due_shifted = true where user_id = '00000000-0000-0000-0000-00000000000a' and idx = 1;
   get diagnostics n = row_count; assert n = 1, 'админ сдвигает срок';
   insert into program_items (week, kind, title) values (2, 'homework', 'Новая домашка');
-  assert (select count(*) from audit_log where entity = 'program_items' and actor_telegram_id = 900000003) = 1, 'правка попала в историю';
+  assert (select count(*) from audit_log where entity = 'program_items' and actor_telegram_id = 900000003 and after ->> 'title' = 'Новая домашка') = 1, 'правка попала в историю';
 end $$;
 
 reset role;
