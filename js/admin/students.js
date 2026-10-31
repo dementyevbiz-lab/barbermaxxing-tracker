@@ -29,7 +29,7 @@ export function renderStudents(root) {
         <span class="cap"><span class="dim">${esc(p.tariff?.name || '')} · ${w} · ${seen}</span></span>
         ${s.share != null ? `<span class="progress"><i style="width:${Math.round(s.share * 100)}%"></i></span>` : ''}
         <span style="display:flex;gap:6px;flex-wrap:wrap">${s.lagging ? '<span class="flag red">отстаёт</span>' : ''}${s.inactive ? '<span class="flag">давно не заходил</span>' : ''}${cp[0] ? `<span class="flag ${cp[1]}">${cp[0]}</span>` : ''}</span></span></button>`;
-    }).join('') || '<p class="dim empty-note">' + (A.profiles.length ? 'Под фильтр никто не попал' : 'Пока никого. Добавьте ученика') + '</p>';
+    }).join('') || '<div class="empty-note"><span class="dim">' + (A.profiles.length ? 'Под фильтр никто не попал' : 'Пока никого. Добавьте ученика') + '</span></div>';
   }
   root.addEventListener('click', (e) => {
     const f = e.target.closest('[data-f]'); if (f) { filter = f.dataset.f; store.set('afilter', filter); return draw(); }

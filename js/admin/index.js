@@ -20,7 +20,7 @@ export async function startAdmin(root, r) {
     ${TABS.map(([k, t, svg]) => `<button class="tab" data-tab="${k}"><svg viewBox="0 0 24 24">${svg}</svg><span class="lbl dim">${t}</span></button>`).join('')}</nav>
     <main class="main" id="main"><div class="loading-line"></div></main></div>`;
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) go(b.dataset.tab); });
-  try { await loadAdminData(); } catch (e) { console.warn(e); $('#main').innerHTML = '<p class="dim empty-note">Не загрузилось. Обновите страницу</p>'; return; }
+  try { await loadAdminData(); } catch (e) { console.warn(e); $('#main').innerHTML = '<div class="empty-note"><span class="dim">Не загрузилось. Обновите страницу</span></div>'; return; }
   let scrollT;
   window.addEventListener('scroll', () => { clearTimeout(scrollT); scrollT = setTimeout(() => store.set('ascroll.' + state.tab, window.scrollY), 150); }, { passive: true });
   state.admin = true; state.first = r.first_name;

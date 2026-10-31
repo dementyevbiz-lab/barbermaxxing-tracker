@@ -33,7 +33,7 @@ export function renderContent(root) {
 // ---------- общий список в странице ----------
 function listPage(title, rows, { add, edit, importer, note, verifyAll }) {
   openPage(`<div class="btns">${add ? '<button class="btn pri" id="lAdd"><span class="onlime">Добавить</span></button>' : ''}${importer ? '<button class="btn" id="lImp"><span class="ink">Импорт</span></button>' : ''}${verifyAll ? '<button class="btn" id="lVer"><span class="ink">Отметить все проверенными</span></button>' : ''}</div>${note ? `<p class="dim cap">${note}</p>` : ''}
-    <div class="stack-s">${rows.map((r) => `<button class="note-card" data-r="${esc(r.id)}"><span class="body ink">${esc(r.title)}</span><span class="dim cap">${esc(r.sub || '')}</span></button>`).join('') || '<p class="dim empty-note">Пока пусто</p>'}</div>`,
+    <div class="stack-s">${rows.map((r) => `<button class="note-card" data-r="${esc(r.id)}"><span class="body ink">${esc(r.title)}</span><span class="dim cap">${esc(r.sub || '')}</span></button>`).join('') || '<div class="empty-note"><span class="dim">Пока пусто</span></div>'}</div>`,
   (body) => {
     if (add) body.querySelector('#lAdd').onclick = add;
     if (importer) body.querySelector('#lImp').onclick = importer;

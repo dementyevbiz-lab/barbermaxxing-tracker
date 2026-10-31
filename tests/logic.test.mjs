@@ -156,4 +156,14 @@ D.userAch.push({ code: 'first_video', tier: 2, revoked_at: null }); assert.equal
 const vc = L.videoComparison(D);
 assert.deepEqual(vc.views, [400, 1200]);
 
+// ачивки открываются по очереди: сначала три, за каждую полученную ещё одна
+D.achievements = ['a', 'b', 'c', 'd', 'e', 'f'].map((k, i) => ({ code: k, name: k, counter: 'insights', ord: i + 1, secret: false, tiers: [{ tier: 1, threshold: 1000 + i, xp: 10 }] }));
+D.userAch = []; let av = L.achievementView(D);
+assert.equal(av.open.length, 3, 'сначала открыто три'); assert.equal(av.locked, 3);
+D.userAch = [{ code: 'a', tier: 1, revoked_at: null }]; av = L.achievementView(D);
+assert.equal(av.open.length, 4, 'за полученную открывается ещё одна');
+// ачивка челленджа без задач скрыта
+D.achievements.push({ code: 'qb', name: 'qb', counter: 'challenge:quick_booking', ord: 0, secret: false, tiers: [{ tier: 1, threshold: 1, xp: 10 }] });
+assert.ok(!L.achievementView(D).open.some((x) => x.a.code === 'qb'), 'ачивка челленджа скрыта, пока нет задач');
+
 console.log('logic.test: все проверки пройдены');

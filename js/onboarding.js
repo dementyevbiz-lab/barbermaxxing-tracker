@@ -68,7 +68,7 @@ export function runOnboarding(onFinish) {
   }
   function pointB(el) {
     el.innerHTML = `<div class="card"><span class="plate lime"><span class="onlime">Куда хочешь прийти</span></span>
-      <p class="dim cap">Это твоя точка Б, цель. Это ориентир и обещанием не является. Любую цифру можно пропустить</p><div class="stack-s" id="mf"></div></div>${nav()}`;
+      <p class="dim cap">Это твоя точка Б, цель. Любую цифру можно пропустить</p><div class="stack-s" id="mf"></div></div>${nav()}`;
     metricFields(el.querySelector('#mf'), { getVal: (k) => D.goals[k]?.b, onSave: (k, v) => data.saveGoal(k, 'b', v) });
     el.querySelector('[data-next]').onclick = () => go(6);
   }

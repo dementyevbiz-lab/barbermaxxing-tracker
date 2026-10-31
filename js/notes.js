@@ -37,15 +37,15 @@ export function renderNotes(root) {
       <button class="btn" id="tglView"><span class="ink">${view === 'cal' ? 'Список' : 'Календарь'}</span></button></div>
       ${view === 'cal' ? `<div class="grid-cards cal-grid"><div class="card"><div class="cal-nav"><button data-nav="-1" aria-label="Назад" ${ym.y * 12 + ym.m <= minYm ? 'disabled' : ''}>${tri('l')}</button><span class="title2 ink">${MONTHS[ym.m]} ${ym.y}</span><button data-nav="1" aria-label="Вперёд" ${ym.y * 12 + ym.m >= limit.getFullYear() * 12 + limit.getMonth() ? 'disabled' : ''}>${tri('r')}</button></div>
         <div class="cal">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((x) => `<span class="dow dim">${x}</span>`).join('')}${cells.join('')}</div></div>
-        <div class="stack-s"><span class="dim cap">${L.fmtDay(L.parseDay(selDay))}</span>${dayList.map(entryCard).join('') || '<p class="dim empty-note">В этот день записей нет</p>'}</div></div>`
-      : `<div class="stack-s">${all.map(entryCard).join('') || '<p class="dim empty-note">Здесь будут твои выводы после созвонов, эфиров и уроков</p>'}</div>`}</div>`;
+        <div class="stack-s"><span class="dim cap">${L.fmtDay(L.parseDay(selDay))}</span>${dayList.map(entryCard).join('') || '<div class="empty-note"><span class="dim">В этот день записей нет</span></div>'}</div></div>`
+      : `<div class="stack-s">${all.map(entryCard).join('') || '<div class="empty-note"><span class="dim">Здесь будут твои выводы после созвонов, эфиров и уроков</span></div>'}</div>`}</div>`;
   }
 
   function drawQuestions() {
     const qs = D.questions.filter((q) => !q.deleted_at && q.status === qst).sort((a, b) => b.created_at.localeCompare(a.created_at));
     body.innerHTML = `<div class="stack"><div class="btns"><button class="btn pri" id="addQ" style="flex:1"><span class="onlime">Добавить вопрос</span></button></div>
       <div class="seg" id="qseg">${Object.entries(QSTAT).map(([k, t]) => `<button data-q="${k}" class="${k === qst ? 'on' : ''}"><span class="${k === qst ? 'onlime' : 'dim'}">${t}</span></button>`).join('')}</div>
-      <div class="stack-s">${qs.map((q) => `<button class="note-card" data-qid="${q.id}"><span class="body ink">${esc(q.body)}</span><span class="dim cap">${L.fmtDay(new Date(q.created_at))}${q.origin === 'trigger' ? ' · предложенный' : ''}</span></button>`).join('') || '<p class="dim empty-note">Пока пусто</p>'}</div></div>`;
+      <div class="stack-s">${qs.map((q) => `<button class="note-card" data-qid="${q.id}"><span class="body ink">${esc(q.body)}</span><span class="dim cap">${L.fmtDay(new Date(q.created_at))}${q.origin === 'trigger' ? ' · предложенный' : ''}</span></button>`).join('') || '<div class="empty-note"><span class="dim">Пока пусто</span></div>'}</div></div>`;
   }
   function draw() { drawSeg(); seg === 'insights' ? drawInsights() : drawQuestions(); }
 

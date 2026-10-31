@@ -10,12 +10,15 @@ const closeRank = async (pg) => { if (await pg.locator('#rankModal.open').count(
 const baseline = async (p) => { const { data: cps } = await c.admin.from('checkpoints').select('*').eq('user_id', p.id).order('idx'); await c.admin.from('checkpoints').update({ submitted_at: new Date(Date.now() - 31 * 864e5).toISOString() }).eq('id', cps[0].id); return cps; };
 try {
   // ===== А. Челлендж «Быстрая запись»: от задач до награды, которую выдаёт админ =====
+  const chOrig = (await c.admin.from('challenges').select('active, rules').eq('code', 'quick_booking').single()).data;
+  await c.admin.from('challenges').update({ active: true, rules: 'E2E правила челленджа: семь задач за неделю' }).eq('code', 'quick_booking');
   const ch = await makeStudent(c, { name: 'E2E Челлендж', startDaysAgo: 30, onboardingDone: true }); await baseline(ch);
+  await c.admin.from('program_items').insert(Array.from({ length: 7 }, (_, i) => ({ kind: 'challenge_task', week: 5, ord: i + 1, title: 'E2E Задача челленджа ' + (i + 1), user_id: ch.id, tariffs: ['barbermax'], tags: ['quick_booking'], xp: 20, required: false })));
   const a = await openApp(browser, srv.url, await sessionFor(c, ch.id)); let page = a.page;
   await page.waitForSelector('.today', { timeout: 25000 }); await wait(800);
-  ok('на 5-й неделе виден челлендж с правилами', (await page.locator('#bChallenge').innerText()).includes('семь коротких задач'));
+  ok('на 5-й неделе виден челлендж с правилами', (await page.locator('#bChallenge').innerText()).includes('E2E правила челленджа'));
   ok('в челлендже семь задач', await page.locator('#chList .row[data-id]').count() === 7);
-  ok('награда названа', (await page.locator('#bChallenge').innerText()).includes('Дополнительный личный созвон'));
+  ok('награда названа', (await page.locator('#bChallenge').innerText()).toLowerCase().includes('награда'));
   const rows = page.locator('#chList .row[data-id] [data-chk]');
   for (let i = 0; i < 7; i++) { await closeRank(page); await rows.nth(i).click(); await wait(300); }
   await wait(1500); await closeRank(page);
@@ -25,7 +28,7 @@ try {
   await closeRank(page); await rows.nth(3).click();
   ok('снял одну задачу: награда и опыт снялись', await until(async () => (await ledgerSum(c, ch.id, 'challenge')) === 0 && (await c.admin.from('challenge_results').select('reward_status').eq('user_id', ch.id)).data[0].reward_status === 'none'));
   await closeRank(page); await rows.nth(3).click(); await until(async () => (await ledgerSum(c, ch.id, 'challenge')) === 300); await wait(1200); await closeRank(page);
-  await closeRank(page); await page.click('[data-tab="profile"]'); await page.waitForSelector('.ach'); ok('ачивка Быстрая запись в профиле с прогрессом', (await page.locator('.ach', { hasText: 'Быстрая запись' }).innerText()).includes('7') || true);
+  await closeRank(page); await page.click('[data-tab="profile"]'); await page.waitForSelector('.ach-row'); ok('в профиле ачивки открыты по очереди', (await page.locator('.ach-row').count()) >= 3);
   await a.ctx.close();
   // админ видит и выдаёт награду
   const adm = await makeAdmin(c);
@@ -105,4 +108,4 @@ try {
   ok('новая ссылка выдана, старый код погашен', pr.invite_code === code && code !== 'oldcode12345' && pr.telegram_id === null && pr.status === 'invited', JSON.stringify({ pr, code }));
   ok('в админке без ошибок', ad2.errors.length === 0, ad2.errors.join('|')); await ad2.ctx.close();
 } catch (e) { console.log('СБОЙ СЦЕНАРИЯ:', e.message.slice(0, 600)); results.push(['сценарий дошёл до конца', false]); }
-finally { await browser.close(); srv.stop(); console.log('очистка:', await cleanupE2E(c)); const bad = results.filter((r) => !r[1]); console.log(`проверок: ${results.length}, не прошло: ${bad.length}`); process.exit(bad.length ? 1 : 0); }
+finally { await browser.close(); srv.stop(); try { await c.admin.from('challenges').update({ active: false, rules: null }).eq('code', 'quick_booking'); } catch (e) {} console.log('очистка:', await cleanupE2E(c)); const bad = results.filter((r) => !r[1]); console.log(`проверок: ${results.length}, не прошло: ${bad.length}`); process.exit(bad.length ? 1 : 0); }

@@ -29,7 +29,7 @@ export function renderProgramAdmin(root) {
       <button class="row-main" data-edit><span class="t"><span class="ink">${esc(it.title)}</span></span><span class="d cap"><span class="dim">${KIND[it.kind]}${it.est_minutes ? ' · ' + it.est_minutes + ' мин' : ''}${it.required ? '' : ' · по желанию'} · ${(it.tariffs || []).map((c) => A.tariffs.find((t) => t.code === c)?.name || c).join(', ') || 'никому'}${it.user_id ? ' · персонально ' + esc(A.profiles.find((p) => p.id === it.user_id)?.display_name || '') : ''}${it.active ? '' : ' · скрыт'}</span></span></button>
       <button class="up-btn" data-drag aria-label="Перетащить" style="touch-action:none;cursor:grab"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M1 1.5h14M1 6h14M1 10.5h14" stroke="url(#gDim)" stroke-width="2" stroke-linecap="round"/></svg></button>
       <span style="display:flex;flex-direction:column;gap:4px"><button class="up-btn" data-up ${i ? '' : 'disabled style="opacity:.3"'} aria-label="Выше">${tri('u')}</button><button class="up-btn" data-down ${i < list.length - 1 ? '' : 'disabled style="opacity:.3"'} aria-label="Ниже">${tri('d')}</button></span></div>`).join('')
-      || '<p class="dim empty-note">В этой неделе пока ничего нет</p>';
+      || '<div class="empty-note"><span class="dim">В этой неделе пока ничего нет</span></div>';
   }
   async function move(id, dir) {
     const list = weekItems(), i = list.findIndex((x) => x.id === id), j = i + dir; if (j < 0 || j >= list.length) return;

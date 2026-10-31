@@ -63,7 +63,7 @@ export function pathHelpSheet(hasNow) {
   return '<h2 class="sh-title"><span class="ink">Как читать путь</span></h2>' +
     '<div class="kv" style="justify-content:flex-start"><span class="ink">Сейчас: где ты по цифрам последнего замера</span></div>' +
     '<div class="kv" style="justify-content:flex-start"><span class="ink">Куда ведёт текущий темп: куда приводят уроки, домашки и видео, если продолжать так же</span></div>' +
-    `<p class="dim cap">Это ориентир и обещанием не является. Главное, что ты двигаешься от точки А${hasNow ? '' : '. Маркер Сейчас появится после первого замера'}</p>`;
+    `<p class="dim cap">Каждый урок, домашка и видео приближают тебя к цели${hasNow ? '' : '. Маркер Сейчас появится после первого замера'}</p>`;
 }
 
 // ---------- страница поверх вкладок ----------

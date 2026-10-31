@@ -4,7 +4,7 @@ import * as L from './logic.js';
 import * as data from './data.js';
 import { bus } from './data.js';
 import { ICON, KIND, VIDEO_ICON, checkSvg, pathSvg, pathLegend, placeMarkers, pathHelpSheet, plate } from './ui.js';
-import { openCheckpoint } from './forms.js';
+import { openCheckpoint, openVideoSheet } from './forms.js';
 import { itemSheet } from './program.js';
 import { progressHtml, achievementsHtml } from './progress.js';
 
@@ -47,7 +47,8 @@ function rowDetail(it, m) {
   if (it.est_minutes) parts.push(it.est_minutes + ' мин');
   if (it.on_date) parts.push(it.on_date === L.ymd(m.today) ? 'сегодня' : L.fmtDay(L.parseDay(it.on_date)));
   else if (it.kind === 'short_task') parts.push('короткое задание');
-  else if (it.required && m.info.start) parts.push('до ' + L.fmtDay(L.weekEnd(m.info.start, it.week)));
+  else if (it.required && m.info.start) parts.push('обязательно · до ' + L.fmtDay(L.weekEnd(m.info.start, it.week)));
+  else if (!it.required) parts.push('по желанию');
   if (it.has_notes && data.hasNotes(it.id)) parts.push('конспект есть');
   return parts.join(' · ');
 }
@@ -216,17 +217,11 @@ export function renderToday(root) {
     row.querySelector('#videoDetail').textContent = n || week.total ? `Сегодня ${n} · на этой неделе ${week.total}` : 'С клиентом, экспертное или лайф';
     renderActions(false);
   }
-  const openVideo = () => openSheet(`<h2 class="sh-title"><span class="ink">Какое видео</span></h2>
-    <input class="field" id="viewsIn" type="number" inputmode="numeric" min="0" placeholder="Просмотры, если уже есть">
-    <div class="rows">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<button class="opt" data-v="${k}"><span class="ico">${VIDEO_ICON[k]}</span><span class="grow"><span class="ink">${t}</span></span></button>`).join('')}</div>`,
-    (sh) => sh.querySelectorAll('[data-v]').forEach((b) => b.onclick = async () => {
-      const raw = sh.querySelector('#viewsIn').value, views = raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0);
-      closeSheet(); const L0 = L.levelOf(data.xpNow(), data.lvlStep());
-      const row = await data.logVideo(b.dataset.v, views); haptic();
-      renderHeader(); renderStrip(); renderPath(true); renderVideo();
-      const L1 = L.levelOf(data.xpNow(), data.lvlStep());
-      toast(L1 > L0 ? 'Видео засчитано · уровень ' + L1 : 'Видео засчитано', async () => { await data.setVideoUndone(row.id, true); renderHeader(); renderStrip(); renderPath(true); renderVideo(); toast('Отметка снята'); });
-    }));
+  const openVideo = () => openVideoSheet({ onSaved: (row) => {
+    const L1 = L.levelOf(data.xpNow(), data.lvlStep());
+    renderHeader(); renderStrip(); renderPath(true); renderVideo();
+    toast('Видео записано. Просмотры можно добавить на вкладке Путь', async () => { await data.setVideoUndone(row.id, true); renderHeader(); renderStrip(); renderPath(true); renderVideo(); toast('Отметка снята'); });
+  } });
   const vrow = q('#videoRow');
   if (vrow) vrow.addEventListener('click', (e) => { if (e.target.closest('[data-vopen],[data-vchk]')) openVideo(); });
 

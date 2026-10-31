@@ -9,7 +9,7 @@ export function renderProfile(root) {
   const xp = data.xpNow(), step = data.lvlStep(), Lv = L.levelOf(xp, step), ranks = [...data.ranksList()].sort((a, b) => a.level - b.level);
   const base = L.levelBase(Lv, step), next = L.levelBase(Lv + 1, step), cur = L.rankOf(Lv, ranks);
   const tierNames = D.settings.tier_names || ['Бронза', 'Серебро', 'Золото', 'Платина'];
-  const achs = L.achievementProgress(D).filter((x) => !x.secret || x.got.length);
+  const av = L.achievementView(D), achs = av.open, lockedAch = av.locked;
   const finalSent = D.checkpoints.some((c) => c.kind === 'final' && c.submitted_at);
   const pdfOpen = info.state === 'finished' || (info.state === 'active' && info.n === info.weeks) || finalSent;
   const calls = D.calls.filter((c) => c.scheduled_at).sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
@@ -26,10 +26,10 @@ export function renderProfile(root) {
     <section class="card"><div class="h"><span class="ink">Звания</span></div><div class="ladder">${ranks.map((r, i) => {
       const nextL = ranks[i + 1]?.level ?? Infinity, on = Lv >= r.level && Lv < nextL;
       return `<div class="rk ${on ? 'on' : Lv < r.level ? 'off' : ''}"><span class="lv ${on ? 'onlime' : 'ink'}">${r.level}</span><span class="${on ? 'onlime' : 'ink'}">${esc(r.name)}</span></div>`; }).join('')}</div></section></div>
-    ${achs.length ? `<section class="card"><div class="h"><span class="ink">Ачивки</span></div><div class="stack-s">${achs.map((x) => `<div class="ach"><div class="grow"><span class="title2 ink">${esc(x.a.name)}</span>
-        <div class="dim cap">${x.top ? 'Сейчас: ' + esc(tierNames[x.top - 1] || '') : 'Пока не открыта'}${x.next ? ` · до ступени «${esc(tierNames[x.next.tier - 1] || '')}»: ${x.value} из ${x.thr || '—'}` : ' · все ступени пройдены'}</div>
-        ${x.next ? `<div class="progress" style="margin-top:8px"><i style="width:${Math.round(x.ratio * 100)}%"></i></div>` : ''}
-        <div class="tiers">${x.a.tiers.map((tr) => `<i class="${x.got.includes(tr.tier) ? 'on' : ''}"></i>`).join('')}</div></div></div>`).join('')}</div></section>` : ''}
+    ${achs.length ? `<section class="card"><div class="h"><span class="ink">Ачивки</span></div><p class="dim cap">Награды за активность в трекере. Новые открываются по мере прохождения</p><div class="stack-s">${achs.map((x) => `<div class="ach-row"><span class="ico" aria-hidden="true">🏅</span><div class="grow"><span class="title2 ink">${esc(x.a.name)}</span>
+        <div class="dim cap">${x.top ? 'Сейчас: ' + esc(tierNames[x.top - 1] || '') : 'Пока не открыта'}${x.next ? ` · до ступени ${esc(tierNames[x.next.tier - 1] || '')}: ${x.value} из ${x.thr || '—'}` : ' · все ступени пройдены'}</div>
+        ${x.next ? `<div class="progress"><i style="width:${Math.round(x.ratio * 100)}%"></i></div>` : ''}
+        <div class="tiers">${x.a.tiers.map((tr) => `<i class="${x.got.includes(tr.tier) ? 'on' : ''}"></i>`).join('')}</div></div></div>`).join('')}${lockedAch ? `<p class="dim cap ach-lock">Ещё ${lockedAch} откроются по ходу программы</p>` : ''}</div></section>` : ''}
     <section class="card"><div class="h"><span class="ink">Тариф</span></div><p class="title2 ink">${esc(t.name || '')}</p>
       <p class="dim cap">${t.weeks} ${L.plural(t.weeks, 'неделя', 'недели', 'недель')}${D.profile.start_date ? ' · старт ' + L.fmtDay(L.parseDay(D.profile.start_date)) : ''}</p>
       ${incl.map((x) => `<div class="kv"><span class="ink">${esc(x)}</span></div>`).join('')}

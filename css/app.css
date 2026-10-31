@@ -338,8 +338,8 @@ input[type=date].field{color-scheme:dark}
 
 /* фон: у body нет своей заливки, иначе она закрывает текстуру; текстура светлее и видна на всём экране */
 body{background:transparent}
-.tex{filter:brightness(2.1) contrast(1.05)}
-.page::after{content:"";position:fixed;inset:0;background:url("../assets/bg-texture.jpg") center/cover no-repeat;filter:brightness(2.1) contrast(1.05);z-index:-1}
+.tex{filter:brightness(1.3) contrast(1.05)}
+.page::after{content:"";position:fixed;inset:0;background:url("../assets/bg-texture.jpg") center/cover no-repeat;filter:brightness(1.3) contrast(1.05);z-index:-1}
 .page::before{z-index:-2}
 
 /* логотип в приложении */
@@ -379,7 +379,18 @@ select.field option,select.field optgroup{background:#1c1f1c;color:#fff;-webkit-
 .segscroll button.fut{background:linear-gradient(135deg,rgba(24,24,24,.85),rgba(10,10,10,.85))}
 
 /* подсказки на голом фоне читаются на подложке */
-.empty-note{background:linear-gradient(135deg,rgba(38,38,38,.88),rgba(18,18,18,.88));border:1px solid var(--card-stroke);border-radius:30px;padding:16px 22px;text-align:center}
+.empty-note{background:linear-gradient(135deg,rgba(38,38,38,.9),rgba(18,18,18,.9));border:1px solid var(--card-stroke);border-radius:30px;padding:16px 22px;text-align:center}
 .slot .plus{font-size:24px;line-height:1}
 /* календарь на средних экранах занимает всю ширину, два столбца только на широких */
 @media (min-width:980px) and (max-width:1199px){.cal-grid{grid-template-columns:minmax(0,1fr)!important}}
+
+/* название программы целиком помещается в боковом меню */
+.tabs .brand{padding:0 12px 26px;gap:10px;min-width:0;overflow:hidden}
+.tabs .brand .limet{font-size:15px;white-space:nowrap;letter-spacing:-.02em}
+.tabs .brand .logo-s{width:36px;height:36px;border-radius:12px}
+/* ачивки */
+.ach-row{display:flex;align-items:center;gap:12px;background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:12px 18px}
+.ach-row .ico{font-size:24px}
+.ach-row .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ach-lock{text-align:center;padding:6px 8px}
+.segscroll button.lock{opacity:.55}

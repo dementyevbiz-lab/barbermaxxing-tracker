@@ -51,6 +51,6 @@ export function renderSummary(root) {
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Сводка</span></h1></div>
     ${out.map((o) => `<div class="card"><span class="plate"><span class="onlime">${{ hw: 'Домашка', item: 'Программа', metric: 'Цифры', cp: 'Замеры', seen: 'Активность', video: 'Видео' }[o.k]}</span></span>
       <p class="title2 ink">${esc(o.title)}</p><p class="ink">${esc(o.data)}</p><p class="dim cap">Что можно сделать: ${esc(o.advice)}</p></div>`).join('')
-      || `<p class="dim empty-note">${count ? 'Замечаний нет. Пороги можно поменять в разделе Контент' : 'Пока нет учеников со стартом'}</p>`}
+      || `<div class="empty-note"><span class="dim">${count ? 'Замечаний нет. Пороги можно поменять в разделе Контент' : 'Пока нет учеников со стартом'}</span></div>`}
     ${count ? `<p class="dim cap">Считаются правилами по данным ${count} ${L.plural(count, 'ученика', 'учеников', 'учеников')} на сегодня</p>` : ''}</div>`;
 }

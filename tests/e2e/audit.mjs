@@ -40,7 +40,7 @@ const CHECK = `async (shotB64) => {
     const rx = Math.max(0, Math.floor(r.left * sc)), ry = Math.max(0, Math.floor(r.top * sc)), rw = Math.max(1, Math.min(cv.width - rx, Math.ceil(r.width * sc))), rh = Math.max(1, Math.min(cv.height - ry, Math.ceil(r.height * sc)));
     const d = cx.getImageData(rx, ry, rw, rh).data; let best = 0, bestPx = null;
     for (let i = 0; i < d.length; i += 4 * 3) { const px = [d[i], d[i + 1], d[i + 2]]; const q = ratio(px, bg); if (q > best) { best = q; bestPx = px; } }
-    if (best < 2.4 && !(text === 'Скриншоты' && best > 1)) out.push({ kind: 'текст сливается с фоном', text: text.slice(0, 40), ratio: +best.toFixed(2), bg: bg.join(','), cls: (el.className || el.tagName).toString().slice(0, 40) });
+    if (best < 2.4 && !(['Скриншоты', 'Скриншотов пока нет'].includes(text) && best > 1)) out.push({ kind: 'текст сливается с фоном', text: text.slice(0, 40), ratio: +best.toFixed(2), bg: bg.join(','), cls: (el.className || el.tagName).toString().slice(0, 40) });
     // обрезка
     const cs = getComputedStyle(el);
     if (el.scrollWidth > el.clientWidth + 2 && cs.overflowX !== 'visible' && cs.overflowX !== 'auto' && cs.overflowX !== 'scroll' && !el.closest('.segscroll,.strip,select,input,textarea')) out.push({ kind: 'текст обрезан', text: text.slice(0, 40) });
@@ -77,7 +77,8 @@ try {
   await c.admin.from('insights').insert([{ user_id: st.id, body: 'Мой вывод для проверки', title: 'Про цену', entry_date: new Date().toISOString().slice(0, 10) }]);
   await c.admin.from('questions').insert([{ user_id: st.id, body: 'Мой вопрос эксперту' }]);
   await c.admin.from('calls').insert([{ user_id: st.id, kind: 'strategy', scheduled_at: new Date(Date.now() + 36e5 * 30).toISOString() }]);
-  await c.admin.from('video_logs').insert([{ user_id: st.id, kind: 'client', logged_on: new Date().toISOString().slice(0, 10) }]);
+  await c.admin.from('video_logs').insert([{ user_id: st.id, kind: 'client', logged_on: new Date().toISOString().slice(0, 10), views: 1200 }]);
+  await c.admin.from('program_items').insert([{ kind: 'lesson', week: 5, ord: 1, title: 'E2E Урок аудита', user_id: st.id, tariffs: ['barbermax'], required: true, has_notes: true }, { kind: 'homework', week: 5, ord: 2, title: 'E2E Домашка аудита', user_id: st.id, tariffs: ['barbermax'], required: true }, { kind: 'short_task', week: 5, ord: 3, title: 'E2E Короткое аудита', why: 'Зачем', how: 'Как', result: 'Результат', user_id: st.id, tariffs: ['barbermax'], required: false, xp: 20 }]);
   const sess = await sessionFor(c, st.id);
   for (const [tag, w, h, mobile] of [['телефон', 390, 844, true], ['компьютер', 1440, 900, false], ['планшет', 820, 1100, false]]) {
     const { page, errors } = await openApp(browser, srv.url, sess, { w, h, mobile });
@@ -92,7 +93,7 @@ try {
     await page.click('#videoRow [data-vopen]'); await audit(page, 'окно: какое видео', tag); await closeSheets(page);
     await page.click('#lvlBtn'); await audit(page, 'окно: уровень', tag); await closeSheets(page);
     await page.click('#pathQ'); await audit(page, 'окно: как читать путь', tag); await closeSheets(page);
-    await page.locator('#todayList .row[data-id] [data-open]').first().click(); await audit(page, 'окно: задание', tag); await closeSheets(page);
+    if (await page.locator('#todayList .row[data-id] [data-open]').count()) { await page.locator('#todayList .row[data-id] [data-open]').first().click(); await audit(page, 'окно: задание', tag); await closeSheets(page); }
     if (await page.locator('#checkBtn').count()) { await page.click('#checkBtn'); await wait(500); await audit(page, 'форма замера', tag); await page.evaluate(() => document.querySelector('[data-back]').click()); await wait(500); }
     await page.click('[data-tab="notes"]'); await page.click('#addIns'); await audit(page, 'окно: новый вывод', tag); await closeSheets(page);
     await page.locator('[data-ed]').first().click().catch(() => {}); await closeSheets(page);

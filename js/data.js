@@ -94,16 +94,21 @@ export const toggleDone = (itemId) => toggleCompletion(itemId, 'done');
 export const toggleNotes = (itemId) => toggleCompletion(itemId, 'notes');
 
 // ---------- видео ----------
-export async function logVideo(kind, views) {
-  const D = state.D, day = L.ymd(new Date());
-  const row = { id: uuid(), user_id: uid(), kind, logged_on: day, views: views ?? null, note: null, undone_at: null };
+export async function logVideo(kind, views, opts = {}) {
+  const D = state.D, day = opts.date || L.ymd(new Date());
+  const row = { id: uuid(), user_id: uid(), kind, logged_on: day, views: views ?? null, note: opts.note || null, undone_at: null };
   D.videos.push(row);
   const todayCount = D.videos.filter((v) => v.logged_on === day && !v.undone_at && v.id !== row.id && D.ledger.some((l) => l.ref_id === v.id && l.kind === 'video' && !l.undone_at)).length;
   if (todayCount < (D.settings.xp?.video_daily_max ?? 3)) tempXp('video', row.id, D.settings.xp?.video ?? 15);
-  const r = await write({ t: 'video_logs', m: 'insert', row: { id: row.id, user_id: row.user_id, kind, logged_on: day, views: row.views } });
+  const r = await write({ t: 'video_logs', m: 'insert', row: { id: row.id, user_id: row.user_id, kind, logged_on: day, views: row.views, note: row.note } });
   if (!r.ok) { D.videos = D.videos.filter((v) => v.id !== row.id); toast('Не получилось, попробуй ещё раз'); }
   syncProgress();
   return row;
+}
+export async function updateVideo(id, patch) {
+  const v = state.D.videos.find((x) => x.id === id); if (!v) return;
+  Object.assign(v, patch);
+  await write({ t: 'video_logs', m: 'update', row: patch, match: { id } });
 }
 export async function setVideoUndone(id, undone) {
   const v = state.D.videos.find((x) => x.id === id); if (!v) return;

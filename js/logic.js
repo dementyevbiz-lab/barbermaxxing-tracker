@@ -363,7 +363,8 @@ export function achievementProgress(D) {
     const got = earned.filter((u) => u.code === a.code).map((u) => u.tier), value = counter(a.counter);
     const tiers = [...a.tiers].sort((x, y) => x.tier - y.tier), next = tiers.find((t) => !got.includes(t.tier));
     const thr = next ? (next.threshold ?? total(a.counter)) : null;
-    return { a, value, got, top: got.length ? Math.max(...got) : 0, next, thr, complete: !next, secret: a.secret,
+    const noTasks = a.counter.startsWith('challenge:') && total(a.counter) === 0 && !got.length;
+    return { a, value, got, top: got.length ? Math.max(...got) : 0, next, thr, complete: !next, secret: a.secret, hidden: noTasks, ord: a.ord ?? 100,
       ratio: next && thr > 0 ? Math.min(1, value / thr) : next ? 0 : 1 };
   });
 }
@@ -405,4 +406,12 @@ export function plural(n, one, few, many) {
   if (d > 1 && d < 5) return few;
   if (d === 1) return one;
   return many;
+}
+
+// Ачивки открываются по очереди: сначала три, за каждую полученную открывается ещё одна
+export function achievementView(D) {
+  const all = achievementProgress(D).filter((x) => !x.hidden && (!x.secret || x.got.length)).sort((a, b) => a.ord - b.ord);
+  const earned = all.filter((x) => x.got.length).length;
+  const open = all.filter((x, i) => i < 3 + earned || x.got.length);
+  return { open, locked: all.length - open.length };
 }

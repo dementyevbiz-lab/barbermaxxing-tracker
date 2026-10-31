@@ -34,10 +34,13 @@ export function progressHtml(D, info, items, rows, order = 25) {
     ${vids ? `<div class="kv"><span class="dim">Снято видео</span><span class="ink">${vids}</span></div>` : ''}</section>`;
 }
 
-// Ближайшие ачивки: что ещё до следующей ступени
+// Ачивки: награды за активность, открываются по очереди. Отдельный блок, не задания программы
 export function achievementsHtml(D, order = 28) {
   const names = D.settings?.tier_names || ['Бронза', 'Серебро', 'Золото', 'Платина'];
-  const list = L.achievementProgress(D).filter((x) => !x.complete && (!x.secret || x.got.length)).sort((a, b) => b.ratio - a.ratio || (a.thr ?? 99) - (b.thr ?? 99)).slice(0, 3);
+  const { open, locked } = L.achievementView(D);
+  const list = open.filter((x) => !x.complete).sort((a, b) => b.ratio - a.ratio || a.ord - b.ord).slice(0, 3);
   if (!list.length) return '';
-  return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Ближайшие ачивки</span></div><div class="stack-s" style="gap:14px">${list.map((x) => `<div class="prog-row"><div class="top"><span class="ink">${esc(x.a.name)}</span><span class="vals dim">${esc(names[x.next.tier - 1] || '')}: ${x.value} из ${x.thr || '—'}</span></div><div class="progress"><i style="width:${Math.round(x.ratio * 100)}%"></i></div></div>`).join('')}</div></section>`;
+  return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Ачивки</span><span class="grow"></span><span class="plate"><span class="onlime">Награды</span></span></div>
+    <p class="dim cap">Награды за активность в трекере. Новые открываются по мере прохождения${locked ? `, закрыто ещё ${locked}` : ''}</p>
+    <div class="stack-s">${list.map((x) => `<div class="ach-row"><span class="ico" aria-hidden="true">🏅</span><div class="grow"><div class="top" style="display:flex;justify-content:space-between;gap:10px"><span class="ink">${esc(x.a.name)}</span><span class="vals dim">${esc(names[x.next.tier - 1] || '')}: ${x.value} из ${x.thr || '—'}</span></div><div class="progress"><i style="width:${Math.round(x.ratio * 100)}%"></i></div></div></div>`).join('')}</div></section>`;
 }

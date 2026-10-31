@@ -78,7 +78,7 @@ try {
   const rows = page.locator('#actList .row');
   ok('на экране три пункта недели и одно короткое задание', (await rows.count()) + (await page.locator('#todayList .row[data-id]').count()) === 4, await rows.count());
   ok('блок «На сегодня» с видео-задачей и коротким заданием', (await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#todayList .row[data-id]').count()) === 1);
-  ok('ближайшие ачивки показаны', (await page.locator('text=Ближайшие ачивки').count()) === 1);
+  ok('блок ачивок показан и подписан как награды', (await page.locator('.ach-row').count()) >= 1 && (await page.locator('text=Награды за активность').count()) === 1);
   ok('цитата дня показана и только проверенная', await page.locator('.quote').count() === 1 && !(await page.locator('.quote').innerText()).includes('непроверенная'));
   ok('фильм показан по метке ситуации', (await page.locator('text=E2E Фильм').count()) === 1);
   ok('вопрос по триггеру показан', await page.locator('#bQuestion').count() === 1);
@@ -104,9 +104,9 @@ try {
   await page.click('#scrim', { position: { x: 5, y: 5 } }); await wait(500);
 
   // видео
-  await page.click('#videoRow [data-vopen]'); await page.waitForSelector('[data-v="client"]'); await page.fill('#viewsIn', '120'); await page.click('[data-v="client"]');
+  await page.click('#videoRow [data-vopen]'); await page.waitForSelector('[data-v="client"]'); await page.click('[data-v="client"]'); await page.fill('#vViews', '120'); await page.fill('#vNote', 'https://example.com/v1'); await page.click('#vSave');
   ok('видео записано и даёт 15 опыта', await until(async () => (await ledgerSum(c, p.id, 'video')) === 15));
-  const { data: vl } = await c.admin.from('video_logs').select('*').eq('user_id', p.id); ok('просмотры видео сохранены', vl[0]?.views === 120 && vl[0]?.kind === 'client');
+  const { data: vl } = await c.admin.from('video_logs').select('*').eq('user_id', p.id); ok('просмотры и ссылка видео сохранены', vl[0]?.views === 120 && vl[0]?.kind === 'client' && vl[0]?.note === 'https://example.com/v1');
   await closeModal(); await page.waitForSelector('#toastUndo:not([hidden])'); await page.click('#toastUndo');
   ok('отмена видео возвращает опыт', await until(async () => (await ledgerSum(c, p.id, 'video')) === 0));
 
@@ -135,10 +135,20 @@ try {
   ok('галерея скриншотов показана', await page.locator('.gal .shot').count() === 3);
   await page.click('[data-m="avg_check"]'); await page.waitForSelector('#sheet.open .kv'); await shot(page, 'metric'); await page.click('#scrim', { position: { x: 5, y: 5 } }); await wait(400);
 
+  // результаты видео: добавить просмотры позже и записать видео задним числом
+  await closeModal(); await page.click('[data-tab="path"]'); await page.waitForSelector('#vAdd');
+  ok('на Пути три полоски видео по направлениям', await page.locator('.prog-row:has-text("С клиентом"), .prog-row:has-text("Экспертное"), .prog-row:has-text("Лайф")').count() >= 3);
+  await page.click('#vAdd'); await page.waitForSelector('[data-v="life"]'); await page.click('[data-v="life"]');
+  const past = new Date(Date.now() - 5 * 864e5).toISOString().slice(0, 10); await page.fill('#vDate', past); await page.fill('#vViews', '800'); await page.click('#vSave');
+  ok('видео можно записать задним числом с просмотрами', await until(async () => (await c.admin.from('video_logs').select('*').eq('user_id', p.id)).data.some((v) => v.logged_on === past && v.views === 800 && v.kind === 'life')));
+  await wait(900); await page.locator('[data-vid]').first().click(); await page.waitForSelector('#eViews'); await page.fill('#eViews', '5000'); await page.click('#eSave');
+  ok('просмотры к записанному видео добавляются позже', await until(async () => (await c.admin.from('video_logs').select('views').eq('user_id', p.id)).data.some((v) => v.views === 5000)));
+  await wait(700); ok('на Пути видно лучшее видео', (await page.locator('#page, body').first().innerText()).includes('Лучшее видео'));
+
   // программа
   await page.click('[data-tab="program"]'); await page.waitForSelector('[data-w]'); await wait(300); await shot(page, 'program');
   ok('на вкладке Программа пункты текущей недели', await page.locator('.row[data-id]').count() >= 3, await page.locator('.row[data-id]').count());
-  await page.click('[data-w="6"]'); ok('в шестой неделе есть готовые короткие задания', (await page.locator('#wkBody .row[data-id]').count()) >= 3);
+  await page.click('[data-w="6"]'); ok('будущая неделя закрыта: задания не видны, написано когда откроется', (await page.locator('#wkBody .row[data-id]').count()) === 0 && (await page.locator('#wkBody').innerText()).includes('откроется'));
 
   // выводы и вопросы
   await page.click('[data-tab="notes"]'); await page.waitForSelector('#addIns');
@@ -156,7 +166,7 @@ try {
   // профиль
   await page.click('[data-tab="profile"]'); await page.waitForSelector('.ladder'); await wait(400); await shot(page, 'profile');
   ok('в профиле звание и лестница', (await page.locator('.ladder .rk.on').innerText()).includes('Подмастерье'));
-  ok('ачивки показаны, секретные скрыты', await page.locator('.ach').count() >= 3);
+  ok('ачивки в профиле открыты по очереди (не все сразу)', (await page.locator('.ach-row').count()) >= 3 && (await page.locator('.ach-row').count()) < 9);
   ok('PDF пока закрыт', await page.locator('#pdfBtn[disabled]').count() === 1);
   await page.click('[data-cur="KZT"]'); await wait(800);
   ok('валюта среднего чека сохраняется', (await c.admin.from('profiles').select('prefs').eq('id', p.id).single()).data.prefs.currency === 'KZT');
@@ -174,7 +184,7 @@ try {
     ok('до старта видны задания первой недели', (await fp.locator('#bActions').innerText()).includes('E2E Урок недели'));
     await fp.locator('#todayList .row', { hasText: 'E2E Эфир дня' }).locator('[data-chk]').click();
     ok('до старта можно отмечать: опыт пришёл', await until(async () => (await ledgerSum(c, f.id, 'completion')) === 10));
-    await fp.click('#videoRow [data-vopen]'); await fp.click('[data-v="expert"]');
+    await fp.click('#videoRow [data-vopen]'); await fp.click('[data-v="expert"]'); await fp.click('#vSave');
     ok('до старта можно записать видео', await until(async () => (await ledgerSum(c, f.id, 'video')) === 15));
     await wait(500); ok('галочка видео-задачи встала', await fp.locator('#videoRow .chk.on').count() === 1);
     ok('до старта без ошибок в консоли', fa.errors.length === 0, fa.errors.join(' | ')); await fa.ctx.close();

@@ -3,7 +3,7 @@ import { $, $$, esc, state, openSheet, toast } from './core.js';
 import * as L from './logic.js';
 import * as data from './data.js';
 import { pathSvg, pathLegend, placeMarkers, pathHelpSheet, fmtMetric, unitOf, sparkline, SCREEN_KINDS, VIDEO_ICON } from './ui.js';
-import { openCheckpoint } from './forms.js';
+import { openCheckpoint, openVideoSheet, openVideoEdit } from './forms.js';
 import { progressHtml } from './progress.js';
 
 const CP_NAME = (cp) => (cp.idx === 0 ? 'Точка А' : cp.kind === 'final' ? 'Итоговый замер' : 'Замер ' + cp.idx);
@@ -18,6 +18,9 @@ export function renderPath(root) {
   const cmp = L.videoComparison(D);
   const wkVideos = info.state === 'active' ? L.videoCounts(D, L.weekStart(info.start, info.n), L.weekEnd(info.start, info.n)) : { client: 0, expert: 0, life: 0, total: 0 };
   const all = L.videoCounts(D);
+  const myVids = L.liveVideos(D).slice().sort((a, b) => b.logged_on.localeCompare(a.logged_on));
+  const withViews = myVids.filter((v) => v.views != null);
+  const showAllVids = state.showAllVids === true;
 
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Путь</span></h1></div>
     <div class="grid-cards">${progressHtml(D, info, L.visibleItems(D), rows, 0)}<section class="card">
@@ -25,8 +28,11 @@ export function renderPath(root) {
       ${pathSvg('q')}${pathLegend(hasNow)}${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}</section>
     <section class="card"><div class="h"><span class="ink">Видео</span><span class="grow"></span><span class="dim cap">всего ${all.total}</span></div>
       <div class="stack-s" style="gap:14px">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<div class="prog-row"><div class="top"><span class="ink">${VIDEO_ICON[k]} ${t}</span><span class="vals dim">за неделю ${wkVideos[k]} · всего ${all[k]}</span></div><div class="progress"><i style="width:${all.total ? Math.round(all[k] / Math.max(all.client, all.expert, all.life, 1) * 100) : 0}%"></i></div></div>`).join('')}</div>
-      ${cmp ? `<p class="ink">За период между замерами ${cmp.counts.total} ${L.plural(cmp.counts.total, 'видео', 'видео', 'видео')} (${cmp.counts.client} с клиентом, ${cmp.counts.expert} экспертных, ${cmp.counts.life} лайф)${cmp.views ? `, просмотры лучших с ${L.fmtNum(cmp.views[0])} до ${L.fmtNum(cmp.views[1])}` : ''}</p>` : '<p class="dim cap">После второго замера здесь появится сопоставление видео с цифрами</p>'}</section></div>
-    ${metrics.length ? `<div class="grid-cards grid-3">${metrics.map((m) => metricCard(D, m, rows)).join('')}</div>` : '<p class="dim empty-note">Цифры появятся после первых замеров</p>'}
+      ${cmp ? `<p class="ink">За период между замерами ${cmp.counts.total} ${L.plural(cmp.counts.total, 'видео', 'видео', 'видео')} (${cmp.counts.client} с клиентом, ${cmp.counts.expert} экспертных, ${cmp.counts.life} лайф)${cmp.views ? `, просмотры лучших с ${L.fmtNum(cmp.views[0])} до ${L.fmtNum(cmp.views[1])}` : ''}</p>` : '<p class="dim cap">После второго замера здесь появится сопоставление видео с цифрами</p>'}
+      <div class="h" style="margin-top:6px"><span class="ink">Мои видео</span><span class="grow"></span><button class="btn sm pri" id="vAdd"><span class="onlime">Добавить видео</span></button></div>
+      ${withViews.length ? `<p class="ink">Лучшее видео: ${L.fmtNum(Math.max(...withViews.map((v) => v.views)))} просмотров · всего ${L.fmtNum(withViews.reduce((s, v) => s + v.views, 0))}</p>` : ''}
+      <div class="stack-s">${(showAllVids ? myVids : myVids.slice(0, 6)).map((v) => `<button class="row" data-vid="${v.id}" style="padding-right:20px"><span class="ico">${VIDEO_ICON[v.kind]}</span><span class="row-main"><span class="ink t">${L.VIDEO_KINDS[v.kind]}</span><span class="dim cap">${L.fmtDay(L.parseDay(v.logged_on))} · ${v.views != null ? 'просмотры ' + L.fmtNum(v.views) : 'добавить просмотры'}</span></span></button>`).join('') || '<p class="dim cap">Записанные видео появятся здесь. Просмотры можно добавлять, когда они накопятся</p>'}${myVids.length > 6 && !showAllVids ? '<button class="btn sm" id="vAll"><span class="ink">Показать все</span></button>' : ''}</div></section></div>
+    ${metrics.length ? `<div class="grid-cards grid-3">${metrics.map((m) => metricCard(D, m, rows)).join('')}</div>` : '<div class="empty-note"><span class="dim">Цифры появятся после первых замеров</span></div>'}
     <section class="card"><div class="h"><span class="ink">Замеры</span></div><div class="stack-s">${cps.map((cp) => `<button class="row" data-cp="${cp.id}" style="padding-right:20px"><span class="row-main"><span class="ink t">${CP_NAME(cp)}</span>
       <span class="dim cap">${cp.submitted_at ? 'Отправлен ' + L.fmtDay(new Date(cp.submitted_at)) : 'До ' + L.fmtDay(L.parseDay(cp.due_date))}</span></span>${cp.submitted_at ? '<span class="plate lime"><span class="onlime">Готово</span></span>' : ''}</button>`).join('') || '<p class="dim">Замеров пока нет</p>'}</div></section>
     <section class="card"><div class="h"><span class="ink">Скриншоты</span></div><div id="gallery"></div></section></div>`;
@@ -37,6 +43,9 @@ export function renderPath(root) {
 
   root.addEventListener('click', (e) => {
     const mc = e.target.closest('[data-m]'); if (mc) return metricHistory(mc.dataset.m);
+    if (e.target.closest('#vAdd')) return openVideoSheet({ onSaved: () => state.app.refresh() });
+    if (e.target.closest('#vAll')) { state.showAllVids = true; return state.app.refresh(); }
+    const vr = e.target.closest('[data-vid]'); if (vr) return openVideoEdit(vr.dataset.vid, { onChanged: () => state.app.refresh() });
     const c = e.target.closest('[data-cp]'); if (c) return cpSheet(D.checkpoints.find((x) => x.id === c.dataset.cp));
     const g = e.target.closest('[data-big]'); if (g) openSheet(`<img src="${esc(g.dataset.big)}" alt="" style="width:100%;border-radius:36px">`);
   });

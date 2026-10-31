@@ -29,6 +29,7 @@ export function renderProgram(root) {
   const weeks = info.weeks || D.profile.tariff?.weeks || 0;
   let sel = state.programWeek || (info.state === 'active' || info.state === 'finished' ? info.n : 1);
   const items = L.visibleItems(D);
+  const maxOpen = info.state === 'finished' ? weeks : info.state === 'active' ? info.n : 1; // последующие недели закрыты до своего начала
   const readOnly = D.profile.status === 'paused' || info.state === 'finished';
   const calls = D.calls.filter((c) => c.scheduled_at).sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
   const CK = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
@@ -41,14 +42,15 @@ export function renderProgram(root) {
   function drawSeg() {
     $('#wkSeg', root).innerHTML = Array.from({ length: weeks }, (_, i) => i + 1).map((w) => {
       const future = info.state === 'active' ? w > info.n : info.state !== 'finished';
-      return `<button class="${w === sel ? 'on' : future ? 'fut' : ''}" data-w="${w}"><span class="${w === sel ? 'onlime' : future ? 'dim' : 'ink'}">${w}</span></button>`;
+      return `<button class="${w === sel ? 'on' : future ? 'fut' : ''}${w > maxOpen ? ' lock' : ''}" data-w="${w}"><span class="${w === sel ? 'onlime' : future ? 'dim' : 'ink'}">${w}</span></button>`;
     }).join('');
   }
   function drawBody() {
     const list = items.filter((i) => i.week === sel);
     const body = $('#wkBody', root);
+    if (sel > maxOpen) { const d = info.start ? L.fmtDay(L.weekStart(info.start, sel)) : ''; body.innerHTML = `<div class="empty-note"><span class="dim">Эта неделя откроется${d ? ' ' + d : ' позже'}</span></div>`; return; }
     const st = L.weekState(D, sel, info, items);
-    if (!list.length) { body.innerHTML = '<p class="dim empty-note">Задания этой недели появятся позже</p>'; return; }
+    if (!list.length) { body.innerHTML = '<div class="empty-note"><span class="dim">Задания этой недели появятся позже</span></div>'; return; }
     body.innerHTML = `<div class="h"><span class="ink">Неделя ${sel}</span><span class="grow"></span><span class="dim cap">${list.filter((i) => i.required).length ? list.filter((i) => i.required && data.isDone(i.id)).length + ' из ' + list.filter((i) => i.required).length : ''}</span></div>
       <div class="rows">${list.map((it) => {
         const det = [it.on_date ? L.fmtDay(L.parseDay(it.on_date)) : '', it.est_minutes ? it.est_minutes + ' мин' : '', it.required ? '' : 'по желанию', data.hasNotes(it.id) ? 'конспект есть' : ''].filter(Boolean).join(' · ');
