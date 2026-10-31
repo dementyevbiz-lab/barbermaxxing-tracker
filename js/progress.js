@@ -53,5 +53,5 @@ export function progressMiniHtml(D, info, order = 55) {
   return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Прогресс</span><span class="grow"></span><button class="btn sm" data-go-progress><span class="ink">Подробнее</span></button></div>
     <p class="title2 ink">Пройдено ${tot.done} из ${tot.total}</p>
     ${pts.filter((x) => x.value != null).length > 1 ? lineChart({ points: pts, height: 110, yMin: 0, yMax: 100, fmtV: (v) => v + '%' }) : ''}
-    <p class="dim cap">Доля пройденных обязательных пунктов по неделям. Цифры замеров и видео смотри во вкладке Прогресс</p></section>`;
+    <p class="dim cap">Доля пройденных пунктов по неделям. Цифры замеров и видео смотри во вкладке Прогресс</p></section>`;
 }

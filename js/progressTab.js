@@ -27,7 +27,7 @@ export function renderProgressTab(root) {
     <div class="grid-cards">
       <section class="card"><div class="h"><span class="ink">Прохождение программы</span></div>
         ${lineChart({ points: pass.map((s) => ({ label: wk(s.week), value: s.pct })), height: 160, yMin: 0, yMax: 100, fmtV: (v) => v + '%' }) || `<p class="title2 ink">${esc(L.weekTitle(D, Math.max(cur, 0)))}: пройдено ${pass.length ? pass[pass.length - 1].done : 0} из ${pass.length ? pass[pass.length - 1].total : 0}</p>`}
-        <p class="dim cap">Какая часть обязательных пунктов пройдена в каждой неделе. График появится, когда пройдёт больше одной недели</p></section>
+        <p class="dim cap">Какая часть пунктов пройдена в каждой неделе. График появится, когда пройдёт больше одной недели</p></section>
       <section class="card"><div class="h"><span class="ink">Опыт</span></div>
         ${lineChart({ points: xpS.map((p) => ({ label: p.date.slice(8, 10) + '.' + p.date.slice(5, 7), value: p.value })), height: 160, yMin: 0, fmtV: (v) => L.fmtNum(Math.round(v)) }) || `<p class="title2 ink">${L.fmtNum(xp)} опыта, уровень ${Lv}</p>`}
         <p class="dim cap">Накопленный опыт по дням. Он растёт за каждое действие и никогда не уменьшается. График появится, когда опыт наберётся за несколько дней</p></section></div>

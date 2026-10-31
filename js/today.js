@@ -43,7 +43,6 @@ function rowDetail(it, m) {
   if (it.est_minutes) parts.push(it.est_minutes + ' мин');
   if (it.on_date) parts.push(it.on_date === L.ymd(m.today) ? 'сегодня' : L.fmtDay(L.parseDay(it.on_date)));
   else if (it.kind === 'short_task') parts.push('короткое задание');
-  else if (it.required && m.info.start) parts.push('обязательно · до ' + L.fmtDay(L.weekEnd(m.info.start, it.week)));
   else if (!it.required) parts.push('по желанию');
   if (it.has_notes && data.hasNotes(it.id)) parts.push('конспект есть');
   return parts.join(' · ');
