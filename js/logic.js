@@ -155,6 +155,10 @@ export function calcP(D, R, info, items = visibleItems(D)) {
 }
 
 // ---------- следующий замер и созвон ----------
+// Замер виден и доступен: отправленный, точка А, либо до срока осталось не больше N дней (или срок прошёл)
+export function checkpointOpen(D, cp, today = startOfDay()) {
+  return !!cp.submitted_at || cp.idx === 0 || diffDays(parseDay(cp.due_date), today) <= (D.settings?.checkpoint_open_days ?? 2);
+}
 export function nextCheckpoint(D, today = startOfDay()) {
   const openDays = D.settings?.checkpoint_open_days ?? 2;
   const list = (D.checkpoints || []).filter((c) => !c.submitted_at && c.idx > 0).sort((a, b) => a.idx - b.idx);

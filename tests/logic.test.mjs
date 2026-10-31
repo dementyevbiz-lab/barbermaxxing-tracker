@@ -181,4 +181,8 @@ assert.ok(L.calcP(pre, null, pinfo) > 0, 'перспектива считает�
 assert.equal(L.weekTitle({ settings: {} }, 0), 'Модуль 0. Предобучение'); assert.equal(L.weekTitle({ settings: {} }, 3), 'Неделя 3');
 pre.completions.push({ item_id: 'm2', kind: 'done', completed_at: new Date().toISOString() }); assert.equal(L.weekState(pre, 0, pinfo), 'full');
 
+// замеры открываются по времени
+const cpD = { settings: {}, checkpoints: [{ idx: 0, due_date: d(-20), submitted_at: null }, { idx: 1, due_date: d(10) }, { idx: 2, due_date: d(2) }, { idx: 3, due_date: d(-1) }, { idx: 4, due_date: d(30), submitted_at: 'x' }] };
+assert.deepEqual(cpD.checkpoints.map((c) => L.checkpointOpen(cpD, c, today)), [true, false, true, true, true], 'будущий замер закрыт, за 2 дня и просроченный открыты');
+
 console.log('logic.test: все проверки пройдены');

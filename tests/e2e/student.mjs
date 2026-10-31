@@ -133,6 +133,7 @@ try {
   await page.click('[data-tab="path"]'); await page.waitForSelector('[data-m="avg_check"]'); await wait(600); await shot(page, 'path');
   ok('на пути есть карточка метрики со значением', (await page.locator('[data-m="avg_check"]').innerText()).replace(/\s/g, '').includes('1800'));
   ok('галерея скриншотов показана', await page.locator('.gal .shot').count() === 3);
+  ok('закрытые замеры на Пути не видны, открываются по времени', (await page.locator('[data-cp]').count()) === 2, await page.locator('[data-cp]').count());
   await page.click('[data-m="avg_check"]'); await page.waitForSelector('#sheet.open .kv'); await shot(page, 'metric'); await page.click('#scrim', { position: { x: 5, y: 5 } }); await wait(400);
 
   // результаты видео: добавить просмотры позже и записать видео задним числом

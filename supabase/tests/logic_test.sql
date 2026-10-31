@@ -170,6 +170,19 @@ begin
   exception when insufficient_privilege or foreign_key_violation then null; end;
 end $$;
 
+-- Будущий замер закрыт: итоговый замер ещё не открыт, значения и скриншоты в него писать нельзя
+do $$
+declare a constant uuid := '00000000-0000-0000-0000-0000000000a1'; fut uuid;
+begin
+  select id into fut from checkpoints where user_id = a and idx = 3;
+  begin insert into checkpoint_values (checkpoint_id, metric_key, value) values (fut, 'avg_check', 1); raise exception 'значение в будущий замер прошло';
+  exception when insufficient_privilege then null; end;
+  begin insert into screenshots (user_id, checkpoint_id, kind, storage_path) values (a, fut, 'other', a || '/x/1.jpg'); raise exception 'скриншот в будущий замер прошёл';
+  exception when insufficient_privilege then null; end;
+  begin update checkpoints set submitted_at = now() where id = fut; raise exception 'отправка будущего замера прошла';
+  exception when insufficient_privilege then null; end;
+end $$;
+
 -- Ученик Б не видит ничего из этого
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","app_metadata":{"telegram_id":910000002}}', true);
 do $$

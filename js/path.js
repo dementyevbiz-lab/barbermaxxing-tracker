@@ -22,7 +22,7 @@ export function renderPath(root) {
   const D = state.D, today = L.startOfDay(), info = L.weekInfo(D.profile, D.profile.tariff, today);
   const { R, rows } = L.calcR(D), P = L.calcP(D, R, info);
   const metrics = D.metrics.filter((m) => m.active && (D.goals[m.key]?.a != null || D.goals[m.key]?.b != null || L.metricSeries(D, m.key).length));
-  const cps = (D.checkpoints || []).slice().sort((a, b) => a.idx - b.idx);
+  const cps = (D.checkpoints || []).filter((c) => L.checkpointOpen(D, c, today)).sort((a, b) => a.idx - b.idx); // будущие замеры не видны, они открываются по времени
   const sent = L.submittedCheckpoints(D);
 
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Путь</span></h1></div>
