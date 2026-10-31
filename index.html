@@ -9,318 +9,34 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&display=swap">
-<style>
-:root{
-  color-scheme: dark;
-  --dir:135deg;
-  --lime: linear-gradient(var(--dir), #BBFF68 0%, #F1FF6E 100%);
-  --bg: linear-gradient(var(--dir), #000000 0%, #1C1E1C 100%);
-  --card: linear-gradient(var(--dir), #3D403D 0%, #1C1F1C 100%);
-  --row: linear-gradient(var(--dir), #262626 0%, #121212 100%);
-  --card-stroke: rgba(255,255,255,.08);
-  --ink-on-dark: linear-gradient(var(--dir), #FFFFFF 0%, #999999 100%);
-  --ink-dim: linear-gradient(var(--dir), #A6A6A6 0%, #6E6E6E 100%);
-  --ink-on-lime: linear-gradient(var(--dir), #0F0F0F 0%, #4D4D4D 100%);
-  --red: linear-gradient(var(--dir), #F26161 0%, #D12E33 100%);
-  --font: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --ease: cubic-bezier(.2,.7,.2,1);
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:#000;color:#fff;font-family:var(--font);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-button,input,select{font:inherit;color:inherit}
-button{border:0;background:none;padding:0;cursor:pointer}
-h1,h2,p{margin:0}
-.bg{position:fixed;inset:0;background:var(--bg);z-index:-2}
-.tex{position:fixed;inset:0;background:url("assets/bg-texture.jpg") center/cover no-repeat;z-index:-1}
-.wrap{min-height:100%;display:grid;place-items:center;
-  padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-.wrap.top{place-items:start center}
-.stack{width:min(560px,100%);display:flex;flex-direction:column;gap:20px}
-.card{width:min(440px,100%);background:var(--card);border:1px solid var(--card-stroke);border-radius:56px;padding:44px 32px;
-  display:flex;flex-direction:column;gap:14px;text-align:center;margin:0 auto}
-.panel{background:var(--card);border:1px solid var(--card-stroke);border-radius:48px;padding:28px 22px;display:flex;flex-direction:column;gap:14px}
-.ink,.dim,.limet,.onlime,.redt{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
-.ink{background-image:var(--ink-on-dark)}
-.dim{background-image:var(--ink-dim)}
-.limet{background-image:var(--lime)}
-.onlime{background-image:var(--ink-on-lime)}
-.redt{background-image:var(--red)}
-.brand{font-weight:700;font-size:14px;letter-spacing:-.02em}
-.logo{width:160px;height:160px;align-self:center;border-radius:50px;padding:2px;background:var(--lime)}
-.logo img{display:block;width:100%;height:100%;border-radius:48px;object-fit:cover}
-h1{font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-h2{font-size:15px;font-weight:700;letter-spacing:-.02em;text-transform:uppercase}
-p,.cap{font-size:14px}
-.chip{align-self:center;background:var(--row);border:1px solid var(--card-stroke);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:500}
-.row{background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:14px 20px;display:flex;align-items:center;gap:12px;width:100%;text-align:left}
-.row .t{font-weight:500}
-.row .grow{flex:1;min-width:0}
-.list{display:flex;flex-direction:column;gap:8px}
-.btn{border-radius:999px;padding:14px 22px;font-weight:700;text-align:center;transition:opacity .2s var(--ease)}
-.btn.pri{background:var(--lime)}
-.btn.sec{background:var(--row);border:1px solid var(--card-stroke)}
-.btn:disabled{opacity:.5}
-.btns{display:flex;flex-wrap:wrap;gap:8px}
-.btns .btn{flex:1 1 auto}
-.field{display:flex;flex-direction:column;gap:6px;text-align:left}
-.field input,.field select{background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:14px 20px;outline:none;width:100%;-webkit-appearance:none;appearance:none}
-.field input:focus,.field select:focus{border-color:#BBFF68}
-.link{word-break:break-all;font-size:14px;background:var(--row);border:1px solid var(--card-stroke);border-radius:30px;padding:14px 20px;user-select:all;-webkit-user-select:all}
-.hidden{display:none!important}
-.spin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:#BBFF68;animation:sp 1s linear infinite;align-self:center}
-@keyframes sp{to{transform:rotate(360deg)}}
-/* окно снизу */
-.veil{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s var(--ease);z-index:30}
-.veil.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:min(560px,100%);background:var(--card);border:1px solid var(--card-stroke);
-  border-radius:48px 48px 0 0;padding:28px 22px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;
-  transform:translateY(105%);transition:transform .28s var(--ease);z-index:31}
-.sheet:not(.on){visibility:hidden;transition:transform .28s var(--ease),visibility 0s .28s}
-.sheet.on{transform:none}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;
-  background:var(--row);border:1px solid var(--card-stroke);border-radius:999px;padding:12px 20px;font-size:14px;transition:all .25s var(--ease);z-index:40;white-space:nowrap}
-.toast.on{opacity:1;transform:translate(-50%,0)}
-@media (min-width:701px){ body{font-size:17px} }
-</style>
+<link rel="stylesheet" href="css/app.css?v=1">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gLimeBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BBFF68"/><stop offset="1" stop-color="#F1FF6E"/></linearGradient>
+    <linearGradient id="gLimePath" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="320" y2="200"><stop offset="0" stop-color="#BBFF68"/><stop offset="1" stop-color="#F1FF6E"/></linearGradient>
+    <linearGradient id="gLimeDim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D4A1A"/><stop offset="1" stop-color="#576624"/></linearGradient>
+    <linearGradient id="gOnLime" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F0F0F"/><stop offset="1" stop-color="#4D4D4D"/></linearGradient>
+    <linearGradient id="gInk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#999999"/></linearGradient>
+    <linearGradient id="gDim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A8A8A"/><stop offset="1" stop-color="#5A5A5A"/></linearGradient>
+    <linearGradient id="gRow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#262626"/><stop offset="1" stop-color="#121212"/></linearGradient>
+  </defs>
+</svg>
 <div class="bg"></div><div class="tex"></div>
-
-<!-- Простые экраны: загрузка, приветствие, нет доступа -->
-<div class="wrap" id="simple">
-  <div class="card">
-    <div class="logo"><img src="assets/logo.webp" alt="Трекер прогресса"></div>
-    <span class="brand limet">BARBERMAXXING</span>
-    <h1><span class="ink" id="hi">Привет</span></h1>
-    <p><span class="dim" id="sub">Открой приложение через бота в Telegram</span></p>
-    <span class="chip hidden" id="chip"><span class="ink" id="chipText"></span></span>
-    <div class="spin hidden" id="spin"></div>
-    <button class="btn sec hidden" id="retry"><span class="ink">Попробовать снова</span></button>
+<div id="root"></div>
+<div class="page" id="page"></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="ink" id="toastTxt"></span><button class="undo" id="toastUndo" hidden><span class="onlime">Вернуть</span></button></div>
+<div class="rank-modal" id="rankModal">
+  <div class="rank-card">
+    <span class="plate lime"><span class="onlime">Новое звание</span></span>
+    <div class="rank-ring"><span class="onlime" id="rmLvl"></span></div>
+    <div class="rank-name" id="rmWrap"><span class="limet" id="rmName"></span></div>
+    <span class="dim cap">Опыт копится сам из твоих отметок</span>
   </div>
 </div>
-
-<!-- Админка: ученики и приглашения -->
-<div class="wrap top hidden" id="admin">
-  <div class="stack">
-    <div class="panel">
-      <span class="brand limet">BARBERMAXXING</span>
-      <h1><span class="ink">Ученики</span></h1>
-      <p><span class="dim" id="admSub"></span></p>
-    </div>
-
-    <div class="panel">
-      <h2><span class="ink">Добавить ученика</span></h2>
-      <label class="field"><span class="cap dim">Имя</span><input id="fName" maxlength="80" autocomplete="off"></label>
-      <label class="field"><span class="cap dim">Тариф</span><select id="fTariff"></select></label>
-      <label class="field"><span class="cap dim">Дата старта</span><input id="fStart" type="date"></label>
-      <button class="btn pri" id="fAdd"><span class="onlime">Создать приглашение</span></button>
-    </div>
-
-    <div class="panel" id="listPanel">
-      <h2><span class="ink">Все ученики</span></h2>
-      <div class="list" id="list"></div>
-      <p class="hidden" id="listEmpty"><span class="dim">Пока никого. Добавьте ученика выше</span></p>
-    </div>
-
-    <div class="panel">
-      <h2><span class="ink">Демо-ученики</span></h2>
-      <p><span class="dim">Двое с тестовыми целями и замерами, чтобы проверять экраны</span></p>
-      <div class="btns">
-        <button class="btn sec" id="demoAdd"><span class="ink">Добавить</span></button>
-        <button class="btn sec" id="demoDel"><span class="ink">Удалить всех демо</span></button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="veil" id="veil"></div>
-<div class="sheet" id="sheet"></div>
-<div class="toast" id="toast"></div>
-
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
-
-const CFG = window.BMX_CONFIG;
-const tg = window.Telegram && window.Telegram.WebApp;
-const $ = (id) => document.getElementById(id);
-const sb = createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'bmx-auth' } });
-
-if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.setBackgroundColor('#000000'); } catch (e) {} }
-
-// ---------- общее ----------
-function say(title, sub, opts = {}) {
-  $('simple').classList.remove('hidden'); $('admin').classList.add('hidden');
-  $('hi').textContent = title; $('sub').textContent = sub || '';
-  $('spin').classList.toggle('hidden', !opts.loading);
-  $('retry').classList.toggle('hidden', !opts.retry);
-  $('chip').classList.toggle('hidden', !opts.chip);
-  if (opts.chip) $('chipText').textContent = opts.chip;
-}
-let toastTimer;
-function toast(text) {
-  const t = $('toast'); t.textContent = text; t.classList.add('on');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2000);
-}
-function openSheet(html) { $('sheet').innerHTML = html; $('veil').classList.add('on'); $('sheet').classList.add('on'); }
-function closeSheet() { $('veil').classList.remove('on'); $('sheet').classList.remove('on'); }
-$('veil').addEventListener('click', closeSheet);
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function fmtDate(d) { if (!d) return ''; const [y, m, dd] = d.slice(0, 10).split('-'); return `${dd}.${m}.${y}`; }
-function weekOf(start, weeks) {
-  if (!start) return null;
-  const days = Math.floor((Date.now() - new Date(start + 'T00:00:00').getTime()) / 86400000);
-  if (days < 0) return { before: true };
-  return { n: Math.min(weeks, Math.floor(days / 7) + 1), of: weeks };
-}
-async function copy(text) {
-  try { await navigator.clipboard.writeText(text); toast('Ссылка скопирована'); }
-  catch (e) { toast('Выделите ссылку и скопируйте'); }
-}
-function confirmBox(text) {
-  return new Promise((res) => (tg && tg.showConfirm) ? tg.showConfirm(text, res) : res(window.confirm(text)));
-}
-
-async function callFn(name, body, withAuth) {
-  const headers = { 'Content-Type': 'application/json', apikey: CFG.supabaseKey };
-  if (withAuth) {
-    const { data } = await sb.auth.getSession();
-    if (data.session) headers.Authorization = 'Bearer ' + data.session.access_token;
-  }
-  const r = await fetch(`${CFG.supabaseUrl}/functions/v1/${name}`, { method: 'POST', headers, body: JSON.stringify(body) });
-  let j = {}; try { j = await r.json(); } catch (e) {}
-  return { http: r.status, ...j };
-}
-
-// ---------- вход ----------
-async function login() {
-  const initData = tg && tg.initData;
-  if (!initData) { say('Привет', 'Открой приложение через бота в Telegram'); return; }
-  say('Входим', '', { loading: true });
-  let r;
-  try { r = await callFn('tg-auth', { initData }); }
-  catch (e) { r = { status: 'offline' }; }
-
-  if (r.status === 'ok') {
-    await sb.auth.setSession({ access_token: r.session.access_token, refresh_token: r.session.refresh_token });
-    if (r.is_admin) return showAdmin(r);
-    return showStudent(r);
-  }
-  const id = r.telegram_id ? `Твой Telegram ID: ${r.telegram_id}` : '';
-  switch (r.status) {
-    case 'invite_required': return say('Доступ по приглашению', 'Попроси ссылку у команды программы', { chip: id });
-    case 'invite_invalid': return say('Ссылка не работает', 'Её уже использовали или заменили. Попроси новую у команды программы', { chip: id });
-    case 'blocked': return say('Доступ закрыт', 'Если это ошибка, напиши команде программы');
-    case 'too_many': return say('Слишком много попыток', 'Попробуй через час');
-    case 'offline': return say('Нет связи', 'Проверь интернет и попробуй снова', { retry: true });
-    default: return say('Обновляем данные', 'Зайди через минуту', { retry: true });
-  }
-}
-$('retry').addEventListener('click', login);
-
-// ---------- ученик ----------
-async function showStudent(r) {
-  const { data: p, error } = await sb.from('profiles').select('display_name, start_date, tariffs(name, weeks)').single();
-  if (error || !p) return say('Обновляем данные', 'Зайди через минуту', { retry: true });
-  const w = weekOf(p.start_date, p.tariffs?.weeks || 0);
-  const chip = !w ? p.tariffs?.name : w.before ? `Старт ${fmtDate(p.start_date)}` : `Неделя ${w.n} из ${w.of}`;
-  say(`Привет, ${p.display_name || r.first_name || 'друг'}`, 'Трекер скоро будет здесь', { chip });
-}
-
-// ---------- админ ----------
-let tariffs = [];
-async function showAdmin(r) {
-  $('simple').classList.add('hidden'); $('admin').classList.remove('hidden');
-  $('admSub').textContent = `Привет, ${r.first_name || 'команда'}. Здесь приглашения и демо-ученики`;
-  const { data: t } = await sb.from('tariffs').select('id, code, name, weeks').order('id');
-  tariffs = t || [];
-  $('fTariff').innerHTML = tariffs.map((x) => `<option value="${x.code}" ${x.code === 'barbermax' ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
-  await loadList();
-}
-
-let students = [];
-async function loadList() {
-  const { data, error } = await sb.from('profiles')
-    .select('id, display_name, status, demo, start_date, last_seen_at, tg_username, invite_code, tariffs(name, weeks)')
-    .order('created_at');
-  if (error) { toast('Не загрузилось, попробуйте снова'); return; }
-  students = data || [];
-  $('listEmpty').classList.toggle('hidden', students.length > 0);
-  $('list').innerHTML = students.map((s) => {
-    const w = weekOf(s.start_date, s.tariffs?.weeks || 0);
-    const wk = !w ? 'без даты старта' : w.before ? `старт ${fmtDate(s.start_date)}` : `неделя ${w.n} из ${w.of}`;
-    const st = s.status === 'invited' ? 'ещё не вошёл' : s.status === 'blocked' ? 'доступ закрыт' : s.last_seen_at ? `заходил ${fmtDate(s.last_seen_at)}` : 'вошёл';
-    return `<button class="row" data-id="${s.id}"><span class="grow"><span class="t ink">${esc(s.display_name)}${s.demo ? ' · демо' : ''}</span><br>
-      <span class="cap dim">${esc(s.tariffs?.name || '')} · ${wk} · ${st}</span></span></button>`;
-  }).join('');
-}
-$('list').addEventListener('click', (e) => { const b = e.target.closest('[data-id]'); if (b) openStudent(b.dataset.id); });
-
-function linkSheet(title, link, note) {
-  openSheet(`<h2><span class="ink">${esc(title)}</span></h2>
-    ${note ? `<p><span class="dim">${esc(note)}</span></p>` : ''}
-    <div class="link" id="lnk">${esc(link)}</div>
-    <button class="btn pri" id="cp"><span class="onlime">Скопировать ссылку</span></button>`);
-  $('cp').onclick = () => copy(link);
-}
-
-async function openStudent(id) {
-  const s = students.find((x) => x.id === id); if (!s) return;
-  const link = s.invite_code ? `https://t.me/${CFG.botUsername}?startapp=${s.invite_code}` : null;
-  openSheet(`<h2><span class="ink">${esc(s.display_name)}</span></h2>
-    <p><span class="dim">${s.tg_username ? '@' + esc(s.tg_username) + ' · ' : ''}${esc(s.tariffs?.name || '')}${s.start_date ? ' · старт ' + fmtDate(s.start_date) : ''}</span></p>
-    ${link ? `<div class="link">${esc(link)}</div><button class="btn pri" id="sCopy"><span class="onlime">Скопировать ссылку</span></button>` : ''}
-    <button class="btn sec" id="sNew"><span class="ink">Новая ссылка</span></button>
-    <button class="btn sec" id="sBlock"><span class="ink">${s.status === 'blocked' ? 'Открыть доступ' : 'Закрыть доступ'}</span></button>
-    <button class="btn sec" id="sDel"><span class="redt">Удалить с данными</span></button>`);
-  if (link) $('sCopy').onclick = () => copy(link);
-  $('sNew').onclick = async () => {
-    if (!await confirmBox('Старая ссылка перестанет работать. Если ученик уже входил, ему понадобится войти по новой')) return;
-    const r = await callFn('admin', { action: 'reissue_invite', user_id: id }, true);
-    if (!r.ok) return toast(r.message || 'Не получилось');
-    await loadList(); linkSheet('Новая ссылка', r.invite_link, `Для ученика ${s.display_name}`);
-  };
-  $('sBlock').onclick = async () => {
-    const next = s.status === 'blocked' ? (s.invite_code ? 'invited' : 'active') : 'blocked';
-    const { error } = await sb.from('profiles').update({ status: next }).eq('id', id);
-    if (error) return toast('Не получилось');
-    closeSheet(); toast(next === 'blocked' ? 'Доступ закрыт' : 'Доступ открыт'); loadList();
-  };
-  $('sDel').onclick = async () => {
-    if (!await confirmBox(`Удалить ${s.display_name} и все его данные? Это не отменить`)) return;
-    const r = await callFn('admin', { action: 'delete_student', user_id: id }, true);
-    if (!r.ok) return toast(r.message || 'Не получилось');
-    closeSheet(); toast('Удалено'); loadList();
-  };
-}
-
-$('fAdd').addEventListener('click', async () => {
-  const name = $('fName').value.trim();
-  if (!name) { $('fName').focus(); return toast('Впишите имя'); }
-  $('fAdd').disabled = true;
-  const r = await callFn('admin', { action: 'create_student', display_name: name, tariff_code: $('fTariff').value, start_date: $('fStart').value || null }, true);
-  $('fAdd').disabled = false;
-  if (!r.ok) return toast(r.message || 'Не получилось');
-  $('fName').value = '';
-  await loadList();
-  linkSheet('Приглашение готово', r.invite_link, `Отправьте ссылку ученику ${name}. Она сработает один раз`);
-});
-
-$('demoAdd').addEventListener('click', async () => {
-  $('demoAdd').disabled = true;
-  const r = await callFn('admin', { action: 'seed_demo' }, true);
-  $('demoAdd').disabled = false;
-  if (!r.ok) return toast(r.message || 'Не получилось');
-  toast('Демо-ученики добавлены'); loadList();
-});
-$('demoDel').addEventListener('click', async () => {
-  if (!await confirmBox('Удалить всех демо-учеников вместе с их данными?')) return;
-  const r = await callFn('admin', { action: 'delete_demo' }, true);
-  if (!r.ok) return toast(r.message || 'Не получилось');
-  toast(`Удалено: ${r.deleted}`); loadList();
-});
-
-login();
-</script>
+<script type="module" src="js/main.js?v=1"></script>
 </body>
 </html>
