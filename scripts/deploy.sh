@@ -32,7 +32,7 @@ if [ "$what" = sql ] || [ "$what" = all ]; then
   for f in supabase/migrations/*.sql; do echo "== $f"; sql_file "$f"; done
 fi
 if [ "$what" = functions ] || [ "$what" = all ]; then
-  for n in tg-auth admin; do echo "== функция $n"; deploy_fn "$n"; done
+  for n in tg-auth admin bot notify; do echo "== функция $n"; deploy_fn "$n"; done
 fi
 if [ "$what" = test ] || [ "$what" = all ]; then
   echo "== проверка прав"; sql_file supabase/tests/rls_test.sql

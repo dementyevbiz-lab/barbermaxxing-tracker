@@ -22,6 +22,7 @@ export function renderContent(root) {
     ['ch', 'Челленджи', A.challenges.map((c) => c.title + (c.active ? ' (вкл)' : ' (выкл)')).join(', ') || 'нет', challenges],
     ['tariffs', 'Тарифы', A.tariffs.map((t) => t.name).join(', '), tariffs],
     ['mech', 'Механика и тексты', 'опыт, перспектива, пороги сводки, ссылка на чат', mechanics],
+    ['bot', 'Бот', 'подключить ответы бота кнопкой «Открыть»', botSetup],
     ['backup', 'Бэкап', 'выгрузить все данные одним файлом', backup],
   ];
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Контент</span></h1></div>
@@ -158,6 +159,14 @@ function mechanics() {
       initial: { checkpoint_open_days: S.checkpoint_open_days ?? 2, week_full_videos: S.week_full_videos ?? 2, triggers_cfg: jsonField(S.triggers_cfg || {}), screenshots_cfg: jsonField(S.screenshots_cfg || {}), bot_notifications: jsonField(S.bot_notifications || {}) },
       onSave: async (v) => { await dbOk(sb.from('settings').upsert([{ key: 'checkpoint_open_days', value: v.checkpoint_open_days ?? 2 }, { key: 'week_full_videos', value: v.week_full_videos ?? 2 }, { key: 'triggers_cfg', value: parseJson(v.triggers_cfg, 'Показ вопросов') }, { key: 'screenshots_cfg', value: parseJson(v.screenshots_cfg, 'Скриншоты') }, { key: 'bot_notifications', value: parseJson(v.bot_notifications, 'Бот') }], { onConflict: 'key' })); toast('Сохранено'); await state.app.reload(); } }),
   })[b.dataset.m]()), { title: 'Механика и тексты' });
+}
+// ---------- бот ----------
+async function botSetup() {
+  toast('Подключаем…');
+  const { data: s } = await sb.auth.getSession();
+  const r = await fetch(`${window.BMX_CONFIG.supabaseUrl}/functions/v1/bot`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: window.BMX_CONFIG.supabaseKey, Authorization: 'Bearer ' + s.session.access_token }, body: JSON.stringify({ action: 'setup' }) });
+  const j = await r.json().catch(() => ({}));
+  openSheet(`<h2 class="sh-title"><span class="ink">${j.ok ? 'Бот подключён' : 'Не получилось'}</span></h2><p class="dim">${j.ok ? 'Теперь на любое сообщение бот отвечает кнопкой «Открыть»' : esc(j.description || j.message || 'Проверьте, что секреты бота заданы (scripts/setup-bot.sh)')}</p>`);
 }
 // ---------- бэкап ----------
 async function backup() {
