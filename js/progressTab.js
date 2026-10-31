@@ -21,9 +21,9 @@ export function renderProgressTab(root) {
 
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Прогресс</span>${cur >= 0 ? `<span class="plate" style="margin-left:12px"><span class="onlime">${esc(cur === 0 ? 'Модуль 0' : 'Неделя ' + cur + ' из ' + info.weeks)}</span></span>` : ''}</h1></div>
     <div class="stat-grid three">
-      <div class="stat"><span class="dim cap">Пройдено пунктов</span><span class="big-num ink">${tot.done}<span class="dim" style="font-size:20px"> из ${tot.total}</span></span></div>
-      <div class="stat"><span class="dim cap">Опыт, уровень ${Lv}</span><span class="big-num ink">${L.fmtNum(xp)}</span></div>
-      <div class="stat"><span class="dim cap">Видео снято</span><span class="big-num ink">${all.total}</span></div></div>
+      <div class="stat"><span class="dim cap">Пройдено</span><span class="big-num ink">${tot.done}<span class="dim" style="font-size:20px"> из ${tot.total}</span></span></div>
+      <div class="stat"><span class="dim cap">Опыт</span><span class="big-num ink">${L.fmtNum(xp)}</span></div>
+      <div class="stat"><span class="dim cap">Видео</span><span class="big-num ink">${all.total}</span></div></div>
     <div class="grid-cards">
       <section class="card"><div class="h"><span class="ink">Прохождение программы</span></div>
         ${lineChart({ points: pass.map((s) => ({ label: wk(s.week), value: s.pct })), height: 160, yMin: 0, yMax: 100, fmtV: (v) => v + '%' }) || `<p class="title2 ink">${esc(L.weekTitle(D, Math.max(cur, 0)))}: пройдено ${pass.length ? pass[pass.length - 1].done : 0} из ${pass.length ? pass[pass.length - 1].total : 0}</p>`}

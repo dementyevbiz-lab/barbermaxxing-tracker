@@ -33,7 +33,7 @@ export function renderProfile(root) {
     <section class="card"><div class="h"><span class="ink">Тариф</span></div><p class="title2 ink">${esc(t.name || '')}</p>
       <p class="dim cap">${t.weeks} ${L.plural(t.weeks, 'неделя', 'недели', 'недель')}${D.profile.start_date ? ' · старт ' + L.fmtDay(L.parseDay(D.profile.start_date)) : ''}</p>
       ${incl.map((x) => `<div class="kv"><span class="ink">${esc(x)}</span></div>`).join('')}
-      ${calls.map((c) => { const d = new Date(c.scheduled_at); return `<div class="kv"><span class="ink">${esc(CK[c.kind] || 'Созвон')}</span><span class="dim">${L.fmtDay(d)}, ${L.fmtTime(d)}</span></div>`; }).join('')}
+      ${calls.map((c) => { const d = new Date(c.scheduled_at); return `<div class="kv col"><span class="ink">${esc(CK[c.kind] || 'Созвон')}</span><span class="dim">${L.fmtDay(d)}, ${L.fmtTime(d)}</span></div>`; }).join('')}
       ${support ? '<button class="btn pri" id="supportBtn" style="align-self:flex-start"><span class="onlime">Чат сопровождения</span></button>' : ''}</section>
     <section class="card"><div class="h"><span class="ink">Итог программы</span></div>
       <p class="dim cap">${pdfOpen ? 'Один лист с твоим путём, скриншотами и цифрами' : 'Откроется на последней неделе программы'}</p>

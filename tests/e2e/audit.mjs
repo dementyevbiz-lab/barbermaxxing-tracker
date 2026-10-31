@@ -43,6 +43,11 @@ const CHECK = `async (shotB64) => {
     const d = cx.getImageData(rx, ry, rw, rh).data; let best = 0, bestPx = null;
     for (let i = 0; i < d.length; i += 4 * 3) { const px = [d[i], d[i + 1], d[i + 2]]; const q = ratio(px, bg); if (q > best) { best = q; bestPx = px; } }
     if (best < 2.4 && !(['Скриншоты', 'Скриншотов пока нет'].includes(text) && best > 1)) out.push({ kind: 'текст сливается с фоном', text: text.slice(0, 40), ratio: +best.toFixed(2), bg: bg.join(','), cls: (el.className || el.tagName).toString().slice(0, 40) });
+    // перенос короткой подписи на вторую строку
+    if (text.length <= 26 && !(el instanceof SVGElement) && !el.closest('.tbl, button, h1, h2, textarea, input, select, .sh-title, .h1, .h1s, .title2, .big-num, .quote, .goal, .rank-name')) {
+      const lh = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.4;
+      if (r.height > lh * 1.6) out.push({ kind: 'короткая подпись переносится', text: text.slice(0, 40), cls: (el.className || el.tagName).toString().slice(0, 40) });
+    }
     // обрезка
     const cs = getComputedStyle(el);
     if (el.scrollWidth > el.clientWidth + 2 && cs.overflowX !== 'visible' && cs.overflowX !== 'auto' && cs.overflowX !== 'scroll' && !el.closest('.segscroll,.strip,select,input,textarea')) out.push({ kind: 'текст обрезан', text: text.slice(0, 40) });

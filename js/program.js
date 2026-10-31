@@ -37,7 +37,7 @@ export function renderProgram(root) {
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Программа</span></h1></div>
     <div class="segscroll" id="wkSeg"></div><div class="stack-s" id="wkBody"></div>
     ${calls.length && D.profile.ui_overrides?.hide?.includes('calls') !== true ? `<div class="card"><div class="h"><span class="ink">Созвоны</span></div><div class="stack-s">${calls.map((c) => {
-      const d = new Date(c.scheduled_at); return `<div class="kv"><span class="ink">${esc(CK[c.kind] || 'Созвон')}</span><span class="dim">${L.fmtDay(d)}, ${L.fmtTime(d)}</span></div>`; }).join('')}</div></div>` : ''}</div>`;
+      const d = new Date(c.scheduled_at); return `<div class="kv col"><span class="ink">${esc(CK[c.kind] || 'Созвон')}</span><span class="dim">${L.fmtDay(d)}, ${L.fmtTime(d)}</span></div>`; }).join('')}</div></div>` : ''}</div>`;
 
   function drawSeg() {
     $('#wkSeg', root).innerHTML = Array.from({ length: weeks + 1 }, (_, i) => i).map((w) => {

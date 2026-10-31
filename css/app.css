@@ -407,3 +407,20 @@ select.field option,select.field optgroup{background:#1c1f1c;color:#fff;-webkit-
 .chart{display:block;margin:0 auto;max-height:230px}
 .path-svg{max-width:560px;max-height:400px;margin:0 auto}
 .grid-cards{align-items:start}
+
+/* короткие подписи не переносятся на вторую строку: значения в одну строку, названия сжимаются многоточием */
+.vals,.prog-row .vals,.ach-row .vals,.plate,.pill,.chip{white-space:nowrap}
+/* в строке «название и значение» значение в одну строку, длинное название переносится */
+.kv>span:first-child{min-width:0}
+.kv>span:last-child:not(:only-child){white-space:nowrap;text-align:right;flex:none}
+.ach-row .top,.prog-row .top{gap:10px;align-items:baseline}
+.ach-row .top .ink,.prog-row .top .ink{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ach-row .vals,.prog-row .vals{flex:none;font-size:13px}
+@media (max-width:420px){.ach-row .vals,.prog-row .vals{font-size:12px}.ach-row{padding:12px 14px;gap:10px}.ach-row .ico{font-size:20px}}
+
+/* таблица метрик в карточке ученика на телефоне */
+.tbl td:not(:first-child){white-space:nowrap}
+@media (max-width:560px){.tbl td,.tbl th{font-size:13px;padding:9px 6px}}
+
+.kv.col{flex-direction:column;align-items:flex-start;gap:2px}
+.kv.col>span:last-child{text-align:left}
