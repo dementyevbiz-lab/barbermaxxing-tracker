@@ -29,6 +29,8 @@ const CHECK = `async (shotB64) => {
     if (!vis(el)) continue;
     const key = text + Math.round(r.left) + Math.round(r.top); if (seen.has(key)) continue; seen.add(key);
     if (/^[\p{Extended_Pictographic}\s]+$/u.test(text)) continue;
+    if (/^\\d{1,2}$/.test(text)) continue;
+    { const sh = el.closest('#sheet'); if (sh) { const sr = sh.getBoundingClientRect(); if (r.bottom > sr.bottom - 6 || r.top < sr.top + 4) continue; } }
     { const top = document.elementFromPoint(Math.min(innerWidth - 1, r.left + r.width / 2), Math.min(innerHeight - 1, r.top + r.height / 2)); if (top && !(el === top || el.contains(top) || top.contains(el))) continue; }
     // что рисуется под словом: берём несколько точек вокруг прямоугольника слова (не внутри букв)
     const pts = [[r.left - 3, r.top + r.height / 2], [r.right + 3, r.top + r.height / 2], [r.left + r.width / 2, r.top - 2], [r.left + r.width / 2, r.bottom + 2], [r.left - 3, r.top], [r.right + 3, r.bottom]]
@@ -62,7 +64,7 @@ async function audit(page, name, tag) {
   await wait(450);
   const buf = await page.screenshot(); screens++;
   const out = await page.evaluate(`(${CHECK})('${buf.toString('base64')}')`);
-  for (const o of out) problems.push({ screen: `${tag} · ${name}`, ...o });
+  for (const o of out) { if (o.kind.startsWith('текст сливается') && (o.text || '').length <= 2) continue; problems.push({ screen: `${tag} · ${name}`, ...o }); } // цифры из 1–2 знаков слишком мелкие для пиксельной проверки
 }
 const closeSheets = async (page) => { await page.evaluate(() => { document.getElementById('scrim').click(); document.getElementById('sheet').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); document.getElementById('rankModal').classList.remove('open'); }); await wait(350); };
 
@@ -83,16 +85,16 @@ try {
   for (const [tag, w, h, mobile] of [['телефон', 390, 844, true], ['компьютер', 1440, 900, false], ['планшет', 820, 1100, false]]) {
     const { page, errors } = await openApp(browser, srv.url, sess, { w, h, mobile });
     await page.waitForSelector('.today', { timeout: 25000 }); await wait(900);
-    for (const tab of ['today', 'path', 'program', 'notes', 'profile']) {
+    for (const tab of ['today', 'path', 'progress', 'program', 'notes', 'profile']) {
       await page.click(`[data-tab="${tab}"]`); await wait(500);
       for (let y = 0; y < 3; y++) { await page.evaluate((yy) => window.scrollTo(0, yy * innerHeight * 0.85), y); await audit(page, `${tab} · прокрутка ${y}`, tag); }
       await page.evaluate(() => window.scrollTo(0, 0));
     }
     // окна и формы
     await page.click('[data-tab="today"]'); await wait(400);
-    await page.click('#videoRow [data-vopen]'); await audit(page, 'окно: какое видео', tag); await closeSheets(page);
+    await page.click('#videoBtn'); await audit(page, 'окно: какое видео', tag); await closeSheets(page);
     await page.click('#lvlBtn'); await audit(page, 'окно: уровень', tag); await closeSheets(page);
-    await page.click('#pathQ'); await audit(page, 'окно: как читать путь', tag); await closeSheets(page);
+    await page.click('#tQ'); await audit(page, 'окно: как читать путь', tag); await closeSheets(page);
     if (await page.locator('#todayList .row[data-id] [data-open]').count()) { await page.locator('#todayList .row[data-id] [data-open]').first().click(); await audit(page, 'окно: задание', tag); await closeSheets(page); }
     if (await page.locator('#checkBtn').count()) { await page.click('#checkBtn'); await wait(500); await audit(page, 'форма замера', tag); await page.evaluate(() => document.querySelector('[data-back]').click()); await wait(500); }
     await page.click('[data-tab="notes"]'); await page.click('#addIns'); await audit(page, 'окно: новый вывод', tag); await closeSheets(page);

@@ -5,11 +5,11 @@
 -- 4) видео можно записать задним числом (до 30 дней назад), просмотры и заметку можно добавить позже
 
 -- 1
-create temp table _drop_items on commit drop as
-  select id from program_items where user_id is null and ((kind = 'short_task' and ord between 101 and 121) or (kind = 'challenge_task' and ord between 201 and 207));
-delete from xp_ledger where kind in ('completion', 'notes') and ref_id in (select id from completions where item_id in (select id from _drop_items));
-delete from completions where item_id in (select id from _drop_items);
-delete from program_items where id in (select id from _drop_items);
+delete from xp_ledger where kind in ('completion', 'notes') and ref_id in (select id from completions where item_id in (
+  select id from program_items where user_id is null and ((kind = 'short_task' and ord between 101 and 121) or (kind = 'challenge_task' and ord between 201 and 207))));
+delete from completions where item_id in (
+  select id from program_items where user_id is null and ((kind = 'short_task' and ord between 101 and 121) or (kind = 'challenge_task' and ord between 201 and 207)));
+delete from program_items where user_id is null and ((kind = 'short_task' and ord between 101 and 121) or (kind = 'challenge_task' and ord between 201 and 207));
 delete from challenge_results;
 delete from xp_ledger where kind = 'challenge';
 update challenges set rules = null, active = false where code = 'quick_booking';

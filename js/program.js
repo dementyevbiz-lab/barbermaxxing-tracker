@@ -27,9 +27,9 @@ export function itemSheet(id, { onChange, readOnly } = {}) {
 export function renderProgram(root) {
   const D = state.D, today = L.startOfDay(), info = L.weekInfo(D.profile, D.profile.tariff, today);
   const weeks = info.weeks || D.profile.tariff?.weeks || 0;
-  let sel = state.programWeek || (info.state === 'active' || info.state === 'finished' ? info.n : 1);
   const items = L.visibleItems(D);
-  const maxOpen = info.state === 'finished' ? weeks : info.state === 'active' ? info.n : 1; // последующие недели закрыты до своего начала
+  const maxOpen = info.state === 'finished' ? weeks : info.state === 'active' ? info.n : 0; // модуль 0 до старта, потом по неделям; следующие закрыты полностью
+  let sel = Math.min(state.programWeek ?? Math.max(L.curWeek(info), 0), maxOpen);
   const readOnly = D.profile.status === 'paused' || info.state === 'finished';
   const calls = D.calls.filter((c) => c.scheduled_at).sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
   const CK = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
@@ -40,18 +40,18 @@ export function renderProgram(root) {
       const d = new Date(c.scheduled_at); return `<div class="kv"><span class="ink">${esc(CK[c.kind] || 'Созвон')}</span><span class="dim">${L.fmtDay(d)}, ${L.fmtTime(d)}</span></div>`; }).join('')}</div></div>` : ''}</div>`;
 
   function drawSeg() {
-    $('#wkSeg', root).innerHTML = Array.from({ length: weeks }, (_, i) => i + 1).map((w) => {
-      const future = info.state === 'active' ? w > info.n : info.state !== 'finished';
-      return `<button class="${w === sel ? 'on' : future ? 'fut' : ''}${w > maxOpen ? ' lock' : ''}" data-w="${w}"><span class="${w === sel ? 'onlime' : future ? 'dim' : 'ink'}">${w}</span></button>`;
+    $('#wkSeg', root).innerHTML = Array.from({ length: weeks + 1 }, (_, i) => i).map((w) => {
+      const closed = w > maxOpen;
+      return `<button class="${w === sel ? 'on' : closed ? 'fut lock' : ''}" data-w="${w}" ${closed ? 'disabled aria-disabled="true"' : ''}><span class="${w === sel ? 'onlime' : closed ? 'dim' : 'ink'}">${w === 0 ? 'М0' : w}</span></button>`;
     }).join('');
   }
   function drawBody() {
     const list = items.filter((i) => i.week === sel);
     const body = $('#wkBody', root);
-    if (sel > maxOpen) { const d = info.start ? L.fmtDay(L.weekStart(info.start, sel)) : ''; body.innerHTML = `<div class="empty-note"><span class="dim">Эта неделя откроется${d ? ' ' + d : ' позже'}</span></div>`; return; }
+    if (sel > maxOpen) return;
     const st = L.weekState(D, sel, info, items);
     if (!list.length) { body.innerHTML = '<div class="empty-note"><span class="dim">Задания этой недели появятся позже</span></div>'; return; }
-    body.innerHTML = `<div class="h"><span class="ink">Неделя ${sel}</span><span class="grow"></span><span class="dim cap">${list.filter((i) => i.required).length ? list.filter((i) => i.required && data.isDone(i.id)).length + ' из ' + list.filter((i) => i.required).length : ''}</span></div>
+    body.innerHTML = `<div class="h"><span class="ink">${esc(L.weekTitle(D, sel))}</span><span class="grow"></span><span class="dim cap">${list.filter((i) => i.required).length ? list.filter((i) => i.required && data.isDone(i.id)).length + ' из ' + list.filter((i) => i.required).length : ''}</span></div>
       <div class="rows">${list.map((it) => {
         const det = [it.on_date ? L.fmtDay(L.parseDay(it.on_date)) : '', it.est_minutes ? it.est_minutes + ' мин' : '', it.required ? '' : 'по желанию', data.hasNotes(it.id) ? 'конспект есть' : ''].filter(Boolean).join(' · ');
         return `<div class="row${data.isDone(it.id) ? ' done' : ''}" data-id="${it.id}"><span class="ico">${ICON[it.kind]}</span>
@@ -60,7 +60,7 @@ export function renderProgram(root) {
   }
   drawSeg(); drawBody();
   root.addEventListener('click', (e) => {
-    const w = e.target.closest('[data-w]'); if (w) { sel = Number(w.dataset.w); state.programWeek = sel; drawSeg(); drawBody(); return; }
+    const w = e.target.closest('[data-w]'); if (w && !w.disabled) { sel = Number(w.dataset.w); state.programWeek = sel; drawSeg(); drawBody(); return; }
     const row = e.target.closest('.row[data-id]'); if (!row) return;
     if (e.target.closest('[data-chk]')) {
       if (readOnly) return toast(D.profile.status === 'paused' ? 'Программа на паузе' : 'Программа завершена');

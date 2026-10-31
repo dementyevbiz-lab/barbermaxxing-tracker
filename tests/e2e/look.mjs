@@ -10,7 +10,7 @@ try {
   await c.admin.from('checkpoint_values').insert([{ checkpoint_id: cps[0].id, metric_key: 'avg_check', value: 1500 }]);
   await c.admin.from('goals').insert([{ user_id: p.id, metric_key: 'avg_check', a_value: 1500, b_value: 2500 }, { user_id: p.id, metric_key: 'booking_fill', a_value: 55, b_value: 85 }]);
   await c.admin.from('goal_text').insert({ user_id: p.id, why_text: 'Полная запись и чек выше' });
-  await c.admin.from('program_items').insert([{ kind: 'live', week: 1, ord: 1, title: 'E2E Первый эфир', est_minutes: 90, user_id: p.id, tariffs: ['barbermax'], has_notes: true }]);
+  await c.admin.from('program_items').insert([{ kind: 'live', week: 1, ord: 1, title: 'E2E Эфир недели', est_minutes: 90, user_id: p.id, tariffs: ['barbermax'], has_notes: true }]);
   await c.admin.from('insights').insert({ user_id: p.id, body: 'вывод', entry_date: new Date().toISOString().slice(0, 10) });
   const session = await sessionFor(c, p.id);
   for (const [tag, w, h, mobile] of [['d', 1440, 900, false], ['m', 390, 844, true]]) {
@@ -19,7 +19,9 @@ try {
     await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-today.png`, fullPage: true });
     await page.click('[data-tab="notes"]'); await page.waitForSelector('#seg'); await wait(600);
     await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-notes.png` });
-    await page.click('[data-tab="path"]'); await wait(800); await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-path.png` });
+    await page.click('[data-tab="path"]'); await wait(800); await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-path.png`, fullPage: true });
+    await page.click('[data-tab="progress"]'); await wait(900); await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-progress.png`, fullPage: true });
+    await page.click('[data-tab="program"]'); await wait(600); await page.screenshot({ path: `/tmp/claude-0/shots/${pre}-${tag}-program.png` });
     if (errors.length) console.log(tag, 'ошибки:', errors);
   }
 } finally { await browser.close(); srv.stop(); await cleanupE2E(c); }

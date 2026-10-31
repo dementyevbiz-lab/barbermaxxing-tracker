@@ -46,7 +46,7 @@ try {
   const pp = await openApp(browser, srv.url, await sessionFor(c, pa.id)); page = pp.page;
   await page.waitForSelector('.today', { timeout: 25000 }); await wait(700);
   ok('на паузе показана плашка «Программа на паузе»', (await page.locator('.today').innerText()).includes('Программа на паузе'));
-  ok('на паузе нет строки «Снять видео»', await page.locator('#videoRow').count() === 0);
+  ok('на паузе нет кнопки записи видео', await page.locator('#videoBtn').count() === 0);
   const before = (await c.admin.from('completions').select('id').eq('user_id', pa.id)).data.length;
   await page.locator('#actList .row', { hasText: 'E2E Урок паузы' }).locator('[data-chk]').click(); await wait(900);
   ok('на паузе отметка не ставится', (await c.admin.from('completions').select('id').eq('user_id', pa.id)).data.length === before && (await page.locator('#toastTxt').innerText()).includes('паузе'));

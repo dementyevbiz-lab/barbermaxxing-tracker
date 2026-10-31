@@ -2,6 +2,7 @@
 import { esc } from './core.js';
 import * as L from './logic.js';
 import { fmtMetric, tri } from './ui.js';
+import { lineChart } from './charts.js';
 
 export function progressHtml(D, info, items, rows, order = 25) {
   const { done } = L.doneSets(D);
@@ -43,4 +44,14 @@ export function achievementsHtml(D, order = 28) {
   return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Ачивки</span><span class="grow"></span><span class="plate"><span class="onlime">Награды</span></span></div>
     <p class="dim cap">Награды за активность в трекере. Новые открываются по мере прохождения${locked ? `, закрыто ещё ${locked}` : ''}</p>
     <div class="stack-s">${list.map((x) => `<div class="ach-row"><span class="ico" aria-hidden="true">🏅</span><div class="grow"><div class="top" style="display:flex;justify-content:space-between;gap:10px"><span class="ink">${esc(x.a.name)}</span><span class="vals dim">${esc(names[x.next.tier - 1] || '')}: ${x.value} из ${x.thr || '—'}</span></div><div class="progress"><i style="width:${Math.round(x.ratio * 100)}%"></i></div></div></div>`).join('')}</div></section>`;
+}
+
+// Компактный прогресс на главной: сколько пройдено и как менялось по неделям. Подробности на вкладке «Прогресс»
+export function progressMiniHtml(D, info, order = 55) {
+  const tot = L.requiredTotals(D, info), pass = L.passageSeries(D, info);
+  const pts = pass.map((s) => ({ label: s.week === 0 ? 'М0' : String(s.week), value: s.pct }));
+  return `<section class="card" style="order:${order}"><div class="h"><span class="ink">Прогресс</span><span class="grow"></span><button class="btn sm" data-go-progress><span class="ink">Подробнее</span></button></div>
+    <p class="title2 ink">Пройдено ${tot.done} из ${tot.total}</p>
+    ${pts.filter((x) => x.value != null).length > 1 ? lineChart({ points: pts, height: 110, yMin: 0, yMax: 100, fmtV: (v) => v + '%' }) : ''}
+    <p class="dim cap">Доля пройденных обязательных пунктов по неделям. Цифры замеров и видео смотри во вкладке Прогресс</p></section>`;
 }

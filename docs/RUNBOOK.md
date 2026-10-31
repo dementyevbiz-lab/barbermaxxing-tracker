@@ -8,6 +8,9 @@
 - Выкладка: `scripts/deploy.sh sql|functions|test|all`. Бот и расписание: `scripts/setup-bot.sh` (один раз, создаёт секреты и расписание).
 - Секреты функций (в Supabase, не в коде): `TELEGRAM_BOT_TOKEN` (вставляет заказчик), `NOTIFY_SECRET`, `BOT_WEBHOOK_SECRET` (создаёт `setup-bot.sh`).
 
+## Перед каждой выкладкой
+`node scripts/stamp.mjs` подписывает файлы версией, чтобы Telegram не показывал старую закэшированную версию (ставит карту модулей в index.html). Без этого ученики могут видеть прошлую версию.
+
 ## Проверки перед выкладкой
 ```bash
 node tests/logic.test.mjs                 # расчёты: уровни, недели, результат, перспектива, триггеры

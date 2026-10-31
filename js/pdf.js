@@ -39,7 +39,7 @@ export async function buildPdf() {
   const xp = data.xpNow(), step = data.lvlStep(), Lv = L.levelOf(xp, step), rank = L.rankOf(Lv, data.ranksList());
   const { done, notes } = L.doneSets(D);
   const cnt = { lesson: 0, homework: 0, notes: notes.size };
-  for (const i of items) if (done.has(i.id)) { if (i.kind === 'lesson' || i.kind === 'live') cnt.lesson++; if (i.kind === 'homework') cnt.homework++; }
+  for (const i of items) if (done.has(i.id)) { if (i.kind === 'lesson' || i.kind === 'live' || i.kind === 'material') cnt.lesson++; if (i.kind === 'homework') cnt.homework++; }
   const vids = L.videoCounts(D);
   const metrics = D.metrics.filter((m) => m.active && (D.goals[m.key] || L.metricSeries(D, m.key).length));
   const tierNames = D.settings.tier_names || ['Бронза', 'Серебро', 'Золото', 'Платина'];
@@ -87,7 +87,7 @@ export async function buildPdf() {
           <div style="font-size:12px;color:#A6A6A6;display:flex;gap:16px;margin-top:2px">${ptR ? `<span style="color:${LIME}">●</span><span>${nowLabel}</span>` : ''}<span style="color:${LIME}">◌</span><span>Куда ведёт текущий темп</span></div>
           ${D.goalText ? `<div style="font-size:14px;margin-top:8px">${esc(D.goalText)}</div>` : ''}`, 'flex:1.1;')}
         <div style="flex:1;display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:10px">${tile('Уроков и эфиров', cnt.lesson)}${tile('Домашек', cnt.homework)}${tile('Конспектов', cnt.notes)}</div>
+          <div style="display:flex;gap:10px">${tile('Уроков и материалов', cnt.lesson)}${tile('Домашек', cnt.homework)}${tile('Конспектов', cnt.notes)}</div>
           <div style="background:${ROW};border-radius:30px;padding:14px 18px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700;font-size:12px;text-transform:uppercase">Видео по направлениям</span><span style="font-size:12px;color:#A6A6A6">всего ${vids.total}</span></div>
             ${[['С клиентом', vids.client], ['Экспертное', vids.expert], ['Лайф', vids.life]].map(([n, v]) => `<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${n}</span><span style="color:#A6A6A6">${v}</span></div>${bar(v / maxV * 100)}</div>`).join('')}</div>
           <div style="background:${ROW};border-radius:30px;padding:14px 18px;flex:1"><div style="font-weight:700;font-size:12px;text-transform:uppercase;margin-bottom:6px">Три лучшие ачивки</div>

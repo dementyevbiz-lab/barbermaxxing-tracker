@@ -2,8 +2,8 @@
 import { $, esc, tg, state, reduced } from './core.js';
 import * as L from './logic.js';
 
-export const ICON = { lesson: '📺', live: '🎙️', homework: '📝', short_task: '⚡', challenge_task: '🎯' };
-export const KIND = { lesson: 'Урок', live: 'Эфир', homework: 'Домашка', short_task: 'Короткое задание', challenge_task: 'Задача челленджа' };
+export const ICON = { lesson: '📺', live: '🎙️', homework: '📝', material: '📚', short_task: '⚡', challenge_task: '🎯' };
+export const KIND = { lesson: 'Урок', live: 'Эфир', homework: 'Домашка', material: 'Материал', short_task: 'Короткое задание', challenge_task: 'Задача челленджа' };
 export const VIDEO_ICON = { client: '✂️', expert: '🎓', life: '☕' };
 export const SOURCES = { call: 'Созвон', live: 'Эфир', lesson: 'Урок', other: 'Другое' };
 export const SCREEN_KINDS = [
@@ -20,14 +20,19 @@ export const fmtMetric = (m, v) => (v == null || v === '' ? '—' : `${L.fmtNum(
 
 // ---------- линия пути А → Б ----------
 export function pathSvg(p = 'p') {
-  return `<svg class="path-svg" viewBox="0 0 320 204" role="img" aria-label="Путь от точки А к точке Б">
-    <path id="${p}Path" d="M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32" fill="none" stroke="url(#gLimePath)" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
+  const d = 'M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32';
+  return `<svg class="path-svg" viewBox="0 0 320 204" role="img" aria-label="Мой путь от старта к цели">
+    <path id="${p}Path" d="${d}" fill="none" stroke="url(#gLimeDim)" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
+    <path id="${p}Fill" d="${d}" pathLength="100" fill="none" stroke="url(#gLimePath)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 100" style="transition:stroke-dasharray 500ms cubic-bezier(.2,.7,.2,1)"/>
     <circle cx="26" cy="170" r="10" fill="url(#gLimeDim)" stroke="url(#gLimeBox)" stroke-width="2"/>
     <circle cx="294" cy="32" r="12" fill="url(#gLimeBox)"/>
     <text x="8" y="199" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="14" fill="url(#gInk)">Старт</text>
     <text x="262" y="12" font-family="Golos Text, system-ui, sans-serif" font-weight="700" font-size="14" fill="url(#gInk)">Цель</text>
     <circle id="${p}Now" r="8.5" fill="url(#gLimeBox)" stroke="url(#gRow)" stroke-width="3" cx="26" cy="170"/>
     <circle id="${p}Pace" r="13" fill="none" stroke="url(#gLimeBox)" stroke-width="2.2" stroke-dasharray="4 4" cx="26" cy="170"/>
+    <circle data-pt="a" cx="26" cy="170" r="24" fill="transparent" style="cursor:pointer" tabindex="0" role="button" aria-label="Старт"/>
+    <circle data-pt="b" cx="294" cy="32" r="24" fill="transparent" style="cursor:pointer" tabindex="0" role="button" aria-label="Цель"/>
+    <circle id="${p}HitNow" data-pt="now" r="20" fill="transparent" style="cursor:pointer" cx="26" cy="170" tabindex="0" role="button" aria-label="Сейчас"/>
   </svg>`;
 }
 export function pathLegend(hasNow) {
@@ -39,21 +44,20 @@ export function pathLegend(hasNow) {
 const curPos = new Map();
 export function placeMarkers(root, p, now, pace, animate = false) {
   const path = root.querySelector('#' + p + 'Path'); if (!path) return;
-  const nowEl = root.querySelector('#' + p + 'Now'), paceEl = root.querySelector('#' + p + 'Pace');
+  const nowEl = root.querySelector('#' + p + 'Now'), paceEl = root.querySelector('#' + p + 'Pace'), fill = root.querySelector('#' + p + 'Fill'), hit = root.querySelector('#' + p + 'HitNow');
   const at = (t) => path.getPointAtLength(Math.max(0, Math.min(1, t)) * path.getTotalLength());
   const set = (el, t) => { const pt = at(t); el.setAttribute('cx', pt.x.toFixed(1)); el.setAttribute('cy', pt.y.toFixed(1)); };
-  nowEl.style.display = now == null ? 'none' : '';
+  nowEl.style.display = now == null ? 'none' : ''; if (hit) hit.style.display = now == null ? 'none' : '';
+  // заполненная часть пути: от старта до «Сейчас»
+  if (fill) fill.setAttribute('stroke-dasharray', `${Math.round((now ?? 0) * 100)} 100`);
   const to = { now: now ?? 0, pace };
   const from = curPos.get(p);
+  const place = (n, pc) => { set(nowEl, n); set(paceEl, pc); if (hit) set(hit, n); };
   try {
-    if (!animate || reduced || !from) { set(nowEl, to.now); set(paceEl, to.pace); }
+    if (!animate || reduced || !from) place(to.now, to.pace);
     else {
       const t0 = performance.now(), dur = 320, ease = (x) => 1 - Math.pow(1 - x, 3);
-      const step = (ts) => {
-        const k = ease(Math.min(1, (ts - t0) / dur));
-        set(nowEl, from.now + (to.now - from.now) * k); set(paceEl, from.pace + (to.pace - from.pace) * k);
-        if (k < 1) requestAnimationFrame(step);
-      };
+      const step = (ts) => { const k = ease(Math.min(1, (ts - t0) / dur)); place(from.now + (to.now - from.now) * k, from.pace + (to.pace - from.pace) * k); if (k < 1) requestAnimationFrame(step); };
       requestAnimationFrame(step);
     }
   } catch (e) {}

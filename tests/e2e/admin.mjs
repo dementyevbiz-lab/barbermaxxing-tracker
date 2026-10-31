@@ -75,11 +75,11 @@ try {
   // программа
   await page.click('[data-tab="program"]'); await page.waitForSelector('#pAdd');
   await page.click('#pAdd'); await page.waitForSelector('#f_title');
-  await fillSheet({ title: 'E2E Только Личка', week: 4, est_minutes: 20 });
+  await fillSheet({ title: 'E2E Только Личка', week: 1, est_minutes: 20 });
   await page.evaluate(() => document.querySelectorAll('[data-multi="tariffs"][data-v="barbermax"]').forEach((b) => b.click()));
   await page.click('#fSave');
   ok('пункт добавлен в программу', await until(async () => (await c.admin.from('program_items').select('*').eq('title', 'E2E Только Личка')).data.length === 1));
-  await page.click('[data-w="4"]'); await page.waitForSelector('.row[data-id]'); await shot('program-admin');
+  await page.click('[data-w="1"]'); await page.waitForSelector('.row[data-id]'); await shot('program-admin');
   // видимость по тарифу
   const { data: pr } = await c.admin.from('program_items').select('*').eq('title', 'E2E Только Личка').single();
   ok('пункт только для тарифа Личка', JSON.stringify(pr.tariffs) === '["personal"]');

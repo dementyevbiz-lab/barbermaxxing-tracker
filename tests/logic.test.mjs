@@ -166,4 +166,19 @@ assert.equal(av.open.length, 4, 'за полученную открываетс�
 D.achievements.push({ code: 'qb', name: 'qb', counter: 'challenge:quick_booking', ord: 0, secret: false, tiers: [{ tier: 1, threshold: 1, xp: 10 }] });
 assert.ok(!L.achievementView(D).open.some((x) => x.a.code === 'qb'), 'ачивка челленджа скрыта, пока нет задач');
 
+// модуль 0 и недели
+const pre = base(); pre.profile.start_date = d(3); pre.items = [
+  { id: 'm1', week: 0, ord: 1, kind: 'material', required: true, active: true, tariffs: ['barbermax'], xp: 80 },
+  { id: 'm2', week: 0, ord: 2, kind: 'material', required: true, active: true, tariffs: ['barbermax'], xp: 20 },
+  { id: 'w1', week: 1, ord: 1, kind: 'lesson', required: true, active: true, tariffs: ['barbermax'] }];
+const pinfo = L.weekInfo(pre.profile, tariff, today);
+assert.equal(pinfo.state, 'before'); assert.equal(L.curWeek(pinfo), 0); assert.equal(L.weekState(pre, 0, pinfo), 'none'); assert.equal(L.weekState(pre, 1, pinfo), 'future');
+pre.completions = [{ item_id: 'm1', kind: 'done', completed_at: new Date().toISOString() }];
+assert.equal(L.weekState(pre, 0, pinfo), 'partial'); assert.equal(L.itemXp(pre.items[0], {}), 80, 'материал даёт опыт из поля');
+assert.deepEqual(L.requiredTotals(pre, pinfo), { total: 2, done: 1 }, 'до старта считается модуль 0');
+assert.deepEqual(L.passageSeries(pre, pinfo).map((x) => x.pct), [50]);
+assert.ok(L.calcP(pre, null, pinfo) > 0, 'перспектива считается и в модуле 0');
+assert.equal(L.weekTitle({ settings: {} }, 0), 'Модуль 0. Предобучение'); assert.equal(L.weekTitle({ settings: {} }, 3), 'Неделя 3');
+pre.completions.push({ item_id: 'm2', kind: 'done', completed_at: new Date().toISOString() }); assert.equal(L.weekState(pre, 0, pinfo), 'full');
+
 console.log('logic.test: все проверки пройдены');

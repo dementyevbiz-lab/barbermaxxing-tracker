@@ -4,8 +4,8 @@ begin;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'l-a@example.com'), ('00000000-0000-0000-0000-0000000000b1', 'l-b@example.com');
 insert into profiles (id, telegram_id, display_name, tariff_id, start_date, status, demo) values
-  ('00000000-0000-0000-0000-0000000000a1', 910000001, 'А', (select id from tariffs where code = 'barbermax'), current_date - 10, 'active', true),
-  ('00000000-0000-0000-0000-0000000000b1', 910000002, 'Б', (select id from tariffs where code = 'personal'), current_date - 10, 'active', true);
+  ('00000000-0000-0000-0000-0000000000a1', 910000001, 'А', (select id from tariffs where code = 'barbermax'), current_date - 40, 'active', true),
+  ('00000000-0000-0000-0000-0000000000b1', 910000002, 'Б', (select id from tariffs where code = 'personal'), current_date - 40, 'active', true);
 
 insert into program_items (id, week, ord, kind, title, est_minutes, has_notes) values
   ('10000000-0000-0000-0000-000000000001', 1, 1, 'lesson', 'Урок 30 минут', 30, true),
@@ -98,7 +98,7 @@ begin
   assert public.t_xp(a, 'video') = 0, 'отмена видео';
   assert not exists (select 1 from user_achievements where user_id = a and code in ('first_video', 'three_directions') and revoked_at is null), 'ачивки видео сняты';
   begin
-    insert into video_logs (user_id, kind, logged_on) values (a, 'client', current_date - 30); raise exception 'старая дата прошла';
+    insert into video_logs (user_id, kind, logged_on) values (a, 'client', current_date - 45); raise exception 'старая дата прошла';
   exception when datetime_field_overflow then null; end;
 
   -- Выводы: 5 за вывод, не больше 3 в день, корзина возвращает и отнимает
@@ -148,6 +148,26 @@ begin
   exception when insufficient_privilege then null; end;
   begin insert into user_achievements (user_id, code, tier) values (a, 'notes', 4); raise exception 'ачивка прошла';
   exception when insufficient_privilege then null; end;
+end $$;
+
+-- Недели открываются по очереди: будущая неделя недоступна и ученику, и для отметки
+do $$
+declare a constant uuid := '00000000-0000-0000-0000-0000000000a1'; n int;
+begin
+  reset role;
+  insert into program_items (id, week, ord, kind, title, xp, tariffs) values
+    ('10000000-0000-0000-0000-0000000000f1', 0, 1, 'material', 'Материал модуля 0', 80, '{barbermax}'),
+    ('10000000-0000-0000-0000-0000000000f2', 9, 1, 'lesson', 'Будущая неделя', 10, '{barbermax}');
+  set local role authenticated;
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","app_metadata":{"telegram_id":910000001}}', true);
+  assert (select count(*) from program_items where id = '10000000-0000-0000-0000-0000000000f1') = 1, 'модуль 0 виден';
+  assert (select count(*) from program_items where id = '10000000-0000-0000-0000-0000000000f2') = 0, 'будущая неделя скрыта';
+  insert into completions (user_id, item_id) values (a, '10000000-0000-0000-0000-0000000000f1');
+  assert public.t_xp(a, 'completion') = (select coalesce(sum(xp), 0) from xp_ledger where user_id = a and kind = 'completion' and undone_at is null), 'считается';
+  assert (select coalesce(sum(xp), 0) from xp_ledger where user_id = a and kind = 'completion' and undone_at is null and ref_id = (select id from completions where item_id = '10000000-0000-0000-0000-0000000000f1' and user_id = a)) = 80, 'материал даёт опыт из поля xp';
+  begin
+    insert into completions (user_id, item_id) values (a, '10000000-0000-0000-0000-0000000000f2'); raise exception 'отметка будущей недели прошла';
+  exception when insufficient_privilege or foreign_key_violation then null; end;
 end $$;
 
 -- Ученик Б не видит ничего из этого

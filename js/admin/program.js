@@ -16,6 +16,7 @@ export function currentCohortWeek() {
 export function renderProgramAdmin(root) {
   const maxW = Math.max(8, ...A.tariffs.map((t) => t.weeks), ...A.items.map((i) => i.week));
   if (selWeek == null) selWeek = currentCohortWeek();
+  if (selWeek === 1 && A.items.some((i) => i.week === 0 && !i.deleted_at) && !A.profiles.some((p) => p.status === 'active' && p.start_date && summarize(p).info.state === 'active')) selWeek = 0;
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Программа</span></h1><button class="btn pri sm" id="pAdd"><span class="onlime">Добавить</span></button></div>
     <div class="segscroll" id="pw"></div><div class="stack-s" id="pList"></div>
     <div class="btns"><button class="btn" id="pPrev"><span class="ink">Как видит ученик</span></button><button class="btn" id="pImp"><span class="ink">Импорт</span></button><button class="btn" id="pTrash"><span class="ink">Корзина</span></button><button class="btn" id="pHist"><span class="ink">История правок</span></button></div></div>`;
@@ -23,7 +24,7 @@ export function renderProgramAdmin(root) {
   const weekItems = () => A.items.filter((i) => i.week === selWeek && !i.deleted_at).sort((a, b) => a.ord - b.ord);
 
   function draw() {
-    $('#pw', root).innerHTML = Array.from({ length: maxW }, (_, i) => i + 1).map((w) => `<button class="${w === selWeek ? 'on' : ''}" data-w="${w}"><span class="${w === selWeek ? 'onlime' : 'ink'}">${w}</span></button>`).join('');
+    $('#pw', root).innerHTML = Array.from({ length: maxW + 1 }, (_, i) => i).map((w) => `<button class="${w === selWeek ? 'on' : ''}" data-w="${w}"><span class="${w === selWeek ? 'onlime' : 'ink'}">${w === 0 ? 'М0' : w}</span></button>`).join('');
     const list = weekItems();
     $('#pList', root).innerHTML = list.map((it, i) => `<div class="row" data-id="${it.id}" style="${it.active ? '' : 'opacity:.5'}"><span class="ico">${ICON[it.kind]}</span>
       <button class="row-main" data-edit><span class="t"><span class="ink">${esc(it.title)}</span></span><span class="d cap"><span class="dim">${KIND[it.kind]}${it.est_minutes ? ' · ' + it.est_minutes + ' мин' : ''}${it.required ? '' : ' · по желанию'} · ${(it.tariffs || []).map((c) => A.tariffs.find((t) => t.code === c)?.name || c).join(', ') || 'никому'}${it.user_id ? ' · персонально ' + esc(A.profiles.find((p) => p.id === it.user_id)?.display_name || '') : ''}${it.active ? '' : ' · скрыт'}</span></span></button>

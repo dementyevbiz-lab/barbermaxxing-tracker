@@ -155,9 +155,9 @@ export function itemForm(preset, after, existing) {
   formSheet({
     title: existing ? 'Пункт программы' : 'Новый пункт',
     fields: [
-      { k: 'kind', label: 'Тип', type: 'select', options: [['lesson', 'Урок'], ['live', 'Эфир'], ['homework', 'Домашка'], ['short_task', 'Короткое задание'], ['challenge_task', 'Задача челленджа']] },
-      { k: 'week', label: 'Неделя', type: 'number', required: true }, { k: 'title', label: 'Название', type: 'text', required: true }, { k: 'description', label: 'Описание', type: 'area' },
-      { k: 'on_date', label: 'Дата (если пункт на конкретный день)', type: 'date', hint: 'В этот день пункт появится в блоке «На сегодня»' }, { k: 'est_minutes', label: 'Минуты', type: 'number' }, { k: 'xp', label: 'Опыт (для коротких заданий и задач челленджа)', type: 'number' },
+      { k: 'kind', label: 'Тип', type: 'select', options: [['lesson', 'Урок'], ['live', 'Эфир'], ['homework', 'Домашка'], ['material', 'Материал (книга, видео, консультация, фильм)'], ['short_task', 'Короткое задание'], ['challenge_task', 'Задача челленджа']] },
+      { k: 'week', label: 'Неделя (0 это модуль предобучения)', type: 'number', required: true }, { k: 'title', label: 'Название', type: 'text', required: true }, { k: 'description', label: 'Описание', type: 'area' },
+      { k: 'on_date', label: 'Дата (если пункт на конкретный день)', type: 'date', hint: 'В этот день пункт появится в блоке «На сегодня»' }, { k: 'est_minutes', label: 'Минуты', type: 'number' }, { k: 'xp', label: 'Опыт (для материалов, коротких заданий и задач челленджа)', type: 'number', hint: 'Чем больше времени и усилий, тем больше опыта' },
       { k: 'why', label: 'Зачем (короткое задание)', type: 'text' }, { k: 'how', label: 'Как (короткое задание)', type: 'area' }, { k: 'result', label: 'Что считать результатом', type: 'text' },
       { k: 'required', label: 'Обязательный пункт недели', type: 'check' }, { k: 'has_notes', label: 'Можно отметить конспект', type: 'check' },
       { k: 'tags', label: 'Метки ситуации и код челленджа', type: 'tags', hint: 'Для задач Быстрой записи: quick_booking' },

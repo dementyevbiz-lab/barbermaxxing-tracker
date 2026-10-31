@@ -6,6 +6,7 @@ import { needsOnboarding, runOnboarding } from './onboarding.js';
 import { renderToday } from './today.js';
 import { renderPath } from './path.js';
 import { renderProgram } from './program.js';
+import { renderProgressTab } from './progressTab.js';
 import { renderNotes } from './notes.js';
 import { renderProfile } from './profile.js';
 import { pageOpen } from './ui.js';
@@ -69,11 +70,12 @@ async function boot() {
 const TABS = [
   ['today', 'Сегодня', '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.2M12 19v2.2M2.8 12H5M19 12h2.2M5.5 5.5l1.6 1.6M16.9 16.9l1.6 1.6M5.5 18.5l1.6-1.6M16.9 7.1l1.6-1.6"/>'],
   ['path', 'Путь', '<circle cx="5" cy="18.5" r="2"/><circle cx="19" cy="5.5" r="2"/><path d="M6.8 17.4c3-1.6 1.2-5.6 5.2-6.4s2.6-3.9 5.3-4.6"/>'],
+  ['progress', 'Прогресс', '<path d="M3 20h18"/><path d="M5 15l4-4 3 3 6-7"/><circle cx="18" cy="7" r="1.6"/>'],
   ['program', 'Программа', '<rect x="4" y="3.5" width="16" height="17" rx="4"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/>'],
   ['notes', 'Выводы', '<path d="M5 19.5h4l10-10a2.8 2.8 0 0 0-4-4l-10 10z"/><path d="M13.5 7l3.5 3.5"/>'],
   ['profile', 'Профиль', '<circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20c1.2-3.6 4-5.3 7.2-5.3s6 1.7 7.2 5.3"/>'],
 ];
-const SCREENS = { today: renderToday, path: renderPath, program: renderProgram, notes: renderNotes, profile: renderProfile };
+const SCREENS = { today: renderToday, path: renderPath, progress: renderProgressTab, program: renderProgram, notes: renderNotes, profile: renderProfile };
 let cleanup = null;
 
 function startStudent() {

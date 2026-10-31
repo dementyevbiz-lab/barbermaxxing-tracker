@@ -77,7 +77,7 @@ try {
   await page.waitForSelector('.today', { timeout: 20000 }); await wait(1200);
   const rows = page.locator('#actList .row');
   ok('на экране три пункта недели и одно короткое задание', (await rows.count()) + (await page.locator('#todayList .row[data-id]').count()) === 4, await rows.count());
-  ok('блок «На сегодня» с видео-задачей и коротким заданием', (await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#todayList .row[data-id]').count()) === 1);
+  ok('видео записывается кнопкой, а не заданием, и блок На сегодня только с заданиями дня', (await page.locator('#videoBtn').count()) === 1 && !(await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#todayList .row[data-id]').count()) === 1);
   ok('блок ачивок показан и подписан как награды', (await page.locator('.ach-row').count()) >= 1 && (await page.locator('text=Награды за активность').count()) === 1);
   ok('цитата дня показана и только проверенная', await page.locator('.quote').count() === 1 && !(await page.locator('.quote').innerText()).includes('непроверенная'));
   ok('фильм показан по метке ситуации', (await page.locator('text=E2E Фильм').count()) === 1);
@@ -104,7 +104,7 @@ try {
   await page.click('#scrim', { position: { x: 5, y: 5 } }); await wait(500);
 
   // видео
-  await page.click('#videoRow [data-vopen]'); await page.waitForSelector('[data-v="client"]'); await page.click('[data-v="client"]'); await page.fill('#vViews', '120'); await page.fill('#vNote', 'https://example.com/v1'); await page.click('#vSave');
+  await page.click('#videoBtn'); await page.waitForSelector('[data-v="client"]'); await page.click('[data-v="client"]'); await page.fill('#vViews', '120'); await page.fill('#vNote', 'https://example.com/v1'); await page.click('#vSave');
   ok('видео записано и даёт 15 опыта', await until(async () => (await ledgerSum(c, p.id, 'video')) === 15));
   const { data: vl } = await c.admin.from('video_logs').select('*').eq('user_id', p.id); ok('просмотры и ссылка видео сохранены', vl[0]?.views === 120 && vl[0]?.kind === 'client' && vl[0]?.note === 'https://example.com/v1');
   await closeModal(); await page.waitForSelector('#toastUndo:not([hidden])'); await page.click('#toastUndo');
@@ -136,19 +136,22 @@ try {
   await page.click('[data-m="avg_check"]'); await page.waitForSelector('#sheet.open .kv'); await shot(page, 'metric'); await page.click('#scrim', { position: { x: 5, y: 5 } }); await wait(400);
 
   // результаты видео: добавить просмотры позже и записать видео задним числом
-  await closeModal(); await page.click('[data-tab="path"]'); await page.waitForSelector('#vAdd');
-  ok('на Пути три полоски видео по направлениям', await page.locator('.prog-row:has-text("С клиентом"), .prog-row:has-text("Экспертное"), .prog-row:has-text("Лайф")').count() >= 3);
+  await closeModal(); await page.click('[data-tab="progress"]'); await page.waitForSelector('#vAdd');
+  ok('в Прогрессе есть графики прохождения и опыта', (await page.locator('svg.chart').count()) >= 1);
+  ok('на вкладке Прогресс три полоски видео по направлениям', await page.locator('.prog-row:has-text("С клиентом"), .prog-row:has-text("Экспертное"), .prog-row:has-text("Лайф")').count() >= 3);
   await page.click('#vAdd'); await page.waitForSelector('[data-v="life"]'); await page.click('[data-v="life"]');
   const past = new Date(Date.now() - 5 * 864e5).toISOString().slice(0, 10); await page.fill('#vDate', past); await page.fill('#vViews', '800'); await page.click('#vSave');
   ok('видео можно записать задним числом с просмотрами', await until(async () => (await c.admin.from('video_logs').select('*').eq('user_id', p.id)).data.some((v) => v.logged_on === past && v.views === 800 && v.kind === 'life')));
   await wait(900); await page.locator('[data-vid]').first().click(); await page.waitForSelector('#eViews'); await page.fill('#eViews', '5000'); await page.click('#eSave');
   ok('просмотры к записанному видео добавляются позже', await until(async () => (await c.admin.from('video_logs').select('views').eq('user_id', p.id)).data.some((v) => v.views === 5000)));
-  await wait(700); ok('на Пути видно лучшее видео', (await page.locator('#page, body').first().innerText()).includes('Лучшее видео'));
+  await wait(700); ok('в Прогрессе видно лучшее видео', (await page.locator('#page, body').first().innerText()).includes('Лучшее видео'));
 
   // программа
   await page.click('[data-tab="program"]'); await page.waitForSelector('[data-w]'); await wait(300); await shot(page, 'program');
   ok('на вкладке Программа пункты текущей недели', await page.locator('.row[data-id]').count() >= 3, await page.locator('.row[data-id]').count());
-  await page.click('[data-w="6"]'); ok('будущая неделя закрыта: задания не видны, написано когда откроется', (await page.locator('#wkBody .row[data-id]').count()) === 0 && (await page.locator('#wkBody').innerText()).includes('откроется'));
+  ok('будущая неделя закрыта: выбрать её нельзя', await page.locator('[data-w="6"]').isDisabled() && await page.locator('[data-w="5"]').isDisabled() && !(await page.locator('[data-w="4"]').isDisabled()));
+  ok('модуль 0 доступен и виден в Программе', !(await page.locator('[data-w="0"]').isDisabled()));
+  await page.click('[data-w="0"]'); await wait(300); ok('в модуле 0 пять материалов', (await page.locator('#wkBody .row[data-id]').count()) === 5 && (await page.locator('#wkBody').innerText()).includes('Дзиро мечтает о суши'));
 
   // выводы и вопросы
   await page.click('[data-tab="notes"]'); await page.waitForSelector('#addIns');
@@ -171,22 +174,28 @@ try {
   await page.click('[data-cur="KZT"]'); await wait(800);
   ok('валюта среднего чека сохраняется', (await c.admin.from('profiles').select('prefs').eq('id', p.id).single()).data.prefs.currency === 'KZT');
 
-  // ученик до старта программы: уже может отмечать и снимать видео, видит задачу на сегодня
+  // ученик до старта программы: модуль 0, задача дня, видео кнопкой
   {
     const f = await makeStudent(c, { name: 'E2E До старта', startDaysAgo: -2, onboardingDone: true });
     const ty = new Date().toISOString().slice(0, 10);
-    await c.admin.from('program_items').insert([{ kind: 'live', week: 1, ord: 1, title: 'E2E Эфир дня', required: true, user_id: f.id, tariffs: ['barbermax'], on_date: ty },
-      { kind: 'lesson', week: 1, ord: 2, title: 'E2E Урок недели', required: true, user_id: f.id, tariffs: ['barbermax'] }]);
+    await c.admin.from('program_items').insert([{ kind: 'material', week: 0, ord: 20, title: 'E2E Материал дня', required: true, user_id: f.id, tariffs: ['barbermax'], on_date: ty, xp: 40 },
+      { kind: 'material', week: 0, ord: 21, title: 'E2E Материал модуля', required: true, user_id: f.id, tariffs: ['barbermax'], xp: 60 },
+      { kind: 'lesson', week: 1, ord: 22, title: 'E2E Урок первой недели', required: true, user_id: f.id, tariffs: ['barbermax'], xp: 10 }]);
     const fa = await openApp(browser, srv.url, await sessionFor(c, f.id)); const fp = fa.page;
     await fp.waitForSelector('.today', { timeout: 20000 }); await wait(800);
-    const bt = await fp.locator('#bToday').innerText();
-    ok('до старта в «На сегодня» есть задача дня и видео', bt.includes('E2E Эфир дня') && bt.includes('Снять видео'), bt);
-    ok('до старта видны задания первой недели', (await fp.locator('#bActions').innerText()).includes('E2E Урок недели'));
-    await fp.locator('#todayList .row', { hasText: 'E2E Эфир дня' }).locator('[data-chk]').click();
-    ok('до старта можно отмечать: опыт пришёл', await until(async () => (await ledgerSum(c, f.id, 'completion')) === 10));
-    await fp.click('#videoRow [data-vopen]'); await fp.click('[data-v="expert"]'); await fp.click('#vSave');
-    ok('до старта можно записать видео', await until(async () => (await ledgerSum(c, f.id, 'video')) === 15));
-    await wait(500); ok('галочка видео-задачи встала', await fp.locator('#videoRow .chk.on').count() === 1);
+    ok('до старта показан модуль 0 и дата старта', (await fp.locator('.today').innerText()).toLowerCase().includes('модуль 0') && (await fp.locator('.today').innerText()).includes('Старт программы'));
+    ok('до старта в «На сегодня» только задача дня', (await fp.locator('#bToday').innerText()).includes('E2E Материал дня') && !(await fp.locator('#bToday').innerText()).includes('Снять видео'));
+    ok('до старта видны материалы модуля 0, но не первой недели', (await fp.locator('#bActions').innerText()).includes('E2E Материал модуля') && !(await fp.locator('body').innerText()).includes('E2E Урок первой недели'));
+    ok('в полоске недель закрыты все недели после модуля 0', (await fp.locator('.strip .wk:disabled').count()) === 7 && (await fp.locator('.strip .wk.cur').count()) === 1);
+    await fp.locator('#todayList .row', { hasText: 'E2E Материал дня' }).locator('[data-chk]').click();
+    ok('материал даёт опыт из поля xp (40)', await until(async () => (await ledgerSum(c, f.id, 'completion')) === 40));
+    await fp.locator('#actList .row', { hasText: 'E2E Материал модуля' }).locator('[data-chk]').click();
+    ok('книга даёт больше опыта пропорционально (60)', await until(async () => (await ledgerSum(c, f.id, 'completion')) === 100));
+    await fp.click('#videoBtn'); await fp.click('[data-v="expert"]'); await fp.click('#vSave');
+    ok('до старта можно записать видео кнопкой', await until(async () => (await ledgerSum(c, f.id, 'video')) === 15));
+    const sb2 = c.anon(); const ss2 = await sessionFor(c, f.id); await sb2.auth.setSession({ access_token: ss2.access_token, refresh_token: ss2.refresh_token });
+    ok('сервер не отдаёт задания будущих недель', (await sb2.from('program_items').select('title').like('title', 'E2E Урок первой недели')).data.length === 0);
+    await wait(500); await fp.click('[data-tab="progress"]'); await fp.waitForSelector('.stat'); ok('до старта в Прогрессе только модуль 0: вместо пустых графиков сводка', (await fp.locator('svg.chart').count()) === 0 && (await fp.locator('.stat').first().innerText()).includes('Пройдено'));
     ok('до старта без ошибок в консоли', fa.errors.length === 0, fa.errors.join(' | ')); await fa.ctx.close();
   }
 

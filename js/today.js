@@ -6,7 +6,8 @@ import { bus } from './data.js';
 import { ICON, KIND, VIDEO_ICON, checkSvg, pathSvg, pathLegend, placeMarkers, pathHelpSheet, plate } from './ui.js';
 import { openCheckpoint, openVideoSheet } from './forms.js';
 import { itemSheet } from './program.js';
-import { progressHtml, achievementsHtml } from './progress.js';
+import { progressMiniHtml, achievementsHtml } from './progress.js';
+import { pathCardHtml, bindPathCard } from './pathcard.js';
 
 export const CALL_KIND = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
 const hiddenBlock = (name) => (state.D.profile.ui_overrides?.hide || []).includes(name);
@@ -23,11 +24,11 @@ export function todayModel() {
 }
 
 // Неделя, по которой показываем задания. До старта это первая неделя: ученик уже видит, что его ждёт, и может отмечать
-export const effWeek = (info) => (info.state === 'active' || info.state === 'finished' ? info.n : info.state === 'before' ? 1 : 0);
+export const effWeek = (info) => L.curWeek(info);
 function actionItems(m) {
   const { info, items, D, tags } = m;
-  const wk = info.state === 'active' ? info.n : info.state === 'before' ? 1 : 0;
-  if (!wk) return { today: [], week: [] };
+  const wk = info.state === 'active' ? info.n : info.state === 'before' ? 0 : -1;
+  if (wk < 0) return { today: [], week: [] };
   const ty = L.ymd(m.today);
   const base = items.filter((i) => !['short_task', 'challenge_task'].includes(i.kind));
   const st = L.pickShortTask(D, { state: 'active', n: wk }, tags);
@@ -35,11 +36,6 @@ function actionItems(m) {
   const today = [...base.filter((i) => i.on_date === ty), ...(st ? [st] : []), ...doneShort.filter((x) => !st || x.id !== st.id)];
   const week = base.filter((i) => i.week === wk && i.on_date !== ty);
   return { today, week };
-}
-
-function videoRowHtml(m) {
-  if (m.readOnly || hiddenBlock('video') || !(m.info.state === 'active' || m.info.state === 'before')) return '';
-  return `<div class="row" id="videoRow"><span class="ico" aria-hidden="true">🎬</span><button class="row-main" data-vopen><span class="t"><span class="ink">Снять видео</span></span><span class="d cap"><span class="dim" id="videoDetail">С клиентом, экспертное или лайф</span></span></button><button class="chk" data-vchk aria-label="Отметить">${checkSvg}</button></div>`;
 }
 
 function rowDetail(it, m) {
@@ -82,20 +78,17 @@ export function renderToday(root) {
       <span class="plate" id="weekChip"><span class="onlime" id="weekChipTxt"></span></span>
     </section>
     <section class="strip-wrap" id="bStrip" style="order:20"><div class="strip" id="strip"></div></section>
-    <section class="sec" id="bToday" style="order:35"><div class="h"><span class="ink">На сегодня</span><span class="grow"></span><span class="dim cap" id="todayCount"></span></div><div class="rows" id="todayList">${videoRowHtml(m)}</div></section>
-    <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">${info.state === 'before' ? 'Скоро, неделя 1' : 'Эта неделя'}</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
-    ${challenge ? `<section class="card" id="bChallenge" style="order:45"><div class="h"><span class="ink">${esc(challenge.c.title)}</span><span class="grow"></span><span class="dim cap" id="chProg"></span></div>${challenge.c.rules ? `<p class="dim cap">${esc(challenge.c.rules)}</p>` : ''}<div class="rows" id="chList"></div>
+    <section class="sec" id="bToday" style="order:35"><div class="h"><span class="ink">На сегодня</span><span class="grow"></span><span class="dim cap" id="todayCount"></span></div><div class="rows" id="todayList"></div></section>
+    <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">${info.state === 'before' ? esc(L.weekTitle(D, 0)) : 'Эта неделя'}</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
+    ${m.readOnly || hiddenBlock('video') || !(info.state === 'active' || info.state === 'before') ? '' : `<section class="video" style="order:45"><button class="btn pri wide" id="videoBtn"><span class="onlime">Записать видео</span></button><span class="dim cap" id="videoCap">Записывай каждое снятое видео, оно попадёт в твою статистику</span></section>`}
+    ${challenge ? `<section class="card" id="bChallenge" style="order:47"><div class="h"><span class="ink">${esc(challenge.c.title)}</span><span class="grow"></span><span class="dim cap" id="chProg"></span></div>${challenge.c.rules ? `<p class="dim cap">${esc(challenge.c.rules)}</p>` : ''}<div class="rows" id="chList"></div>
       <p class="dim cap">${challenge.result?.reward_status === 'given' ? 'Награда получена: ' : challenge.result?.completed_at ? 'Пройден. Награда: ' : 'Награда: '}${esc(challenge.c.reward_text || '')}</p></section>` : ''}
   </div><div class="col">
     ${bannerHtml(m)}
-    ${progressHtml(D, info, m.items, L.calcR(D).rows)}
-    ${achievementsHtml(D)}
-    <section class="card" id="bPath" style="order:30">
-      <div class="h"><span class="ink">Мой путь</span><span class="grow"></span><button class="qbtn" id="pathQ" aria-label="Что это"><span class="dim">?</span></button></div>
-      ${pathSvg('t')}${pathLegend(hasNow)}
-      ${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}
-    </section>
-    ${quote ? `<section class="card" style="order:60"><p class="quote ink">${esc(quote.quote.text)}</p><span class="dim cap">${esc(quote.quote.author)}${quote.quote.source ? ', ' + esc(quote.quote.source) : ''}</span></section>` : ''}
+    ${pathCardHtml(D, info, m.R, { p: 't', order: 50 })}
+    ${progressMiniHtml(D, info, 55)}
+    ${achievementsHtml(D, 60)}
+    ${quote ? `<section class="card" style="order:65"><p class="quote ink">${esc(quote.quote.text)}</p><span class="dim cap">${esc(quote.quote.author)}${quote.quote.source ? ', ' + esc(quote.quote.source) : ''}</span></section>` : ''}
     ${movie ? `<section class="card" style="order:70"><span class="plate"><span class="onlime">${movieHit.byTag ? 'Следующий шаг' : movie.kind === 'book' ? 'Книга недели' : 'Фильм недели'}</span></span><p class="title2 ink">${esc(movie.title)}${movie.author ? ' · ' + esc(movie.author) : ''}${movie.year ? ', ' + movie.year : ''}</p><p class="dim cap">${esc(movie.why)}</p></section>` : ''}
     ${sug ? `<section class="card" id="bQuestion" style="order:80"><span class="plate"><span class="onlime">Можно спросить</span></span><p class="title2 ink">${esc(sug.text)}</p>
       ${sug.trigger.metric ? `<span class="dim cap">${esc(sug.trigger.metric.name)}</span>` : ''}
@@ -114,17 +107,19 @@ export function renderToday(root) {
     const xp = data.xpNow(), step = data.lvlStep(), Lv = L.levelOf(xp, step), base = L.levelBase(Lv, step), next = L.levelBase(Lv + 1, step);
     q('#lvlNum').textContent = Lv; q('#rankName').textContent = L.rankOf(Lv, data.ranksList());
     q('#xpFill').style.width = Math.max(2, Math.min(100, (xp - base) / (next - base) * 100)) + '%';
-    q('#weekChipTxt').textContent = info.state === 'active' || info.state === 'finished' ? `Неделя ${info.n} из ${info.weeks}` : info.state === 'before' ? 'Старт ' + L.fmtDayShort(info.start) : D.profile.tariff?.name || '';
+    q('#weekChipTxt').textContent = info.state === 'active' || info.state === 'finished' ? `Неделя ${info.n} из ${info.weeks}` : info.state === 'before' ? 'Модуль 0' : D.profile.tariff?.name || '';
     fit(q('#rankWrap'), 21);
   }
   function renderStrip() {
     const el = q('#strip'); el.innerHTML = '';
     if (info.state === 'nostart') { q('#bStrip').hidden = true; return; }
-    for (let w = 1; w <= info.weeks; w++) {
+    const cw = L.curWeek(info);
+    for (let w = 0; w <= info.weeks; w++) {
       const st = L.weekState(D, w, info, m.items);
       const b = document.createElement('button');
-      b.className = 'wk ' + st + ((info.state === 'active' && w === info.n) || (info.state === 'before' && w === 1) ? ' cur' : ''); b.dataset.week = w; b.setAttribute('aria-label', 'Неделя ' + w);
-      b.innerHTML = `<span class="${st === 'full' || st === 'partial' ? 'onlime' : 'dim'}">${w}</span>`;
+      b.className = 'wk ' + st + (w === cw ? ' cur' : ''); b.dataset.week = w; b.setAttribute('aria-label', w === 0 ? 'Модуль 0' : 'Неделя ' + w);
+      b.disabled = st === 'future';
+      b.innerHTML = `<span class="${st === 'full' || st === 'partial' ? 'onlime' : 'dim'}">${w === 0 ? 'М0' : w}</span>`;
       el.appendChild(b);
     }
   }
@@ -133,8 +128,8 @@ export function renderToday(root) {
     const mm = model2();
     placeMarkers(root, 't', mm.R, mm.P, animate);
   }
-  q('#strip').addEventListener('click', (e) => { const b = e.target.closest('.wk'); if (!b) return; state.programWeek = Number(b.dataset.week); state.app.go('program'); });
-  q('#pathQ').onclick = () => openSheet(pathHelpSheet(hasNow));
+  q('#strip').addEventListener('click', (e) => { const b = e.target.closest('.wk'); if (!b || b.disabled) return; state.programWeek = Number(b.dataset.week); state.app.go('program'); });
+  bindPathCard(root, 't', D, m.R, m.P);
   q('#lvlBtn').onclick = () => {
     const xp = data.xpNow(), step = data.lvlStep(), Lv = L.levelOf(xp, step);
     openSheet(`<h2 class="sh-title"><span class="ink">Уровень ${Lv} · ${esc(L.rankOf(Lv, data.ranksList()))}</span></h2>
@@ -209,21 +204,18 @@ export function renderToday(root) {
 
   // ----- видео -----
   function renderVideo() {
-    const row = q('#videoRow'); if (!row) return;
+    const cap = q('#videoCap'); if (!cap) return;
     const n = videosToday();
-    row.classList.toggle('done', n > 0); const c = row.querySelector('.chk'); c.classList.toggle('on', n > 0);
     let week = { total: 0 };
     if (info.state === 'active') week = L.videoCounts(D, L.weekStart(info.start, info.n), L.weekEnd(info.start, info.n));
-    row.querySelector('#videoDetail').textContent = n || week.total ? `Сегодня ${n} · на этой неделе ${week.total}` : 'С клиентом, экспертное или лайф';
-    renderActions(false);
+    cap.textContent = n || week.total ? `Сегодня ${n} · за эту неделю ${week.total}. Просмотры можно добавить на вкладке Прогресс` : 'Записывай каждое снятое видео, оно попадёт в твою статистику';
   }
   const openVideo = () => openVideoSheet({ onSaved: (row) => {
     const L1 = L.levelOf(data.xpNow(), data.lvlStep());
     renderHeader(); renderStrip(); renderPath(true); renderVideo();
-    toast('Видео записано. Просмотры можно добавить на вкладке Путь', async () => { await data.setVideoUndone(row.id, true); renderHeader(); renderStrip(); renderPath(true); renderVideo(); toast('Отметка снята'); });
+    toast('Видео записано', async () => { await data.setVideoUndone(row.id, true); renderHeader(); renderStrip(); renderPath(true); renderVideo(); toast('Отметка снята'); });
   } });
-  const vrow = q('#videoRow');
-  if (vrow) vrow.addEventListener('click', (e) => { if (e.target.closest('[data-vopen],[data-vchk]')) openVideo(); });
+  const vb = q('#videoBtn'); if (vb) vb.onclick = openVideo;
 
   // ----- карточки -----
   const qs = q('#qSave');
@@ -250,6 +242,7 @@ export function renderToday(root) {
     }));
 
   const gp = q('[data-go-profile]'); if (gp) gp.onclick = () => state.app.go('profile');
+  const gpr = q('[data-go-progress]'); if (gpr) gpr.onclick = () => state.app.go('progress');
   renderHeader(); renderStrip(); renderActions(false); renderVideo();
   const onProgress = () => { if (root.isConnected) { renderHeader(); } };
   bus.addEventListener('progress', onProgress);
@@ -263,9 +256,10 @@ export function renderToday(root) {
 
 function bannerHtml(m) {
   const { info, D } = m;
-  if (D.profile.status === 'paused') return `<section class="card" style="order:5"><span class="plate"><span class="onlime">Пауза</span></span><p class="title2 ink">Программа на паузе</p><p class="dim cap">Всё сохранено, отмечать пока нельзя</p></section>`;
-  if (info.state === 'before') return `<section class="card" style="order:5"><span class="plate lime"><span class="onlime">Старт ${esc(L.daysWord(info.daysToStart))}</span></span><p class="title2 ink">Программа начнётся ${L.fmtDay(info.start)}</p><p class="dim cap">Уже можно отмечать задания и видео: опыт засчитается</p></section>`;
-  if (info.state === 'finished') return `<section class="card" style="order:5"><span class="plate lime"><span class="onlime">Программа пройдена</span></span><p class="title2 ink">Итог можно скачать в профиле</p><button class="btn pri" data-go-profile style="align-self:flex-start"><span class="onlime">Открыть профиль</span></button></section>`;
+  if (D.profile.status === 'paused') return `<section class="card" style="order:24"><span class="plate"><span class="onlime">Пауза</span></span><p class="title2 ink">Программа на паузе</p><p class="dim cap">Всё сохранено, отмечать пока нельзя</p></section>`;
+  if (info.state === 'before') return `<section class="card" style="order:24"><span class="plate lime"><span class="onlime">${esc(L.weekTitle(D, 0))}</span></span>
+    <p class="title2 ink">Старт программы ${L.fmtDay(info.start)}</p><p class="dim">${esc(D.settings.module0_text || '')}</p></section>`;
+  if (info.state === 'finished') return `<section class="card" style="order:24"><span class="plate lime"><span class="onlime">Программа пройдена</span></span><p class="title2 ink">Итог можно скачать в профиле</p><button class="btn pri" data-go-profile style="align-self:flex-start"><span class="onlime">Открыть профиль</span></button></section>`;
   return '';
 }
 

@@ -37,7 +37,7 @@ export function asD(p) {
 // Сводка по ученику для списка и сводки
 export function summarize(p, today = L.startOfDay()) {
   const D = asD(p), info = L.weekInfo(p, p.tariff, today), items = L.visibleItems(D), { done } = L.doneSets(D);
-  const expected = info.state === 'active' || info.state === 'finished' ? items.filter((i) => i.required && ['lesson', 'live', 'homework'].includes(i.kind) && i.week <= info.n) : [];
+  const expected = info.state === 'active' || info.state === 'finished' ? items.filter((i) => i.required && L.CORE_KINDS.includes(i.kind) && i.week <= info.n) : [];
   const share = expected.length ? expected.filter((i) => done.has(i.id)).length / expected.length : null;
   const cp = D.checkpoints.filter((c) => !c.submitted_at).sort((a, b) => a.idx - b.idx)[0];
   const left = cp ? L.diffDays(L.parseDay(cp.due_date), today) : null;

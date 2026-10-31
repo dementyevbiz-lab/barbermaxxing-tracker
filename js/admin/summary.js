@@ -11,7 +11,7 @@ export function insights() {
   const out = [];
 
   // 1 и 2: пункты, которые не отметила большая часть тех, у кого неделя уже прошла
-  for (const it of A.items.filter((i) => !i.deleted_at && i.active && i.required && ['lesson', 'live', 'homework'].includes(i.kind) && !i.user_id)) {
+  for (const it of A.items.filter((i) => !i.deleted_at && i.active && i.required && L.CORE_KINDS.includes(i.kind) && !i.user_id)) {
     const who = act.filter((s) => (it.tariffs || []).includes(s.p.tariff?.code) && s.info.state !== 'before' && s.info.n >= it.week && (s.info.n > it.week || s.info.state === 'finished'));
     if (who.length < 2) continue;
     const notDone = who.filter((s) => !L.doneSets(s.D).done.has(it.id));

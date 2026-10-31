@@ -38,7 +38,7 @@ export function itemXp(it, xp = {}) {
     return Math.min(xp.lesson_max ?? 30, Math.round(it.est_minutes / (xp.lesson_per_minutes ?? 3)));
   }
   if (it.kind === 'homework') return xp.homework ?? 30;
-  return it.xp || 0;
+  return it.xp || 0; // материал, короткое задание, задача челленджа: опыт задан у пункта
 }
 
 // ---------- неделя ученика ----------
@@ -72,16 +72,20 @@ export function doneSets(D) {
 }
 export const liveVideos = (D) => (D.videos || []).filter((v) => !v.undone_at);
 
-const WEIGHTS = { lesson: 1, live: 1, homework: 2 };
+export const CORE_KINDS = ['lesson', 'live', 'homework', 'material']; // пункты программы, из которых считается прохождение
+const WEIGHTS = { lesson: 1, live: 1, homework: 2, material: 1 };
 export const videoWeight = 1, notesWeight = 0.5;
 
 // Состояние недели w: full | partial | none | future
+// Текущая неделя ученика: до старта это модуль 0
+export const curWeek = (info) => (info.state === 'before' ? 0 : info.state === 'active' || info.state === 'finished' ? info.n : -1);
+export function weekTitle(D, w) { return D.settings?.week_titles?.[String(w)] || (w === 0 ? 'Модуль 0. Предобучение' : `Неделя ${w}`); }
 export function weekState(D, w, info, items = visibleItems(D)) {
-  if (info.state === 'before' || info.state === 'nostart' || w > info.n) return 'future';
+  if (info.state === 'nostart' || w > curWeek(info)) return 'future';
   const { done, notes } = doneSets(D);
   const wk = items.filter((i) => i.week === w);
-  const req = wk.filter((i) => i.required && ['lesson', 'live', 'homework'].includes(i.kind));
-  const from = weekStart(info.start, w), to = weekEnd(info.start, w);
+  const req = wk.filter((i) => i.required && CORE_KINDS.includes(i.kind));
+  const from = w === 0 ? new Date(0) : weekStart(info.start, w), to = w === 0 ? addDays(info.start, -1) : weekEnd(info.start, w);
   const vids = liveVideos(D).filter((v) => { const d = parseDay(v.logged_on); return d >= from && d <= to; }).length;
   const any = wk.some((i) => done.has(i.id) || notes.has(i.id)) || vids > 0;
   if (req.length) return req.every((i) => done.has(i.id)) ? 'full' : any ? 'partial' : 'none';
@@ -133,12 +137,12 @@ export function calcP(D, R, info, items = visibleItems(D)) {
   const cfg = D.settings?.perspective || {};
   const k = cfg.k ?? 0.6, w = { ...WEIGHTS, ...(cfg.weights || {}) };
   const wVideo = w.video ?? videoWeight, wNotes = w.notes ?? notesWeight;
-  const n = info.state === 'active' || info.state === 'finished' ? info.n : 0;
-  if (!n) return Math.max(R || 0, 0);
+  const n = curWeek(info);
+  if (n < 0) return Math.max(R || 0, 0);
   const { done, notes } = doneSets(D);
-  let expected = (n - 1) * (cfg.videos_per_week ?? 2) * wVideo, got = 0;
+  let expected = Math.max(0, n - 1) * (cfg.videos_per_week ?? 2) * wVideo, got = 0;
   for (const it of items) {
-    if (!['lesson', 'live', 'homework'].includes(it.kind) || it.week > n) continue;
+    if (!CORE_KINDS.includes(it.kind) || it.week > n) continue;
     const wt = w[it.kind] ?? w.lesson ?? 1;
     if (it.required) expected += wt;
     if (it.required && done.has(it.id)) got += wt;
@@ -195,11 +199,11 @@ export function evaluateTriggers(D, today = startOfDay()) {
   if (hw && info.state === 'active') add('homework_overdue', { item: hw });
 
   // 3 два урока подряд не отмечены (из закрытых недель)
-  const past = items.filter((i) => (i.kind === 'lesson' || i.kind === 'live') && i.week < info.n);
+  const past = items.filter((i) => ['lesson', 'live', 'material'].includes(i.kind) && i.week < info.n);
   if (past.length >= 2) { const [a, b] = past.slice(-2); if (!done.has(a.id) && !done.has(b.id)) add('lessons_skipped'); }
 
   // 4 урок открыт и не отмечен 5 дней
-  const stuck = items.find((i) => (i.kind === 'lesson' || i.kind === 'live') && !done.has(i.id) && i.week <= info.n
+  const stuck = items.find((i) => ['lesson', 'live', 'material'].includes(i.kind) && !done.has(i.id) && i.week <= info.n
     && diffDays(today, weekStart(info.start, i.week)) >= (prm('stuck_lesson').days ?? 5));
   if (stuck) add('stuck_lesson', { item: stuck });
 
@@ -244,7 +248,7 @@ export function evaluateTriggers(D, today = startOfDay()) {
   if (P - (R || 0) >= (prm('perspective_gap').gap ?? 0.3)) add('perspective_gap');
 
   // 13 сделано больше плана недели
-  const curReq = items.filter((i) => i.week === info.n && i.required && ['lesson', 'live', 'homework'].includes(i.kind));
+  const curReq = items.filter((i) => i.week === info.n && i.required && CORE_KINDS.includes(i.kind));
   if (info.state === 'active' && curReq.length && curReq.every((i) => done.has(i.id)) && items.some((i) => i.week > info.n && done.has(i.id))) add('ahead_plan');
 
   // 14 средний чек не менялся 4 недели
@@ -348,7 +352,7 @@ export function achievementProgress(D) {
   const counter = (key) => {
     if (key === 'videos') return vids.length;
     if (key === 'videos_each_dir') return Math.min(...['client', 'expert', 'life'].map((k) => vids.filter((v) => v.kind === k).length));
-    if (key === 'lessons') return cnt((i) => i && ['lesson', 'live'].includes(i.kind));
+    if (key === 'lessons') return cnt((i) => i && ['lesson', 'live', 'material'].includes(i.kind));
     if (key === 'homework') return cnt((i) => i && i.kind === 'homework');
     if (key === 'notes') return live.filter((c) => c.kind === 'notes').length;
     if (key === 'checkpoints_ontime') return (D.checkpoints || []).filter((c) => c.submitted_at && c.submitted_at.slice(0, 10) <= c.due_date).length;
@@ -415,3 +419,33 @@ export function achievementView(D) {
   const open = all.filter((x, i) => i < 3 + earned || x.got.length);
   return { open, locked: all.length - open.length };
 }
+
+// ---------- данные для графиков прогресса ----------
+// Доля пройденных обязательных пунктов по неделям (модуль 0 и недели до текущей)
+export function passageSeries(D, info) {
+  const cur = curWeek(info), items = visibleItems(D), { done } = doneSets(D), out = [];
+  for (let w = 0; w <= cur; w++) {
+    const req = items.filter((i) => i.week === w && i.required && CORE_KINDS.includes(i.kind));
+    out.push({ week: w, total: req.length, done: req.filter((i) => done.has(i.id)).length, pct: req.length ? Math.round(req.filter((i) => done.has(i.id)).length / req.length * 100) : null });
+  }
+  return out;
+}
+// Накопленный опыт по дням
+export function xpSeries(D) {
+  const byDay = new Map();
+  for (const l of D.ledger || []) { if (l.undone_at || !l.created_at) continue; const d = ymd(dayOf(l.created_at)); byDay.set(d, (byDay.get(d) || 0) + l.xp); }
+  let sum = 0; return [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([d, v]) => ({ date: d, value: (sum += v) }));
+}
+// Видео по неделям: 0 это всё до старта
+export function videoWeeks(D, info) {
+  const cur = curWeek(info), out = [];
+  for (let w = 0; w <= Math.max(cur, 0); w++) {
+    const from = w === 0 ? null : weekStart(info.start, w), to = w === 0 ? (info.start ? addDays(info.start, -1) : null) : weekEnd(info.start, w);
+    out.push({ week: w, ...videoCounts(D, from, to) });
+  }
+  return out;
+}
+export const requiredTotals = (D, info) => {
+  const cur = curWeek(info), items = visibleItems(D).filter((i) => i.required && CORE_KINDS.includes(i.kind) && i.week <= Math.max(cur, 0)), { done } = doneSets(D);
+  return { total: items.length, done: items.filter((i) => done.has(i.id)).length };
+};
