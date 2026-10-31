@@ -48,7 +48,6 @@ export async function cleanupE2E(c) {
   for (const u of au?.users || []) if (/^bmx-e2e-/.test(u.email || '')) await c.admin.auth.admin.deleteUser(u.id);
   await c.admin.from('quotes').delete().like('author', 'E2E %');
   await c.admin.from('movies').delete().like('title', 'E2E %');
-  await c.admin.from('challenges').update({ active: false }).eq('code', 'quick_booking');
   return (data || []).length;
 }
 export const ledgerSum = async (c, uid, kind) => {

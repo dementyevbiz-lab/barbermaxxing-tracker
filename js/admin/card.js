@@ -44,9 +44,9 @@ export function openCard(id) {
       ${!s.lagging && !s.inactive && !fired.length && s.cpState !== 'overdue' ? '<p class="dim">Тревожных меток нет</p>' : ''}</div></div>` : ''}
 
     <div class="card"><div class="h"><span class="ink">Метрики</span></div>
-      <table class="tbl"><tr><th></th><th>А</th><th>Сейчас</th><th>Б</th></tr>${A.metrics.filter((m) => m.active).map((m) => {
+      <table class="tbl"><tr><th></th><th>А</th><th>Сейчас</th><th>Б</th><th class="gcol">График</th></tr>${A.metrics.filter((m) => m.active).map((m) => {
         const g = D.goals[m.key] || {}, ser = L.metricSeries(D, m.key), cur = ser.filter((x) => x.idx > 0).slice(-1)[0]?.value;
-        return `<tr data-a="${m.key}"><td class="ink">${esc(m.name)}</td><td class="ink">${esc(fmtMetric(m, g.a))}</td><td class="ink">${esc(fmtMetric(m, cur))}</td><td class="ink">${esc(fmtMetric(m, g.b))}</td></tr>`; }).join('')}</table>
+        return `<tr data-a="${m.key}"><td><span class="ink">${esc(m.name)}</span></td><td><span class="ink">${esc(fmtMetric(m, g.a))}</span></td><td><span class="limet">${esc(fmtMetric(m, cur))}</span></td><td><span class="ink">${esc(fmtMetric(m, g.b))}</span></td><td class="gcol" style="width:90px">${sparkline(ser, 80, 28)}</td></tr>`; }).join('')}</table>
       <p class="dim cap">Нажмите на строку, чтобы изменить точку А. После первого замера её меняет только команда</p>
       ${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}</div>
 

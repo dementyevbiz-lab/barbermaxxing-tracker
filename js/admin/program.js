@@ -4,6 +4,7 @@ import * as L from '../logic.js';
 import { ICON, KIND } from '../ui.js';
 import { A, summarize, dbOk, csvParse, formSheet, visTariffs } from './common.js';
 import { itemForm } from './card.js';
+import { tri } from '../ui.js';
 
 let selWeek = null;
 
@@ -26,7 +27,8 @@ export function renderProgramAdmin(root) {
     const list = weekItems();
     $('#pList', root).innerHTML = list.map((it, i) => `<div class="row" data-id="${it.id}" style="${it.active ? '' : 'opacity:.5'}"><span class="ico">${ICON[it.kind]}</span>
       <button class="row-main" data-edit><span class="t"><span class="ink">${esc(it.title)}</span></span><span class="d cap"><span class="dim">${KIND[it.kind]}${it.est_minutes ? ' · ' + it.est_minutes + ' мин' : ''}${it.required ? '' : ' · по желанию'} · ${(it.tariffs || []).map((c) => A.tariffs.find((t) => t.code === c)?.name || c).join(', ') || 'никому'}${it.user_id ? ' · персонально ' + esc(A.profiles.find((p) => p.id === it.user_id)?.display_name || '') : ''}${it.active ? '' : ' · скрыт'}</span></span></button>
-      <span style="display:flex;flex-direction:column;gap:4px"><button class="up-btn" data-up ${i ? '' : 'disabled style="opacity:.3"'} aria-label="Выше"><span class="ink">↑</span></button><button class="up-btn" data-down ${i < list.length - 1 ? '' : 'disabled style="opacity:.3"'} aria-label="Ниже"><span class="ink">↓</span></button></span></div>`).join('')
+      <button class="up-btn" data-drag aria-label="Перетащить" style="touch-action:none;cursor:grab"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M1 1.5h14M1 6h14M1 10.5h14" stroke="url(#gDim)" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <span style="display:flex;flex-direction:column;gap:4px"><button class="up-btn" data-up ${i ? '' : 'disabled style="opacity:.3"'} aria-label="Выше">${tri('u')}</button><button class="up-btn" data-down ${i < list.length - 1 ? '' : 'disabled style="opacity:.3"'} aria-label="Ниже">${tri('d')}</button></span></div>`).join('')
       || '<p class="dim empty-note">В этой неделе пока ничего нет</p>';
   }
   async function move(id, dir) {
@@ -35,6 +37,28 @@ export function renderProgramAdmin(root) {
     await Promise.all(list.map((it, k) => sb.from('program_items').update({ ord: k + 1 }).eq('id', it.id)));
     list.forEach((it, k) => { it.ord = k + 1; }); draw();
   }
+  // перетаскивание за ручку: строка едет за пальцем, соседи расступаются, при отпускании порядок сохраняется
+  root.addEventListener('pointerdown', (e) => {
+    const h = e.target.closest('[data-drag]'); if (!h) return;
+    const row = h.closest('.row[data-id]'), list = row.parentElement; e.preventDefault();
+    h.setPointerCapture(e.pointerId);
+    let startY = e.clientY; row.style.transition = 'none'; row.style.position = 'relative'; row.style.zIndex = 5; row.style.opacity = '.9';
+    const move = (ev) => {
+      let dy = ev.clientY - startY; row.style.transform = `translateY(${dy}px)`;
+      const rect = row.getBoundingClientRect(), c = rect.top + rect.height / 2;
+      const next = row.nextElementSibling, prev = row.previousElementSibling;
+      if (next && c > next.getBoundingClientRect().top + next.getBoundingClientRect().height / 2) { const hgt = next.getBoundingClientRect().height + 8; list.insertBefore(row, next.nextSibling); startY += hgt; row.style.transform = `translateY(${ev.clientY - startY}px)`; }
+      else if (prev && prev.matches('.row[data-id]') && c < prev.getBoundingClientRect().top + prev.getBoundingClientRect().height / 2) { const hgt = prev.getBoundingClientRect().height + 8; list.insertBefore(row, prev); startY -= hgt; row.style.transform = `translateY(${ev.clientY - startY}px)`; }
+    };
+    const up = async () => {
+      h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+      row.style.cssText = ''; haptic();
+      const ids = [...list.querySelectorAll('.row[data-id]')].map((r) => r.dataset.id);
+      await Promise.all(ids.map((id, k) => sb.from('program_items').update({ ord: k + 1 }).eq('id', id)));
+      ids.forEach((id, k) => { const it = A.items.find((x) => x.id === id); if (it) it.ord = k + 1; }); draw();
+    };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+  });
   root.addEventListener('click', (e) => {
     const w = e.target.closest('[data-w]'); if (w) { selWeek = Number(w.dataset.w); return draw(); }
     const row = e.target.closest('.row[data-id]'); if (!row) return;
@@ -57,7 +81,7 @@ export function renderProgramAdmin(root) {
       const list = L.visibleItems(fake).filter((i) => i.week === week && !i.user_id);
       return `<h2 class="sh-title"><span class="ink">Как видит ученик</span></h2>
         <div class="btns">${visTariffs().map((t) => `<button class="btn sm ${t.code === code ? 'pri' : ''}" data-t="${t.code}"><span class="${t.code === code ? 'onlime' : 'ink'}">${esc(t.name)}</span></button>`).join('')}</div>
-        <div class="btns"><button class="btn sm" data-wk="-1"><span class="ink">←</span></button><span class="pill">Неделя ${week}</span><button class="btn sm" data-wk="1"><span class="ink">→</span></button></div>
+        <div class="btns"><button class="btn sm" data-wk="-1">${tri('l')}</button><span class="pill">Неделя ${week}</span><button class="btn sm" data-wk="1">${tri('r')}</button></div>
         ${list.map((i) => `<div class="row static"><span class="ico">${ICON[i.kind]}</span><span class="row-main"><span class="ink t">${esc(i.title)}</span><span class="dim cap">${KIND[i.kind]}${i.est_minutes ? ' · ' + i.est_minutes + ' мин' : ''}${i.required ? '' : ' · по желанию'}</span></span></div>`).join('') || '<p class="dim">Задания этой недели появятся позже</p>'}`;
     };
     const mount = (sh) => {

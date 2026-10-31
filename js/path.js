@@ -2,7 +2,7 @@
 import { $, $$, esc, state, openSheet, toast } from './core.js';
 import * as L from './logic.js';
 import * as data from './data.js';
-import { pathSvg, pathLegend, placeMarkers, pathHelpSheet, fmtMetric, unitOf, sparkline, SCREEN_KINDS } from './ui.js';
+import { pathSvg, pathLegend, placeMarkers, pathHelpSheet, fmtMetric, unitOf, sparkline, SCREEN_KINDS, VIDEO_ICON } from './ui.js';
 import { openCheckpoint } from './forms.js';
 import { progressHtml } from './progress.js';
 
@@ -23,10 +23,10 @@ export function renderPath(root) {
     <div class="grid-cards">${progressHtml(D, info, L.visibleItems(D), rows, 0)}<section class="card">
       <div class="h"><span class="ink">Мой путь</span><span class="grow"></span><button class="qbtn" id="pQ"><span class="dim">?</span></button></div>
       ${pathSvg('q')}${pathLegend(hasNow)}${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}</section>
-    ${all.total ? `<section class="card"><div class="h"><span class="ink">Видео</span></div>
-      <div class="stat-grid">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<div class="stat"><span class="dim cap">${t}</span><span class="big-num ink">${all[k]}</span><span class="dim cap">за неделю ${wkVideos[k]}</span></div>`).join('')}</div>
-      ${cmp ? `<p class="ink">За период между замерами ${cmp.counts.total} ${L.plural(cmp.counts.total, 'видео', 'видео', 'видео')} (${cmp.counts.client} с клиентом, ${cmp.counts.expert} экспертных, ${cmp.counts.life} лайф)${cmp.views ? `, просмотры лучших с ${L.fmtNum(cmp.views[0])} до ${L.fmtNum(cmp.views[1])}` : ''}</p>` : '<p class="dim cap">После второго замера здесь появится сопоставление с цифрами</p>'}</section>` : ''}</div>
-    ${metrics.length ? `<div class="grid-cards grid-3">${metrics.map((m) => metricCard(D, m, rows)).join('')}</div>` : '<p class="dim empty-note">Цифры появятся после точки А</p>'}
+    <section class="card"><div class="h"><span class="ink">Видео</span><span class="grow"></span><span class="dim cap">всего ${all.total}</span></div>
+      <div class="stack-s" style="gap:14px">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<div class="prog-row"><div class="top"><span class="ink">${VIDEO_ICON[k]} ${t}</span><span class="vals dim">за неделю ${wkVideos[k]} · всего ${all[k]}</span></div><div class="progress"><i style="width:${all.total ? Math.round(all[k] / Math.max(all.client, all.expert, all.life, 1) * 100) : 0}%"></i></div></div>`).join('')}</div>
+      ${cmp ? `<p class="ink">За период между замерами ${cmp.counts.total} ${L.plural(cmp.counts.total, 'видео', 'видео', 'видео')} (${cmp.counts.client} с клиентом, ${cmp.counts.expert} экспертных, ${cmp.counts.life} лайф)${cmp.views ? `, просмотры лучших с ${L.fmtNum(cmp.views[0])} до ${L.fmtNum(cmp.views[1])}` : ''}</p>` : '<p class="dim cap">После второго замера здесь появится сопоставление видео с цифрами</p>'}</section></div>
+    ${metrics.length ? `<div class="grid-cards grid-3">${metrics.map((m) => metricCard(D, m, rows)).join('')}</div>` : '<p class="dim empty-note">Цифры появятся после первых замеров</p>'}
     <section class="card"><div class="h"><span class="ink">Замеры</span></div><div class="stack-s">${cps.map((cp) => `<button class="row" data-cp="${cp.id}" style="padding-right:20px"><span class="row-main"><span class="ink t">${CP_NAME(cp)}</span>
       <span class="dim cap">${cp.submitted_at ? 'Отправлен ' + L.fmtDay(new Date(cp.submitted_at)) : 'До ' + L.fmtDay(L.parseDay(cp.due_date))}</span></span>${cp.submitted_at ? '<span class="plate lime"><span class="onlime">Готово</span></span>' : ''}</button>`).join('') || '<p class="dim">Замеров пока нет</p>'}</div></section>
     <section class="card"><div class="h"><span class="ink">Скриншоты</span></div><div id="gallery"></div></section></div>`;

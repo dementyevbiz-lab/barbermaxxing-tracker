@@ -14,6 +14,7 @@ function loadScript(src) {
 }
 async function libs() { for (const [g, src] of LIBS) if (!window[g]) await loadScript(src); }
 
+const TRI = '<svg width="9" height="9" viewBox="0 0 12 12" style="margin:0 4px"><path d="M2.5 1 L10 6 L2.5 11 Z" fill="#BBFF68"/></svg>';
 const LIME = '#BBFF68', LIME2 = '#F1FF6E', CARD = 'linear-gradient(135deg,#3D403D,#1C1F1C)', ROW = 'linear-gradient(135deg,#262626,#121212)';
 
 async function imageUrls(shots) {
@@ -59,37 +60,49 @@ export async function buildPdf() {
   const root = document.createElement('div');
   root.id = 'pdfRoot';
   root.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;background:#0B0C0B;color:#fff;font-family:"Golos Text",system-ui,sans-serif;overflow:hidden';
-  const shotBlock = (list, title) => list.length ? `<div style="flex:1"><div style="font-size:11px;color:#8A8A8A;margin-bottom:6px">${title}</div><div style="display:flex;gap:8px">${list.map((s) => `<div style="flex:1;aspect-ratio:3/4;border-radius:22px;padding:2px;background:linear-gradient(135deg,${LIME},${LIME2})"><img src="${urls[s.id]}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;display:block"></img></div>`).join('')}</div></div>` : '';
+  const final = D.checkpoints.find((c) => c.kind === 'final' && c.submitted_at);
+  const nowLabel = final ? 'Итог' : 'Сейчас';
+  const dateOf = (cp) => cp ? L.fmtDay(new Date(cp.submitted_at)) : '';
+  const shotBlock = (list, title, cp) => `<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span style="font-weight:700;text-transform:uppercase;letter-spacing:-.02em">${title}</span><span style="color:#8A8A8A">${esc(dateOf(cp))}</span></div>
+    <div style="display:flex;gap:8px">${list.length ? list.map((s) => `<div style="flex:1;height:236px;border-radius:26px;padding:2px;background:linear-gradient(135deg,${LIME},${LIME2})"><img src="${urls[s.id]}" style="width:100%;height:100%;object-fit:cover;border-radius:24px;display:block"></img></div>`).join('') : '<div style="flex:1;height:236px;border-radius:26px;background:' + ROW + ';display:flex;align-items:center;justify-content:center;font-size:12px;color:#6E6E6E">Скриншотов нет</div>'}</div></div>`;
+  const card = (inner, extra = '') => `<div style="background:${CARD};border-radius:44px;padding:20px 24px;border:1px solid rgba(255,255,255,.08);${extra}">${inner}</div>`;
+  const hd = (t, right = '') => `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:-.02em">${t}</span><span style="font-size:12px;color:#8A8A8A">${right}</span></div>`;
+  const bar = (pct) => `<div style="height:8px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden"><div style="height:100%;width:${Math.round(pct)}%;border-radius:8px;background:linear-gradient(135deg,${LIME},${LIME2})"></div></div>`;
+  const maxV = Math.max(vids.client, vids.expert, vids.life, 1);
+  const tile = (n, v) => `<div style="flex:1;background:${ROW};border-radius:30px;padding:12px 16px"><div style="font-weight:700;font-size:28px;letter-spacing:-.03em;line-height:1">${v}</div><div style="font-size:12px;color:#A6A6A6;margin-top:6px">${n}</div></div>`;
   root.innerHTML = `
-    <div style="padding:44px 48px;display:flex;flex-direction:column;gap:22px;height:100%;background:linear-gradient(135deg,#000,#1C1E1C)">
+    <div style="padding:40px 46px;display:flex;flex-direction:column;gap:18px;height:100%;box-sizing:border-box;background:linear-gradient(135deg,#000,#1C1E1C)">
       <div style="display:flex;align-items:flex-end;justify-content:space-between">
-        <div><div style="font-weight:700;font-size:13px;letter-spacing:-.02em;color:${LIME}">BARBERMAXXING</div><div style="font-weight:700;font-size:40px;letter-spacing:-.03em;line-height:1.05;margin-top:6px">${esc(p.display_name)}</div>
-          <div style="font-size:14px;color:#A6A6A6;margin-top:6px">${esc(t.name || '')}${start ? ' · ' + L.fmtDay(start) + ' — ' + L.fmtDay(end) : ''}</div></div>
-        <div style="display:flex;align-items:center;gap:14px"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,${LIME},${LIME2});color:#0F0F0F;font-weight:700;font-size:28px;display:flex;align-items:center;justify-content:center">${Lv}</div>
+        <div><div style="font-weight:700;font-size:13px;letter-spacing:-.02em;color:${LIME}">BARBERMAXXING · ИТОГ ПРОГРАММЫ</div><div style="font-weight:700;font-size:38px;letter-spacing:-.03em;line-height:1.05;margin-top:6px">${esc(p.display_name)}</div>
+          <div style="font-size:14px;color:#A6A6A6;margin-top:6px">${esc(t.name || '')}${start ? ' · с ' + L.fmtDay(start) + ' по ' + L.fmtDay(end) : ''}</div></div>
+        <div style="display:flex;align-items:center;gap:14px"><div style="width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,${LIME},${LIME2});color:#0F0F0F;font-weight:700;font-size:28px;display:flex;align-items:center;justify-content:center">${Lv}</div>
           <div><div style="font-weight:700;font-size:20px">${esc(rank)}</div><div style="font-size:13px;color:#A6A6A6">${L.fmtNum(xp)} опыта</div></div></div>
       </div>
-      <div style="display:flex;gap:18px">
-        <div style="flex:1.1;background:${CARD};border-radius:36px;padding:20px 22px;border:1px solid rgba(255,255,255,.08)">
-          <div style="font-weight:700;font-size:12px;text-transform:uppercase;margin-bottom:6px">Мой путь</div>
-          <svg viewBox="0 0 320 204" width="100%"><path d="M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32" fill="none" stroke="${LIME}" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
+      <div style="display:flex;gap:16px">
+        ${card(`${hd('Мой путь')}<svg viewBox="0 0 320 204" width="100%" style="display:block"><path d="M26 170 C 74 178, 98 124, 142 120 C 192 116, 194 66, 238 58 C 266 53, 284 42, 294 32" fill="none" stroke="${LIME}" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 11"/>
             <circle cx="26" cy="170" r="10" fill="#3D4A1A" stroke="${LIME}" stroke-width="2"/><circle cx="294" cy="32" r="12" fill="${LIME}"/>
             <text x="8" y="199" font-weight="700" font-size="14" fill="#fff">Старт</text><text x="262" y="12" font-weight="700" font-size="14" fill="#fff">Цель</text>
             ${ptR ? `<circle cx="${ptR.x.toFixed(1)}" cy="${ptR.y.toFixed(1)}" r="8.5" fill="${LIME}" stroke="#121212" stroke-width="3"/>` : ''}
             <circle cx="${ptP.x.toFixed(1)}" cy="${ptP.y.toFixed(1)}" r="13" fill="none" stroke="${LIME}" stroke-width="2.2" stroke-dasharray="4 4"/></svg>
-          <div style="font-size:12px;color:#A6A6A6;display:flex;gap:16px">${R != null ? `<span>● Итог</span>` : ''}<span>◌ Куда ведёт темп</span></div>
-          ${D.goalText ? `<div style="font-size:14px;margin-top:10px">${esc(D.goalText)}</div>` : ''}</div>
+          <div style="font-size:12px;color:#A6A6A6;display:flex;gap:16px;margin-top:2px">${ptR ? `<span style="color:${LIME}">●</span><span>${nowLabel}</span>` : ''}<span style="color:${LIME}">◌</span><span>Куда ведёт текущий темп</span></div>
+          ${D.goalText ? `<div style="font-size:14px;margin-top:8px">${esc(D.goalText)}</div>` : ''}`, 'flex:1.1;')}
         <div style="flex:1;display:flex;flex-direction:column;gap:10px">
-          ${[['Уроков и эфиров отмечено', cnt.lesson], ['Домашек', cnt.homework], ['Конспектов', cnt.notes]].map(([n, v]) => `<div style="background:${ROW};border-radius:26px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#A6A6A6">${n}</span><span style="font-weight:700;font-size:22px">${v}</span></div>`).join('')}
-          <div style="background:${ROW};border-radius:26px;padding:12px 18px"><div style="font-size:13px;color:#A6A6A6">Видео снято: ${vids.total}</div><div style="font-size:13px;margin-top:4px">с клиентом ${vids.client} · экспертных ${vids.expert} · лайф ${vids.life}</div></div>
-          ${topAch.length ? `<div style="background:${ROW};border-radius:26px;padding:12px 18px"><div style="font-size:13px;color:#A6A6A6;margin-bottom:4px">Лучшие ачивки</div>${topAch.map((x) => `<div style="font-size:14px;font-weight:500">${esc(x.a?.name || '')} · <span style="color:${LIME}">${esc(tierNames[x.tier - 1] || '')}</span></div>`).join('')}</div>` : ''}</div>
+          <div style="display:flex;gap:10px">${tile('Уроков и эфиров', cnt.lesson)}${tile('Домашек', cnt.homework)}${tile('Конспектов', cnt.notes)}</div>
+          <div style="background:${ROW};border-radius:30px;padding:14px 18px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700;font-size:12px;text-transform:uppercase">Видео по направлениям</span><span style="font-size:12px;color:#A6A6A6">всего ${vids.total}</span></div>
+            ${[['С клиентом', vids.client], ['Экспертное', vids.expert], ['Лайф', vids.life]].map(([n, v]) => `<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${n}</span><span style="color:#A6A6A6">${v}</span></div>${bar(v / maxV * 100)}</div>`).join('')}</div>
+          <div style="background:${ROW};border-radius:30px;padding:14px 18px;flex:1"><div style="font-weight:700;font-size:12px;text-transform:uppercase;margin-bottom:6px">Три лучшие ачивки</div>
+            ${topAch.length ? topAch.map((x) => `<div style="display:flex;justify-content:space-between;font-size:14px;padding:3px 0"><span>${esc(x.a?.name || '')}</span><span style="color:${LIME};font-weight:700">${esc(tierNames[x.tier - 1] || '')}</span></div>`).join('') : '<div style="font-size:13px;color:#6E6E6E">Пока нет</div>'}</div>
+        </div>
       </div>
-      <div style="background:${CARD};border-radius:36px;padding:18px 22px;border:1px solid rgba(255,255,255,.08)">
-        <div style="font-weight:700;font-size:12px;text-transform:uppercase;margin-bottom:8px">Цифры</div>
-        ${metrics.map((m) => { const g = D.goals[m.key] || {}, ser = L.metricSeries(D, m.key), now = ser.length > 1 ? ser[ser.length - 1].value : null, r = rows.find((x) => x.key === m.key);
-          return `<div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="flex:1.4;font-size:13px">${esc(m.name)}</div>
-            <div style="flex:.8;font-size:12px;color:#A6A6A6">А ${esc(fmtMetric(m, g.a))}</div><div style="flex:.9;font-size:14px;font-weight:700;color:${LIME}">${esc(fmtMetric(m, now))}</div><div style="flex:.8;font-size:12px;color:#A6A6A6">Б ${esc(fmtMetric(m, g.b))}</div>
-            <div style="flex:.9">${spark(ser)}</div></div>`; }).join('') || '<div style="font-size:13px;color:#A6A6A6">Цифры появятся после замеров</div>'}</div>
-      ${shotsA.length || shotsB.length ? `<div style="display:flex;gap:18px">${shotBlock(shotsA, 'Старт')}${shotBlock(shotsB, last ? (last.kind === 'final' ? 'Итог' : 'Последний замер') : '')}</div>` : ''}
+      ${card(`${hd('Цифры от старта к итогу', 'А'+TRI+nowLabel+TRI+'Б')}
+        ${metrics.map((m) => { const g = D.goals[m.key] || {}, ser = L.metricSeries(D, m.key), nowV = ser.length > 1 ? ser[ser.length - 1].value : null, r = rows.find((x) => x.key === m.key);
+          return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07)"><div style="width:150px;font-size:13px;font-weight:500">${esc(m.name)}</div>
+            <div style="width:84px;font-size:12px;color:#A6A6A6">${esc(fmtMetric(m, g.a))}</div>
+            <div style="flex:1">${r && r.progress != null ? bar(r.progress * 100) : '<div style="height:8px"></div>'}</div>
+            <div style="width:96px;font-size:14px;font-weight:700;color:${LIME};text-align:right">${esc(fmtMetric(m, nowV))}</div>
+            <div style="width:84px;font-size:12px;color:#A6A6A6;text-align:right">${esc(fmtMetric(m, g.b))}</div>
+            <div style="width:110px">${spark(ser, 110, 30)}</div></div>`; }).join('') || '<div style="font-size:13px;color:#A6A6A6">Цифры появятся после замеров</div>'}`)}
+      <div style="display:flex;gap:16px">${shotBlock(shotsA, 'Старт', first)}${shotBlock(shotsB, last ? (last.kind === 'final' ? 'Итог' : 'Последний замер') : 'Итог', last)}</div>
       <div style="margin-top:auto;font-size:11px;color:#6E6E6E;display:flex;justify-content:space-between"><span>Barbermaxxing</span><span>${L.fmtDay(new Date())}</span></div>
     </div>`;
   document.body.appendChild(root);

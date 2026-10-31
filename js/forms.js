@@ -57,13 +57,13 @@ export function mountShots(root, cpId, { readonly = false } = {}) {
       const s = shots.find((x) => x.kind === kind);
       if (s) return `<div class="slot has" data-shot="${s.id}"><img src="${esc(urls[s.storage_path] || '')}" alt="${esc(label)}"><div class="tag"><span class="plate"><span class="onlime">${esc(label)}</span></span></div></div>`;
       if (readonly || full) return '';
-      return `<button class="slot" data-add="${kind}"><span class="plus ink">+</span><span class="cap dim">${esc(label)}</span></button>`;
+      return `<button class="slot" data-add="${kind}"><span class="plus"><span class="ink">+</span></span><span class="cap dim">${esc(label)}</span></button>`;
     };
     const others = shots.filter((s) => s.kind === 'other');
     box.innerHTML = `<div class="slots">
       ${SCREEN_KINDS.map(([k, l]) => slot(k, l)).join('')}
       ${others.map((s) => `<div class="slot has" data-shot="${s.id}"><img src="${esc(urls[s.storage_path] || '')}" alt="Другое"><div class="tag"><span class="plate"><span class="onlime">Другое</span></span></div></div>`).join('')}
-      ${readonly || full ? '' : '<button class="slot" data-add="other"><span class="plus ink">+</span><span class="cap dim">Другое</span></button>'}
+      ${readonly || full ? '' : '<button class="slot" data-add="other"><span class="plus"><span class="ink">+</span></span><span class="cap dim">Другое</span></button>'}
     </div>${shots.length >= 3 ? '' : ''}<p class="dim cap" style="margin-top:10px">Скриншотов: ${shots.length} из ${max}. Три и больше дают бонус опыта</p>`;
   }
   async function pick(kind, replaceId) {

@@ -17,7 +17,7 @@ export function insights() {
     const notDone = who.filter((s) => !L.doneSets(s.D).done.has(it.id));
     if (notDone.length / who.length > lowShare) {
       const hw = it.kind === 'homework';
-      out.push({ k: hw ? 'hw' : 'item', title: `${hw ? 'Домашка' : 'Пункт'} «${it.title}» (неделя ${it.week}) почти не отмечается`, data: `Не отметили ${notDone.length} из ${who.length}: ${notDone.map((s) => s.p.display_name).join(', ')}`,
+      out.push({ k: hw ? 'hw' : 'item', title: `${hw ? 'Домашка' : 'Пункт'} ${it.title} (неделя ${it.week}) почти не отмечается`, data: `Не отметили ${notDone.length} из ${who.length}: ${notDone.map((s) => s.p.display_name).join(', ')}`,
         advice: hw ? 'Проверьте, понятно ли задание, и напомните про домашку в общем чате' : 'Возможно, пункт трудно найти или он слишком большой. Напомните о нём или разбейте на части' });
     }
   }
@@ -29,7 +29,7 @@ export function insights() {
       const a = ser[ser.length - 2].value, b = ser[ser.length - 1].value;
       if (m.better === 'down' ? b >= a : b <= a) stuck.push(s.p.display_name);
     }
-    if (n >= 2 && stuck.length / n > 0.5) out.push({ k: 'metric', title: `«${m.name}» не растёт у большинства`, data: `Не улучшилась за два последних замера у ${stuck.length} из ${n}: ${stuck.join(', ')}`, advice: 'Обсудите на общем эфире, что мешает именно в этой метрике' });
+    if (n >= 2 && stuck.length / n > 0.5) out.push({ k: 'metric', title: `${m.name}: не растёт у большинства`, data: `Не улучшилась за два последних замера у ${stuck.length} из ${n}: ${stuck.join(', ')}`, advice: 'Обсудите на общем эфире, что мешает именно в этой метрике' });
   }
   // 4: нет замера
   const late = act.filter((s) => s.cpState === 'overdue');
@@ -41,7 +41,7 @@ export function insights() {
   const started = act.filter((s) => s.info.state === 'active' && L.diffDays(today, s.info.start) >= 14);
   if (started.length >= 2) for (const [k, t] of Object.entries(L.VIDEO_KINDS)) {
     const has = started.filter((s) => L.liveVideos(s.D).some((v) => v.kind === k && L.diffDays(today, L.parseDay(v.logged_on)) < 14)).length;
-    if (has / started.length < 0.25) out.push({ k: 'video', title: `Направление «${t}» почти никто не снимает`, data: `За 14 дней сняли ${has} из ${started.length}`, advice: 'Дайте пример такого видео или короткое задание на него' });
+    if (has / started.length < 0.25) out.push({ k: 'video', title: `Направление ${t} почти никто не снимает`, data: `За 14 дней сняли ${has} из ${started.length}`, advice: 'Дайте пример такого видео или короткое задание на него' });
   }
   return { out, count: act.length };
 }

@@ -2,7 +2,7 @@
 import { $, esc, state, openSheet, closeSheet, toast, haptic, store } from './core.js';
 import * as L from './logic.js';
 import * as data from './data.js';
-import { SOURCES } from './ui.js';
+import { SOURCES, tri } from './ui.js';
 
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const QSTAT = { open: 'Открытые', asked: 'Заданные', dropped: 'Снятые' };
@@ -35,7 +35,7 @@ export function renderNotes(root) {
     const all = live().sort((a, b) => b.entry_date.localeCompare(a.entry_date) || b.created_at.localeCompare(a.created_at));
     body.innerHTML = `<div class="stack"><div class="btns"><button class="btn pri" id="addIns" style="flex:1"><span class="onlime">Записать вывод</span></button>
       <button class="btn" id="tglView"><span class="ink">${view === 'cal' ? 'Список' : 'Календарь'}</span></button></div>
-      ${view === 'cal' ? `<div class="grid-cards cal-grid"><div class="card"><div class="cal-nav"><button data-nav="-1" aria-label="Назад" ${ym.y * 12 + ym.m <= minYm ? 'disabled' : ''}><span class="ink">‹</span></button><span class="title2 ink">${MONTHS[ym.m]} ${ym.y}</span><button data-nav="1" aria-label="Вперёд" ${ym.y * 12 + ym.m >= limit.getFullYear() * 12 + limit.getMonth() ? 'disabled' : ''}><span class="ink">›</span></button></div>
+      ${view === 'cal' ? `<div class="grid-cards cal-grid"><div class="card"><div class="cal-nav"><button data-nav="-1" aria-label="Назад" ${ym.y * 12 + ym.m <= minYm ? 'disabled' : ''}>${tri('l')}</button><span class="title2 ink">${MONTHS[ym.m]} ${ym.y}</span><button data-nav="1" aria-label="Вперёд" ${ym.y * 12 + ym.m >= limit.getFullYear() * 12 + limit.getMonth() ? 'disabled' : ''}>${tri('r')}</button></div>
         <div class="cal">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((x) => `<span class="dow dim">${x}</span>`).join('')}${cells.join('')}</div></div>
         <div class="stack-s"><span class="dim cap">${L.fmtDay(L.parseDay(selDay))}</span>${dayList.map(entryCard).join('') || '<p class="dim empty-note">В этот день записей нет</p>'}</div></div>`
       : `<div class="stack-s">${all.map(entryCard).join('') || '<p class="dim empty-note">Здесь будут твои выводы после созвонов, эфиров и уроков</p>'}</div>`}</div>`;

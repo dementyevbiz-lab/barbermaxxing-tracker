@@ -1,7 +1,7 @@
 // Блок «Мой прогресс»: сколько пройдено, как менялись цифры, что дальше. Только факты по отметкам и замерам
 import { esc } from './core.js';
 import * as L from './logic.js';
-import { fmtMetric } from './ui.js';
+import { fmtMetric, tri } from './ui.js';
 
 export function progressHtml(D, info, items, rows, order = 25) {
   const { done } = L.doneSets(D);
@@ -25,7 +25,7 @@ export function progressHtml(D, info, items, rows, order = 25) {
   const metrics = ms.map((m) => {
     const g = D.goals[m.key], r = rows.find((x) => x.key === m.key), cur = r && r.cur != null ? r.cur : null;
     const pct = r && r.progress != null ? Math.round(r.progress * 100) : 0;
-    return `<div class="prog-row m"><div class="top"><span class="ink">${esc(m.name)}</span><span class="vals dim">${esc(fmtMetric(m, g.a))} → <span class="ink">${esc(fmtMetric(m, cur ?? g.a))}</span> → ${esc(fmtMetric(m, g.b))}</span></div><div class="progress"><i style="width:${pct}%"></i></div></div>`;
+    return `<div class="prog-row m"><div class="top"><span class="ink">${esc(m.name)}</span><span class="vals dim">${esc(fmtMetric(m, g.a))} ${tri()} <span class="ink">${esc(fmtMetric(m, cur ?? g.a))}</span> ${tri()} ${esc(fmtMetric(m, g.b))}</span></div><div class="progress"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
   const next = (D.checkpoints || []).filter((c) => !c.submitted_at && c.idx > 0).sort((a, b) => a.idx - b.idx)[0];
   const hint = !rows.some((r) => r.progress != null) && next ? `<p class="dim cap">Первый замер до ${L.fmtDay(L.parseDay(next.due_date))}: после него здесь появится движение цифр</p>` : '';

@@ -54,12 +54,12 @@ async function boot() {
     case 'blocked': return screen('Доступ закрыт', 'Если это ошибка, напиши команде программы');
     case 'too_many': return screen('Слишком много попыток', 'Попробуй через час');
     case 'offline': return screen('Нет связи', 'Проверь интернет и попробуй снова', { retry: true });
-    default: return screen('Обновляем данные', 'Зайди через минуту', { retry: true });
+    default: screen('Обновляем данные', 'Зайди через минуту', { retry: true }); if (!boot.retried) { boot.retried = true; setTimeout(boot, 7000); } return;
   }
   state.userId = r.user_id; state.admin = r.is_admin;
   if (r.is_admin) { const m = await import('./admin/index.js'); return m.startAdmin(root, r); }
   try { state.D = await loadAll(r.user_id); }
-  catch (e) { console.warn(e); return screen('Обновляем данные', 'Зайди через минуту', { retry: true }); }
+  catch (e) { console.warn(e); screen('Обновляем данные', 'Зайди через минуту', { retry: true }); if (!boot.retried) { boot.retried = true; setTimeout(boot, 7000); } return; }
   state.loadedAt = Date.now();
   data.initRank();
   startStudent();

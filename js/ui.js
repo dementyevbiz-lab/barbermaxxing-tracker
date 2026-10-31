@@ -70,7 +70,7 @@ export function pathHelpSheet(hasNow) {
 let pageClose = null;
 export function openPage(html, mount, { back = true, onClose, title = '' } = {}) {
   const el = $('#page');
-  el.innerHTML = `<div class="page-in"><div class="page-top">${back ? '<button class="back" data-back aria-label="Назад"><span class="ink">←</span></button>' : ''}<h1 class="h1s grow"><span class="ink">${esc(title)}</span></h1></div><div class="stack" id="pageBody">${html}</div></div>`;
+  el.innerHTML = `<div class="page-in"><div class="page-top">${back ? '<button class="back" data-back aria-label="Назад">' + tri('l') + '</button>' : ''}<h1 class="h1s grow"><span class="ink">${esc(title)}</span></h1></div><div class="stack" id="pageBody">${html}</div></div>`;
   pageClose = onClose || null;
   el.classList.add('open'); el.scrollTop = 0;
   const b = el.querySelector('[data-back]'); if (b) b.onclick = closePage;
@@ -97,5 +97,7 @@ export function sparkline(points, width = 280, height = 56) {
   </svg>`;
 }
 
+// Стрелки только треугольниками с лаймовым градиентом (ТЗ, раздел 17.4)
+export const tri = (d = 'r') => `<svg class="tri ${d}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 1 L10 6 L2.5 11 Z" fill="url(#gLimeBox)"/></svg>`;
 export const checkSvg = '<svg viewBox="0 0 32 32"><path d="M10 16.5l4.2 4.2L22.5 12"/></svg>';
 export const plate = (t, lime) => `<span class="plate${lime ? ' lime' : ''}"><span class="onlime">${esc(t)}</span></span>`;

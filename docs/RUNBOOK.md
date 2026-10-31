@@ -16,6 +16,9 @@ deno test --allow-env supabase/tests/     # подпись Telegram и напо�
 NODE_USE_ENV_PROXY=1 node tests/e2e/student.mjs   # ученик на настоящей базе (создаёт и удаляет тестовых «E2E …»)
 NODE_USE_ENV_PROXY=1 node tests/e2e/admin.mjs     # админка
 NODE_USE_ENV_PROXY=1 node tests/e2e/pdf.mjs       # итоговый PDF
+NODE_USE_ENV_PROXY=1 node tests/e2e/journey.mjs   # челлендж до награды, пауза, закрытый доступ, вопросы, созвон, корзина, новая ссылка
+NODE_USE_ENV_PROXY=1 node tests/e2e/calendar.mjs  # календарь на 7 ширинах экрана, ограничение до января 2027
+NODE_USE_ENV_PROXY=1 node tests/e2e/audit.mjs     # автоаудит читаемости: текст против фона на всех экранах и окнах ученика и админа
 ```
 
 ## Проверка на устройствах (делает заказчик, в Telegram)
