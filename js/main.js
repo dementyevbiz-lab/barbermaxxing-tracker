@@ -3,6 +3,7 @@ import { $, esc, sb, tg, state, store, callFn, initTelegram, bindGlobalUi, start
 import * as data from './data.js';
 import { loadAll, syncProgress } from './data.js';
 import { needsOnboarding, runOnboarding } from './onboarding.js';
+import { needsTour, runTour } from './tour.js';
 import { renderToday } from './today.js';
 import { renderPath } from './path.js';
 import { renderProgram } from './program.js';
@@ -95,6 +96,7 @@ function startStudent() {
   startQueueWatch(() => syncProgress());
   const t = store.get('tab', 'today');
   go(SCREENS[t] ? t : 'today', true);
+  if (needsTour(D) && p.status !== 'paused') runTour(() => refresh());
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState !== 'visible' || Date.now() - state.loadedAt < 60000 || sheetOpen() || pageOpen()) return;
     try { state.D = await loadAll(state.userId); state.loadedAt = Date.now(); refresh(); } catch (e) {}

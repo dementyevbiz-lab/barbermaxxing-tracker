@@ -40,6 +40,11 @@ try {
     const bi = page.locator('.mfield input');
     await bi.nth(0).fill('2500'); await bi.nth(1).fill('85'); await bi.nth(2).fill('5'); await bi.nth(4).fill('3000'); await wait(800);
     await page.click('[data-next]'); await page.waitForSelector('text=Путь начат');
+    await page.click('[data-next]'); await page.waitForSelector('text=Как пользоваться трекером', { timeout: 20000 });
+    ok('после онбординга сразу обучение', true);
+    await page.screenshot({ path: '/tmp/tour1.png' }).catch(() => {});
+    let slides = 1; while (await page.locator('[data-next]').innerText().then((t) => t.trim() !== 'Готово')) { await page.click('[data-next]'); slides++; if (slides > 20) break; }
+    ok('в обучении 8 слайдов', slides === 8, String(slides));
     await page.click('[data-next]'); await page.waitForSelector('.today', { timeout: 20000 });
     const { data: goals } = await c.admin.from('goals').select('*').eq('user_id', p.id);
     const g = Object.fromEntries(goals.map((x) => [x.metric_key, x]));
@@ -52,6 +57,13 @@ try {
     ok('онбординг без ошибок в консоли', errors.length === 0, errors.join(' | '));
     // повторное открытие не показывает онбординг
     await page.reload(); await page.waitForSelector('.today', { timeout: 20000 }); ok('после перезапуска онбординга нет', await page.locator('[data-next]').count() === 0);
+    const { data: pr2 } = await c.admin.from('profiles').select('onboarding').eq('id', p.id).single(); ok('обучение помечено пройденным', pr2.onboarding.tour_done === true);
+    ok('после перезапуска обучения нет', await page.locator('text=Как пользоваться трекером').count() === 0);
+    // повторный запуск из Профиля, с пропуском
+    await page.click('[data-tab="profile"]'); await page.waitForSelector('#tourBtn'); await page.click('#tourBtn');
+    await page.waitForSelector('text=Как пользоваться трекером'); await page.click('[data-skip]'); await wait(300);
+    ok('обучение запускается из профиля и закрывается', await page.locator('text=Как пользоваться трекером').isHidden() || await page.locator('#page.open').count() === 0);
+    await page.click('[data-tab="today"]');
     // точку А ученик больше не меняет
     const stu = (await import('./lib.mjs')); const sbUser = c.anon(); await sbUser.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
     const { error: ea } = await sbUser.from('goals').update({ a_value: 1 }).eq('metric_key', 'avg_check'); ok('точку А после замера ученик менять не может', !!ea);

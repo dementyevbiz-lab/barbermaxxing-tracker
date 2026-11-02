@@ -33,7 +33,7 @@ export async function makeStudent(c, { name, tariff = 'barbermax', startDaysAgo 
   const start = new Date(Date.now() - startDaysAgo * 86400000).toISOString().slice(0, 10);
   const { data: p, error: pe } = await c.admin.from('profiles').insert({
     id: au.user.id, display_name: name, tariff_id: t.id, start_date: start, demo: true, status,
-    onboarding: onboardingDone ? { done: true, step: 7, consent_at: new Date().toISOString() } : {},
+    onboarding: onboardingDone ? { done: true, tour_done: true, step: 7, consent_at: new Date().toISOString() } : {},
   }).select('*').single();
   if (pe) throw pe;
   return p;
