@@ -62,6 +62,12 @@ export function visibleItems(D) {
   return (D.items || []).filter((i) => i.active && !i.deleted_at && (!i.user_id || i.user_id === D.profile.id) && (!code || (i.tariffs || []).includes(code)))
     .sort((a, b) => a.week - b.week || a.ord - b.ord);
 }
+// Невыполненные пункты открытых недель (включая модуль 0): чтобы ничего не терялось
+export function pendingItems(D, info, items = visibleItems(D)) {
+  const cw = curWeek(info); if (cw < 0) return [];
+  const { done } = doneSets(D);
+  return items.filter((i) => CORE_KINDS.includes(i.kind) && i.week <= cw && !done.has(i.id));
+}
 export function doneSets(D) {
   const done = new Set(), notes = new Set();
   for (const c of D.completions || []) {

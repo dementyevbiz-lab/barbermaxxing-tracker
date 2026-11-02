@@ -231,6 +231,23 @@ try {
   const d = await openApp(browser, srv.url, session, { w: 1280, h: 860, mobile: false });
   await d.page.waitForSelector('.today', { timeout: 20000 }); await wait(1200); await d.page.screenshot({ path: '/tmp/claude-0/shots/e-desktop.png' });
   ok('на компьютере две колонки', (await d.page.locator('.today').evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)) === 2);
+  // невыполненные задания: отдельный ученик, чтобы не сбивать остальное
+  {
+    const q2 = await makeStudent(c, { name: 'E2E Невыполненные', startDaysAgo: 10, onboardingDone: true });
+    const qa = await openApp(browser, srv.url, await sessionFor(c, q2.id)); const qp = qa.page;
+    await qp.waitForSelector('.today', { timeout: 20000 }); await wait(1000);
+    const n0 = Number(await qp.locator('#pendN').innerText());
+    ok('кнопка невыполненных заданий на экране «Сегодня»', await qp.locator('#pendBtn').isVisible() && n0 > 0, String(n0));
+    await qp.click('#pendBtn'); await qp.waitForSelector('#pendBody .row[data-id]');
+    const listed = await qp.locator('#pendBody .row[data-id]').count();
+    ok('в списке столько же заданий, сколько на кнопке', listed === n0, listed + ' / ' + n0);
+    await wait(600); await qp.screenshot({ path: '/tmp/pending.png' });
+    await qp.locator('#pendBody .row[data-id] [data-chk]').first().click(); await wait(800);
+    ok('отметка в списке уменьшает счётчик', Number(await qp.locator('#pendN').innerText()) === n0 - 1);
+    await qp.locator('#pendBody .row[data-id] [data-chk]').first().click(); await wait(500);
+    ok('снятие отметки возвращает счётчик', Number(await qp.locator('#pendN').innerText()) === n0);
+    await qa.ctx.close().catch(() => {});
+  }
   ok('на всём пути нет ошибок в консоли', errors.length === 0 && d.errors.length === 0, errors.concat(d.errors).join(' | '));
 } catch (e) { console.log('СБОЙ СЦЕНАРИЯ:', e.message.slice(0, 600)); results.push(['сценарий дошёл до конца', false, e.message.split('\n')[0]]); }
 finally { await browser.close(); srv.stop(); console.log('очистка:', await cleanupE2E(c)); const bad = results.filter((r) => !r[1]); console.log(`\nпроверок: ${results.length}, не прошло: ${bad.length}`); process.exit(bad.length ? 1 : 0); }

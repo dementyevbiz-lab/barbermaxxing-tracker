@@ -185,4 +185,12 @@ pre.completions.push({ item_id: 'm2', kind: 'done', completed_at: new Date().toI
 const cpD = { settings: {}, checkpoints: [{ idx: 0, due_date: d(-20), submitted_at: null }, { idx: 1, due_date: d(10) }, { idx: 2, due_date: d(2) }, { idx: 3, due_date: d(-1) }, { idx: 4, due_date: d(30), submitted_at: 'x' }] };
 assert.deepEqual(cpD.checkpoints.map((c) => L.checkpointOpen(cpD, c, today)), [true, false, true, true, true], 'будущий замер закрыт, за 2 дня и просроченный открыты');
 
+// невыполненные пункты: только открытые недели и только основные виды
+const pd = base(); const pdInfo = L.weekInfo(pd.profile, pd.profile.tariff, today);
+assert.deepEqual(L.pendingItems(pd, pdInfo).map((i) => i.id), ['l1', 'h1', 'l4'], 'все невыполненные открытых недель, без коротких заданий и чужого тарифа');
+pd.completions.push({ item_id: 'h1', kind: 'done', completed_at: new Date().toISOString() });
+assert.deepEqual(L.pendingItems(pd, pdInfo).map((i) => i.id), ['l1', 'l4'], 'выполненное уходит из списка');
+pd.items.push({ id: 'f9', week: 6, ord: 1, kind: 'lesson', required: true, active: true, tariffs: ['barbermax'] });
+assert.ok(!L.pendingItems(pd, pdInfo).some((i) => i.id === 'f9'), 'будущая неделя не попадает');
+
 console.log('logic.test: все проверки пройдены');

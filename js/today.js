@@ -3,7 +3,7 @@ import { $, $$, esc, state, openSheet, closeSheet, toast, haptic, reduced, fit, 
 import * as L from './logic.js';
 import * as data from './data.js';
 import { bus } from './data.js';
-import { ICON, KIND, VIDEO_ICON, checkSvg, pathSvg, pathLegend, placeMarkers, pathHelpSheet, plate } from './ui.js';
+import { openPage, ICON, KIND, VIDEO_ICON, checkSvg, pathSvg, pathLegend, placeMarkers, pathHelpSheet, plate } from './ui.js';
 import { openCheckpoint, openVideoSheet } from './forms.js';
 import { itemSheet } from './program.js';
 import { progressMiniHtml, achievementsHtml } from './progress.js';
@@ -77,6 +77,7 @@ export function renderToday(root) {
       <span class="plate" id="weekChip"><span class="onlime" id="weekChipTxt"></span></span>
     </section>
     <section class="strip-wrap" id="bStrip" style="order:20"><div class="strip" id="strip"></div></section>
+    ${info.state === 'nostart' ? '' : '<section class="sec" id="bPending" style="order:30"><button class="pend-btn" id="pendBtn"><span class="grow"><span class="title2 ink" id="pendTitle"></span><br><span class="dim cap" id="pendSub"></span></span><span class="pend-n" id="pendN"><span class="onlime"></span></span></button></section>'}
     <section class="sec" id="bToday" style="order:35"><div class="h"><span class="ink">На сегодня</span><span class="grow"></span><span class="dim cap" id="todayCount"></span></div><div class="rows" id="todayList"></div></section>
     <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">${info.state === 'before' ? esc(L.weekTitle(D, 0)) : 'Эта неделя'}</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
     ${m.readOnly || hiddenBlock('video') || !(info.state === 'active' || info.state === 'before') ? '' : `<section class="video" style="order:45"><button class="btn pri wide" id="videoBtn"><span class="onlime">Записать видео</span></button><span class="dim cap" id="videoCap">Записывай каждое снятое видео, оно попадёт в твою статистику</span></section>`}
@@ -181,7 +182,30 @@ export function renderToday(root) {
     };
     chRefresh();
   }
+  const pending = () => L.pendingItems(D, info, m.items);
+  function renderPending() {
+    const b = q('#pendBtn'); if (!b) return;
+    const n = pending().length;
+    q('#pendTitle').textContent = n ? 'Невыполненные задания' : 'Всё выполнено';
+    q('#pendSub').textContent = n ? 'Всё, что ты ещё не отметил' : 'Невыполненных заданий нет';
+    q('#pendN .onlime').textContent = n; b.classList.toggle('zero', !n);
+  }
+  function openPending() {
+    const list = pending(), weeks = [...new Set(list.map((i) => i.week))];
+    const body = list.length ? weeks.map((w) => `<section class="sec"><div class="h"><span class="ink">${esc(L.weekTitle(D, w))}</span></div><div class="rows">${list.filter((i) => i.week === w).map((i) => rowHtml(i, m)).join('')}</div></section>`).join('') : '<p class="dim">Все задания открытых недель выполнены</p>';
+    openPage(`<div class="stack" id="pendBody">${body}</div>`, (el) => {
+      el.addEventListener('click', (e) => {
+        const row = e.target.closest('.row[data-id]'); if (!row) return;
+        const it = D.items.find((i) => i.id === row.dataset.id);
+        const sync = () => { updateRow(row, it); renderPending(); afterToggle(it.id); };
+        if (e.target.closest('[data-chk]')) { toggle(it.id); updateRow(row, it); renderPending(); }
+        else if (e.target.closest('[data-open]')) itemSheet(it.id, { onChange: sync, readOnly: m.readOnly });
+      });
+    }, { title: 'Невыполненные', onClose: () => { renderPending(); } });
+  }
+  if (q('#pendBtn')) { q('#pendBtn').onclick = openPending; renderPending(); }
   function afterToggle(id, wasLevel) {
+    renderPending();
     renderHeader(); renderStrip(); renderPath(true); renderActions(true);
     if (challenge) chRefresh();
   }
