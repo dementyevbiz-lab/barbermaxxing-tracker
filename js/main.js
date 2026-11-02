@@ -96,7 +96,7 @@ function startStudent() {
   startQueueWatch(() => syncProgress());
   const t = store.get('tab', 'today');
   go(SCREENS[t] ? t : 'today', true);
-  if (needsTour(D) && p.status !== 'paused') runTour(() => refresh());
+  if (needsTour(D) && p.status !== 'paused') runTour(() => refresh(), { forced: true });
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState !== 'visible' || Date.now() - state.loadedAt < 60000 || sheetOpen() || pageOpen()) return;
     try { state.D = await loadAll(state.userId); state.loadedAt = Date.now(); refresh(); } catch (e) {}

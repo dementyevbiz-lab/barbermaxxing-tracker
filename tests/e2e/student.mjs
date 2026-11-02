@@ -42,7 +42,7 @@ try {
     await page.click('[data-next]'); await page.waitForSelector('text=Путь начат');
     await page.click('[data-next]'); await page.waitForSelector('text=Как пользоваться трекером', { timeout: 20000 });
     ok('после онбординга сразу обучение', true);
-    await page.screenshot({ path: '/tmp/tour1.png' }).catch(() => {});
+    ok('в первом обучении нельзя пропустить', (await page.locator('[data-skip]').count()) === 0 && (await page.locator('#page [data-back]').count()) === 0);
     let slides = 1; while (await page.locator('[data-next]').innerText().then((t) => t.trim() !== 'Готово')) { await page.click('[data-next]'); slides++; if (slides > 20) break; }
     ok('в обучении 8 слайдов', slides === 8, String(slides));
     await page.click('[data-next]'); await page.waitForSelector('.today', { timeout: 20000 });

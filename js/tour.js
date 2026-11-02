@@ -4,7 +4,7 @@ import * as data from './data.js';
 import { openPage, closePage } from './ui.js';
 
 const SLIDES = [
-  { ico: '👋', tag: 'Обучение', title: 'Как пользоваться трекером', text: 'Покажем за минуту, где что лежит. Внизу шесть вкладок, на компьютере они слева. Обучение можно пропустить и запустить снова в Профиле',
+  { ico: '👋', tag: 'Обучение', title: 'Как пользоваться трекером', text: 'Покажем за минуту, где что лежит. Внизу шесть вкладок, на компьютере они слева. Позже его можно пройти ещё раз в Профиле',
     rows: [] },
   { ico: '☀️', tag: 'Вкладка «Сегодня»', title: 'Главный экран на каждый день', text: 'Здесь твой уровень, неделя программы и то, что на сегодня',
     rows: [['✅', 'Отмечай сделанное', 'Нажми на пункт, и опыт начислится сразу. Передумал, нажми ещё раз'], ['🎥', 'Записать видео', 'Кнопка на экране, когда снял ролик. Просмотры и ссылку можно добавить позже']] },
@@ -24,7 +24,7 @@ const SLIDES = [
 
 export const needsTour = (D) => !D.profile.onboarding?.tour_done;
 
-export function runTour(onFinish) {
+export function runTour(onFinish, { forced = false } = {}) {
   let i = 0;
   const finish = async () => {
     closePage();
@@ -38,7 +38,7 @@ export function runTour(onFinish) {
         <span class="plate lime"><span class="onlime">${s.tag}</span></span>
         <h2 class="h1s"><span class="ink">${s.title}</span></h2><p class="dim">${s.text}</p></div>
       ${s.rows.map(([e, t, c]) => `<div class="row static"><span class="ico">${e}</span><span class="row-main"><span class="ink t">${t}</span><span class="dim cap">${c}</span></span></div>`).join('')}
-      <div class="btns">${i > 0 ? '<button class="btn" data-prev><span class="ink">Назад</span></button>' : '<button class="btn" data-skip><span class="ink">Пропустить</span></button>'}
+      <div class="btns">${i > 0 ? '<button class="btn" data-prev><span class="ink">Назад</span></button>' : forced ? '' : '<button class="btn" data-skip><span class="ink">Закрыть</span></button>'}
         <button class="btn pri" style="flex:1" data-next><span class="onlime">${last ? 'Готово' : 'Дальше'}</span></button></div>`,
     (body) => {
       const q = (a) => body.querySelector(a);
