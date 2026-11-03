@@ -5,15 +5,17 @@ import { renderStudents } from './students.js';
 import { renderSummary } from './summary.js';
 import { renderProgramAdmin } from './program.js';
 import { renderContent } from './content.js';
+import { renderTopAdmin } from './top.js';
 import { pageOpen, closePage } from '../ui.js';
 
 const TABS = [
   ['students', 'Ученики', '<circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c.9-3.3 3.3-5 6.2-5s5.3 1.7 6.2 5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6M18.5 15c1.4.7 2.4 2.2 2.9 4.2"/>'],
   ['summary', 'Сводка', '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'],
+  ['top', 'Рейтинг', '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4.5v1.5A3 3 0 0 0 8 10.5M16 6h3.5v1.5A3 3 0 0 1 16 10.5M12 13v4M8.5 20h7"/>'],
   ['program', 'Программа', '<rect x="4" y="3.5" width="16" height="17" rx="4"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/>'],
   ['content', 'Контент', '<path d="M12 3l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 16.6 6.7 19.5l1.1-6L3.4 9.3l6-.8z"/>'],
 ];
-const SCREENS = { students: renderStudents, summary: renderSummary, program: renderProgramAdmin, content: renderContent };
+const SCREENS = { students: renderStudents, summary: renderSummary, top: renderTopAdmin, program: renderProgramAdmin, content: renderContent };
 
 export async function startAdmin(root, r) {
   root.innerHTML = `<div class="app"><nav class="tabs" id="tabs"><div class="brand"><span class="logo-s"><img src="assets/logo.webp" alt=""></span><span class="limet">BARBERMAXXING</span></div>

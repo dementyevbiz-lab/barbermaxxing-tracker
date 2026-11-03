@@ -119,6 +119,14 @@ try {
   const adminFn = await fetch('https://nltremspmuuasksxbqtk.supabase.co/functions/v1/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_EB1WIiL4hcJNxK40-OqDlQ_94uiWrrz', Authorization: 'Bearer ' + sess1.access_token }, body: JSON.stringify({ action: 'delete_demo' }) });
   ok('ученик не может вызвать функцию админа', adminFn.status === 403);
   const { error: eAdm } = await s1.from('program_items').insert({ week: 1, kind: 'lesson', title: 'E2E взлом', tariffs: ['barbermax'] }); ok('ученик не может писать в программу', !!eAdm);
+  // рейтинг в админке
+  await page.click('[data-tab="top"]'); await page.waitForSelector('#pager .top-row', { timeout: 15000 }); await wait(500);
+  const topTxt = await page.locator('.pg').nth(0).innerText();
+  ok('в админском рейтинге видны ученики, а админа нет', topTxt.includes('E2E Отстающий') && !topTxt.includes('E2E админ'), topTxt.slice(0, 200));
+  ok('скрытый админом ученик виден админу с пометкой', topTxt.includes('скрыт админом'));
+  await page.screenshot({ path: '/tmp/claude-0/shots/a-top.png' });
+  await page.locator('.pg').nth(0).locator('.top-row', { hasText: 'E2E Отстающий' }).click(); await page.waitForSelector('#page.open', { timeout: 10000 }); await wait(800);
+  ok('строка рейтинга открывает карточку ученика', (await page.locator('#page').innerText()).includes('E2E Отстающий'));
   ok('без ошибок в консоли админки', app.errors.length === 0, app.errors.join(' | '));
 } catch (e) { console.log('СБОЙ СЦЕНАРИЯ:', e.message.slice(0, 700)); results.push(['сценарий дошёл до конца', false, e.message.slice(0, 300)]); try { await page.screenshot({ path: '/tmp/claude-0/shots/a-fail.png' }); } catch (x) {} }
 finally { await browser.close(); srv.stop(); console.log('очистка:', await cleanupE2E(c)); const bad = results.filter((r) => !r[1]); console.log(`\nпроверок: ${results.length}, не прошло: ${bad.length}`); process.exit(bad.length ? 1 : 0); }

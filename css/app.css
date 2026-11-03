@@ -441,3 +441,7 @@ select.field option,select.field optgroup{background:#1c1f1c;color:#fff;-webkit-
 .top-place.p2{opacity:.85}.top-place.p3{opacity:.7}
 .top-val{font-weight:700;white-space:nowrap;flex:none}
 .lnk{color:#BBFF68;-webkit-text-fill-color:#BBFF68;text-decoration:underline;word-break:break-all}
+.top-row.off{opacity:.6}
+#pList .up-btn{width:32px;height:32px}
+#pList .row{padding-right:14px}
+.kv.col>span:last-child{white-space:normal}

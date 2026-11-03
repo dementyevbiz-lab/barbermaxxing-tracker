@@ -55,7 +55,7 @@ export function openCard(id) {
     <div class="card"><div class="h"><span class="ink">Активность</span></div>
       <div class="stat-grid"><div class="stat"><span class="dim cap">За 7 дней</span><span class="big-num ink">${a7.c + a7.v}</span><span class="dim cap">отметок ${a7.c} · видео ${a7.v}</span></div>
       <div class="stat"><span class="dim cap">За 14 дней</span><span class="big-num ink">${a14.c + a14.v}</span><span class="dim cap">отметок ${a14.c} · видео ${a14.v}</span></div></div>
-      <div class="kv"><span class="dim">Видео</span><span class="ink">с клиентом ${vAll.client} · экспертных ${vAll.expert} · лайф ${vAll.life}</span></div>
+      <div class="kv col"><span class="dim">Видео</span><span class="ink">с клиентом ${vAll.client} · экспертных ${vAll.expert} · лайф ${vAll.life}</span></div>
       <div class="kv"><span class="dim">Обязательное к этой неделе</span><span class="ink">${s.share == null ? '—' : Math.round(s.share * 100) + '%'}</span></div></div>
 
     <div class="card"><div class="h"><span class="ink">Скриншоты</span></div><div id="cShots"></div></div>

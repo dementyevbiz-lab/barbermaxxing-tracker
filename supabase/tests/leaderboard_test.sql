@@ -58,6 +58,15 @@ begin
   -- админ тоже получает таблицу без админа
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c3","role":"authenticated","app_metadata":{"telegram_id":920000003}}', true);
   assert jsonb_array_length(public.leaderboard() -> 'rows') = 3, 'админ видит тех же троих';
+  -- админский рейтинг: все ученики, скрытые с пометкой, без админов и демо; ученику закрыт
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c3","role":"authenticated","app_metadata":{"telegram_id":920000003}}', true);
+  r := public.leaderboard_admin();
+  assert jsonb_array_length(r -> 'rows') = 5, 'админ видит пятерых с точкой А: ' || (r -> 'rows')::text;
+  assert exists (select 1 from jsonb_array_elements(r -> 'rows') x where x ->> 'name' = 'Твинк' and x ->> 'hidden' = 'admin' and x ? 'id'), 'скрытый админом виден админу с пометкой';
+  assert exists (select 1 from jsonb_array_elements(r -> 'rows') x where x ->> 'name' = 'Скрытый' and x ->> 'hidden' = 'self'), 'скрывшийся сам виден админу с пометкой';
+  assert not (r -> 'rows')::text like '%Админ"%' and not (r -> 'rows')::text like '%Демо%', 'админов и демо нет и в админском рейтинге';
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","app_metadata":{"telegram_id":920000001}}', true);
+  begin perform public.leaderboard_admin(); raise exception 'ученик получил админский рейтинг'; exception when insufficient_privilege then null; end;
   -- скрывшийся видит пометку и не попадает в список
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c5","role":"authenticated","app_metadata":{"telegram_id":920000005}}', true);
   assert (public.leaderboard() ->> 'hidden')::boolean, 'скрывшийся видит, что скрыт';
