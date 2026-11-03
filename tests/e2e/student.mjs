@@ -90,7 +90,9 @@ try {
   const rows = page.locator('#actList .row');
   ok('на экране три пункта недели и одно короткое задание', (await rows.count()) + (await page.locator('#todayList .row[data-id]').count()) === 4, await rows.count());
   ok('видео записывается кнопкой, а не заданием, и блок На сегодня только с заданиями дня', (await page.locator('#videoBtn').count()) === 1 && !(await page.locator('#bToday').innerText()).includes('Снять видео') && (await page.locator('#todayList .row[data-id]').count()) === 1);
-  ok('блок ачивок показан и подписан как награды', (await page.locator('.ach-row').count()) >= 1 && (await page.locator('text=Награды за активность').count()) === 1);
+  ok('блок ачивок показан и подписан как награды', (await page.locator('.ach-row').count()) >= 1 && (await page.locator('.plate:has-text("Награды")').count()) >= 1);
+  await page.locator('[data-help="ach"]').first().click(); await page.waitForSelector('#sheet.open'); ok('подсказка «?» у ачивок открывает описание', (await page.locator('#sheet').innerText()).includes('Награды за активность'));
+  await page.evaluate(() => document.getElementById('scrim').click()); await wait(400);
   ok('цитата дня показана и только проверенная', await page.locator('.quote').count() === 1 && !(await page.locator('.quote').innerText()).includes('непроверенная'));
   ok('фильм показан по метке ситуации', (await page.locator('text=E2E Фильм').count()) === 1);
   ok('вопрос по триггеру показан', await page.locator('#bQuestion').count() === 1);

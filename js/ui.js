@@ -1,5 +1,5 @@
 // Общие элементы интерфейса: линия пути, страницы поверх вкладок, форматирование метрик
-import { $, esc, tg, state, reduced } from './core.js';
+import { $, esc, tg, state, reduced, openSheet } from './core.js';
 import * as L from './logic.js';
 
 export const ICON = { lesson: '📺', live: '🎙️', homework: '📝', material: '📚', short_task: '⚡', challenge_task: '🎯' };
@@ -63,11 +63,28 @@ export function placeMarkers(root, p, now, pace, animate = false) {
   } catch (e) {}
   curPos.set(p, to);
 }
+// Кнопка «?» и окно подсказки: описания не занимают место на экране
+const HELP = {
+  passage: ['Прохождение программы', 'Какая часть пунктов пройдена в каждой неделе. График появится, когда пройдёт больше одной недели'],
+  xp: ['Опыт', 'Накопленный опыт по дням. Он растёт за каждое действие и никогда не уменьшается. График появится, когда опыт наберётся за несколько дней'],
+  videoWeeks: ['Видео', 'Столбики показывают, сколько видео снято в каждой неделе. Просмотры можно добавлять, когда они накопятся'],
+  ach: ['Ачивки', 'Награды за активность в трекере. Новые открываются по мере прохождения'],
+  miniProg: ['Прогресс', 'Доля пройденных пунктов по неделям. Цифры замеров и видео смотри во вкладке Прогресс'],
+  cp: ['Как заполнять замер', 'Цифры на сегодня. Каждое поле сохраняется само, можно выйти и вернуться. Что не знаешь, оставь пустым'],
+  topHide: ['Рейтинг', 'Другие ученики видят только твоё имя и прирост в процентах. Цифры замеров не видны. Скрыться можно в любой момент'],
+};
+export const helpBtn = (key) => `<button class="qbtn" data-help="${key}" aria-label="Подсказка"><span class="dim">?</span></button>`;
+export const helpSheetHtml = (title, text) => `<h2 class="sh-title"><span class="ink">${esc(title)}</span></h2><p class="dim" style="white-space:pre-wrap">${text}</p>`;
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-help]'); if (!b || !HELP[b.dataset.help]) return;
+  const [t, x] = HELP[b.dataset.help]; openSheet(helpSheetHtml(t, esc(x)));
+});
+
 export function pathHelpSheet(hasNow) {
   return '<h2 class="sh-title"><span class="ink">Как читать путь</span></h2>' +
     '<div class="kv" style="justify-content:flex-start"><span class="ink">Сейчас: где ты по цифрам последнего замера</span></div>' +
     '<div class="kv" style="justify-content:flex-start"><span class="ink">Куда ведёт текущий темп: куда приводят уроки, домашки и видео, если продолжать так же</span></div>' +
-    `<p class="dim cap">Каждый урок, домашка и видео приближают тебя к цели${hasNow ? '' : '. Маркер Сейчас появится после первого замера'}</p>`;
+    `<p class="dim cap">Нажми на Старт, Цель или Сейчас, чтобы увидеть детали. Каждый урок, домашка и видео приближают тебя к цели${hasNow ? '' : '. Маркер Сейчас появится после первого замера'}</p>`;
 }
 
 // ---------- страница поверх вкладок ----------

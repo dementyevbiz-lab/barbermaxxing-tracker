@@ -2,7 +2,7 @@
 import { $, $$, esc, state, openSheet, closeSheet, toast, haptic, confirmBox } from './core.js';
 import * as L from './logic.js';
 import * as data from './data.js';
-import { SCREEN_KINDS, unitOf, openPage, closePage, VIDEO_ICON } from './ui.js';
+import { SCREEN_KINDS, unitOf, openPage, closePage, VIDEO_ICON, helpBtn } from './ui.js';
 
 export function parseNum(s) {
   const t = String(s ?? '').replace(/\s/g, '').replace(',', '.');
@@ -120,7 +120,7 @@ export function openCheckpoint(cpId, { onDone } = {}) {
   openPage(`
     <div class="card">
       <span class="plate ${sent ? 'lime' : ''}"><span class="onlime">${sent ? 'Отправлен, можно исправить' : 'До ' + L.fmtDay(L.parseDay(cp.due_date))}</span></span>
-      <p class="dim cap">Цифры на сегодня. Каждое поле сохраняется само, можно выйти и вернуться. Что не знаешь, оставь пустым</p>
+      <div class="h"><span class="dim cap">Подсказка по заполнению</span><span class="grow"></span>${helpBtn('cp')}</div>
     </div>
     <div class="card"><div class="h"><span class="ink">Цифры</span></div><div class="stack-s" id="cpFields"></div></div>
     <div class="card">

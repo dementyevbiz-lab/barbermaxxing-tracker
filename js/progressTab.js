@@ -8,6 +8,7 @@ import { openVideoSheet, openVideoEdit } from './forms.js';
 import { achievementsHtml } from './progress.js';
 import { metricChart } from './path.js';
 import { topButtonHtml, bindTopButton } from './top.js';
+import { helpBtn } from './ui.js';
 
 export function renderProgressTab(root) {
   const D = state.D, info = L.weekInfo(D.profile, D.profile.tariff, L.startOfDay());
@@ -27,15 +28,14 @@ export function renderProgressTab(root) {
       <div class="stat"><span class="dim cap">Опыт</span><span class="big-num ink">${L.fmtNum(xp)}</span></div>
       <div class="stat"><span class="dim cap">Видео</span><span class="big-num ink">${all.total}</span></div></div>
     <div class="grid-cards">
-      <section class="card"><div class="h"><span class="ink">Прохождение программы</span></div>
+      <section class="card"><div class="h"><span class="ink">Прохождение программы</span><span class="grow"></span>${helpBtn('passage')}</div>
         ${lineChart({ points: pass.map((s) => ({ label: wk(s.week), value: s.pct })), height: 160, yMin: 0, yMax: 100, fmtV: (v) => v + '%' }) || `<p class="title2 ink">${esc(L.weekTitle(D, Math.max(cur, 0)))}: пройдено ${pass.length ? pass[pass.length - 1].done : 0} из ${pass.length ? pass[pass.length - 1].total : 0}</p>`}
-        <p class="dim cap">Какая часть пунктов пройдена в каждой неделе. График появится, когда пройдёт больше одной недели</p></section>
-      <section class="card"><div class="h"><span class="ink">Опыт</span></div>
-        ${lineChart({ points: xpS.map((p) => ({ label: p.date.slice(8, 10) + '.' + p.date.slice(5, 7), value: p.value })), height: 160, yMin: 0, fmtV: (v) => L.fmtNum(Math.round(v)) }) || `<p class="title2 ink">${L.fmtNum(xp)} опыта, уровень ${Lv}</p>`}
-        <p class="dim cap">Накопленный опыт по дням. Он растёт за каждое действие и никогда не уменьшается. График появится, когда опыт наберётся за несколько дней</p></section></div>
-    <section class="card"><div class="h"><span class="ink">Видео</span><span class="grow"></span><button class="btn sm pri" id="vAdd"><span class="onlime">Добавить видео</span></button></div>
+</section>
+      <section class="card"><div class="h"><span class="ink">Опыт</span><span class="grow"></span>${helpBtn('xp')}</div>
+        ${lineChart({ points: xpS.map((p) => ({ label: p.date.slice(8, 10) + '.' + p.date.slice(5, 7), value: p.value })), height: 160, yMin: 0, fmtV: (v) => L.fmtNum(Math.round(v)) }) || `<p class="title2 ink">${L.fmtNum(xp)} опыта, уровень ${Lv}</p>`}</section></div>
+    <section class="card"><div class="h"><span class="ink">Видео</span>${helpBtn('videoWeeks')}<span class="grow"></span><button class="btn sm pri" id="vAdd"><span class="onlime">Добавить видео</span></button></div>
       <div class="stack-s" style="gap:14px">${Object.entries(L.VIDEO_KINDS).map(([k, t]) => `<div class="prog-row"><div class="top"><span class="ink">${VIDEO_ICON[k]} ${t}</span><span class="vals dim">${all[k]}</span></div><div class="progress"><i style="width:${all.total ? Math.round(all[k] / Math.max(all.client, all.expert, all.life, 1) * 100) : 0}%"></i></div></div>`).join('')}</div>
-      ${vw.length > 1 && all.total > 0 ? `<div>${barChart({ bars: vw.map((x) => ({ label: wk(x.week), value: x.total })), height: 120 })}<p class="dim cap">Сколько видео снято в каждой неделе</p></div>` : ''}
+      ${vw.length > 1 && all.total > 0 ? `<div>${barChart({ bars: vw.map((x) => ({ label: wk(x.week), value: x.total })), height: 120 })}</div>` : ''}
       ${withViews.length ? `<p class="ink">Лучшее видео: ${L.fmtNum(Math.max(...withViews.map((v) => v.views)))} просмотров, всего ${L.fmtNum(withViews.reduce((s, v) => s + v.views, 0))}</p>` : ''}
       <div class="h" style="margin-top:4px"><span class="ink">Мои видео</span></div>
       <div class="stack-s">${(showAll ? myVids : myVids.slice(0, 6)).map((v) => `<button class="row" data-vid="${v.id}" style="padding-right:20px"><span class="ico">${VIDEO_ICON[v.kind]}</span><span class="row-main"><span class="ink t">${L.VIDEO_KINDS[v.kind]}</span><span class="dim cap">${L.fmtDay(L.parseDay(v.logged_on))} · ${v.views != null ? 'просмотры ' + L.fmtNum(v.views) : 'добавить просмотры'}</span></span></button>`).join('') || '<p class="dim cap">Видео появятся здесь. Просмотры можно добавлять, когда они накопятся</p>'}${myVids.length > 6 && !showAll ? '<button class="btn sm" id="vAll"><span class="ink">Показать все</span></button>' : ''}</div></section>

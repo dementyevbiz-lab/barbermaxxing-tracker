@@ -2,6 +2,7 @@
 import { $, esc, state, openSheet, closeSheet, toast, tg, haptic } from './core.js';
 import * as L from './logic.js';
 import * as data from './data.js';
+import { helpBtn } from './ui.js';
 
 export function renderProfile(root) {
   const D = state.D, info = L.weekInfo(D.profile, D.profile.tariff, L.startOfDay());
@@ -26,7 +27,7 @@ export function renderProfile(root) {
     <section class="card"><div class="h"><span class="ink">Звания</span></div><div class="ladder">${ranks.map((r, i) => {
       const nextL = ranks[i + 1]?.level ?? Infinity, on = Lv >= r.level && Lv < nextL;
       return `<div class="rk ${on ? 'on' : Lv < r.level ? 'off' : ''}"><span class="lv ${on ? 'onlime' : 'ink'}">${r.level}</span><span class="${on ? 'onlime' : 'ink'}">${esc(r.name)}</span></div>`; }).join('')}</div></section></div>
-    ${achs.length ? `<section class="card"><div class="h"><span class="ink">Ачивки</span></div><p class="dim cap">Награды за активность в трекере. Новые открываются по мере прохождения</p><div class="stack-s">${achs.map((x) => `<div class="ach-row"><span class="ico" aria-hidden="true">🏅</span><div class="grow"><span class="title2 ink">${esc(x.a.name)}</span>
+    ${achs.length ? `<section class="card"><div class="h"><span class="ink">Ачивки</span>${helpBtn('ach')}</div><div class="stack-s">${achs.map((x) => `<div class="ach-row"><span class="ico" aria-hidden="true">🏅</span><div class="grow"><span class="title2 ink">${esc(x.a.name)}</span>
         <div class="dim cap">${x.top ? 'Сейчас: ' + esc(tierNames[x.top - 1] || '') : 'Пока не открыта'}${x.next ? ` · до ступени ${esc(tierNames[x.next.tier - 1] || '')}: ${x.value} из ${x.thr || '—'}` : ' · все ступени пройдены'}</div>
         ${x.next ? `<div class="progress"><i style="width:${Math.round(x.ratio * 100)}%"></i></div>` : ''}
         <div class="tiers">${x.a.tiers.map((tr) => `<i class="${x.got.includes(tr.tier) ? 'on' : ''}"></i>`).join('')}</div></div></div>`).join('')}${lockedAch ? `<p class="dim cap ach-lock">Ещё ${lockedAch} откроются по ходу программы</p>` : ''}</div></section>` : ''}
@@ -39,8 +40,8 @@ export function renderProfile(root) {
       <p class="dim cap">${pdfOpen ? 'Один лист с твоим путём, скриншотами и цифрами' : 'Откроется на последней неделе программы'}</p>
       <button class="btn pri" id="pdfBtn" style="align-self:flex-start" ${pdfOpen ? '' : 'disabled'}><span class="onlime">Итог программы (PDF)</span></button></section>
     <section class="card"><div class="h"><span class="ink">Настройки</span></div>
-      <div class="row static"><span class="row-main"><span class="ink t">Уведомления от бота</span><span class="dim cap">Сроки замеров и даты созвонов</span></span><button class="toggle ${prefs.notifications === false ? '' : 'on'}" id="notifT" aria-label="Уведомления"></button></div>
-      <div class="row static"><span class="row-main"><span class="ink t">Показывать меня в рейтинге</span><span class="dim cap">Другие видят только имя и прирост, цифры не видны</span></span><button class="toggle ${prefs.hide_top ? '' : 'on'}" id="topT" aria-label="Рейтинг"></button></div>
+      <div class="row static"><span class="row-main"><span class="ink t">Уведомления от бота</span></span><button class="toggle ${prefs.notifications === false ? '' : 'on'}" id="notifT" aria-label="Уведомления"></button></div>
+      <div class="row static"><span class="row-main"><span class="ink t">Показывать меня в рейтинге</span></span>${helpBtn('topHide')}<button class="toggle ${prefs.hide_top ? '' : 'on'}" id="topT" aria-label="Рейтинг"></button></div>
       <div class="row static"><span class="row-main"><span class="ink t">Валюта среднего чека</span></span><div class="btns"><button class="btn sm ${prefs.currency === 'KZT' ? '' : 'pri'}" data-cur="RUB"><span class="${prefs.currency === 'KZT' ? 'ink' : 'onlime'}">₽</span></button><button class="btn sm ${prefs.currency === 'KZT' ? 'pri' : ''}" data-cur="KZT"><span class="${prefs.currency === 'KZT' ? 'onlime' : 'ink'}">₸</span></button></div></div>
       <button class="row" id="tourBtn"><span class="row-main"><span class="ink t">Обучение по приложению</span><span class="dim cap">Пройти заново</span></span></button>
       <button class="row" id="trashBtn"><span class="row-main"><span class="ink t">Корзина</span></span></button></section></div>`;

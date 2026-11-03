@@ -78,7 +78,7 @@ export function renderToday(root) {
       <span class="plate" id="weekChip"><span class="onlime" id="weekChipTxt"></span></span>
     </section>
     <section class="strip-wrap" id="bStrip" style="order:20"><div class="strip" id="strip"></div></section>
-    ${info.state === 'nostart' ? '' : '<section class="sec" id="bPending" style="order:30"><button class="pend-btn" id="pendBtn"><span class="grow"><span class="title2 ink" id="pendTitle"></span><br><span class="dim cap" id="pendSub"></span></span><span class="pend-n" id="pendN"><span class="onlime"></span></span></button></section>'}
+    ${info.state === 'nostart' ? '' : '<section class="sec" id="bPending" style="order:30"><button class="pend-btn" id="pendBtn"><span class="grow"><span class="title2 ink" id="pendTitle"></span></span><span class="pend-n" id="pendN"><span class="onlime"></span></span></button></section>'}
     <section class="sec" id="bToday" style="order:35"><div class="h"><span class="ink">На сегодня</span><span class="grow"></span><span class="dim cap" id="todayCount"></span></div><div class="rows" id="todayList"></div></section>
     <section class="sec" id="bActions" style="order:40"><div class="h"><span class="ink">${info.state === 'before' ? esc(L.weekTitle(D, 0)) : 'Эта неделя'}</span><span class="grow"></span><span class="dim cap" id="actCount"></span></div><div class="rows" id="actList"></div></section>
     ${m.readOnly || hiddenBlock('video') || !(info.state === 'active' || info.state === 'before') ? '' : `<section class="video" style="order:45"><button class="btn pri wide" id="videoBtn"><span class="onlime">Записать видео</span></button><span class="dim cap" id="videoCap">Записывай каждое снятое видео, оно попадёт в твою статистику</span></section>`}
@@ -189,7 +189,6 @@ export function renderToday(root) {
     const b = q('#pendBtn'); if (!b) return;
     const n = pending().length;
     q('#pendTitle').textContent = n ? 'Невыполненные задания' : 'Всё выполнено';
-    q('#pendSub').textContent = n ? 'Всё, что ты ещё не отметил' : 'Невыполненных заданий нет';
     q('#pendN .onlime').textContent = n; b.classList.toggle('zero', !n);
   }
   function openPending() {

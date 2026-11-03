@@ -1,6 +1,7 @@
 // Рейтинг: прирост по метрикам относительно точки А. Общий зачёт в очках и отдельная таблица по каждой метрике, листается свайпом
 import { $, esc, sb, state, toast } from './core.js';
-import { openPage } from './ui.js';
+import { openPage, helpBtn, helpSheetHtml } from './ui.js';
+import { openSheet } from './core.js';
 
 const pct = (g) => (g > 0 ? '+' : g < 0 ? '−' : '') + Math.abs(g).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + '%';
 const pts = (n) => Number(n).toLocaleString('ru-RU') + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'очко' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'очка' : 'очков');
@@ -34,7 +35,7 @@ export function myPlace(top) {
 
 // Кнопка-вход. Показывает место, если оно уже есть
 export function topButtonHtml(order, id = 'topBtn') {
-  return `<section class="sec" style="order:${order}"><button class="pend-btn" id="${id}"><span class="grow"><span class="title2 ink">Рейтинг учеников</span><br><span class="dim cap" data-top-sub>Прирост по метрикам от точки А</span></span><span class="pend-n" data-top-n hidden><span class="onlime"></span></span></button></section>`;
+  return `<section class="sec" style="order:${order}"><button class="pend-btn" id="${id}"><span class="grow"><span class="title2 ink">Рейтинг учеников</span><br><span class="dim cap" data-top-sub hidden></span></span><span class="pend-n" data-top-n hidden><span class="onlime"></span></span></button></section>`;
 }
 export function bindTopButton(root, id = 'topBtn') {
   const b = $('#' + id, root); if (!b) return;
@@ -42,7 +43,7 @@ export function bindTopButton(root, id = 'topBtn') {
   loadTop().then((top) => {
     const { place, total } = myPlace(top); if (!place) return;
     const n = $('[data-top-n]', b); n.hidden = false; n.firstElementChild.textContent = place;
-    $('[data-top-sub]', b).textContent = `Ты на ${place} месте из ${total}`;
+    const sub = $('[data-top-sub]', b); sub.hidden = false; sub.textContent = `Ты на ${place} месте из ${total}`;
   }).catch(() => {});
 }
 
@@ -54,10 +55,12 @@ export function openTop() {
     const tables = buildTables(top, metrics), me = myPlace(top);
     const msg = me.place ? `Ты на ${me.place} месте из ${me.total}` : me.hidden ? 'Ты скрыт из рейтинга. Включить можно в Профиле' : me.total ? 'Ты появишься в рейтинге после первого замера' : 'Рейтинг появится после первых замеров учеников';
     const w = top.weights || {};
-    body.innerHTML = `<p class="dim cap">${esc(msg)}</p>
+    body.innerHTML = `<div class="h"><span class="dim cap">${esc(msg)}</span><span class="grow"></span>${helpBtn('top')}</div>
       <div class="top-chips" id="topChips">${tables.map((t, i) => `<button class="btn sm ${i ? '' : 'pri'}" data-i="${i}"><span class="${i ? 'ink' : 'onlime'}">${esc(t.title)}</span></button>`).join('')}</div>
-      <div class="pager" id="pager">${tables.map((t) => `<section class="pg"><div class="rows">${t.list.length ? t.list.map(rowHtml).join('') : '<p class="dim">Пока никого. Прирост появится после первого замера</p>'}</div>
-        <p class="dim cap">${t.key === 'total' ? 'Очки = прирост метрики в процентах от точки А × вес метрики. Вес показывает, насколько метрика влияет на результат: ' + esc(metrics.map((m) => `${m.name} ×${w[m.key] ?? 1}`).join(', ')) + `. Прирост больше ${top.cap ?? 100}% очков не добавляет` : esc(t.hint || 'Прирост от точки А. Начальные цифры никому не показываются')}</p></section>`).join('')}</div>`;
+      <div class="pager" id="pager">${tables.map((t) => `<section class="pg"><div class="rows">${t.list.length ? t.list.map(rowHtml).join('') : '<p class="dim">Пока никого. Прирост появится после первого замера</p>'}</div></section>`).join('')}</div>`;
+    const downs = metrics.filter((m) => m.better === 'down').map((m) => m.name);
+    const helpText = `Общий зачёт считается в очках: прирост метрики в процентах от точки А × вес метрики. Вес показывает, насколько метрика влияет на результат.\n\n${metrics.map((m) => `${m.name} ×${w[m.key] ?? 1}`).join('\n')}\n\nПрирост больше ${top.cap ?? 100}% очков не добавляет.${downs.length ? ` Где лучше меньше (${downs.join(', ')}), снижение даёт прирост.` : ''}\n\nТаблицы по метрикам показывают только прирост. Начальные цифры никому не видны`;
+    body.querySelector('[data-help="top"]').onclick = (e) => { e.stopPropagation(); openSheet(helpSheetHtml('Как считается рейтинг', esc(helpText))); };
     const pager = $('#pager', body), chips = [...body.querySelectorAll('#topChips [data-i]')];
     const mark = (i) => chips.forEach((c, k) => { c.classList.toggle('pri', k === i); c.firstElementChild.className = k === i ? 'onlime' : 'ink'; if (k === i) c.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); });
     chips.forEach((c) => c.onclick = () => pager.scrollTo({ left: Number(c.dataset.i) * pager.clientWidth, behavior: 'smooth' }));

@@ -12,7 +12,6 @@ export function pathCardHtml(D, info, R, { p = 'p', order = 50, big = false } = 
   return `<section class="card" id="${p}Card" style="order:${order}">
     <div class="h"><span class="ink">Мой путь</span><span class="grow"></span><button class="qbtn" id="${p}Q" aria-label="Что это"><span class="dim">?</span></button></div>
     ${pathSvg(p)}${pathLegend(hasNow)}${cap}
-    <p class="dim cap">Нажми на Старт, Цель или Сейчас, чтобы увидеть детали</p>
     ${D.goalText ? `<p class="goal ink">${esc(D.goalText)}</p>` : ''}</section>`;
 }
 
