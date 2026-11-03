@@ -53,7 +53,7 @@ export function openTop() {
     let top;
     try { top = await loadTop(); } catch (e) { console.warn(e); body.innerHTML = '<p class="dim">Не получилось загрузить рейтинг. Попробуй ещё раз позже</p>'; return; }
     const tables = buildTables(top, metrics), me = myPlace(top);
-    const msg = me.place ? `Ты на ${me.place} месте из ${me.total}` : me.hidden ? 'Ты скрыт из рейтинга. Включить можно в Профиле' : me.total ? 'Ты появишься в рейтинге после точки А' : 'Рейтинг появится, когда ученики сдадут точку А';
+    const msg = me.place ? `Ты на ${me.place} месте из ${me.total}` : me.hidden ? 'Ты скрыт из рейтинга. Включить можно в Профиле' : me.total ? 'Тебя пока нет в рейтинге' : 'Рейтинг появится, когда ученики сдадут точку А';
     const w = top.weights || {};
     body.innerHTML = `<div class="h"><span class="dim cap">${esc(msg)}</span><span class="grow"></span>${helpBtn('top')}</div>
       <div class="top-chips" id="topChips">${tables.map((t, i) => `<button class="btn sm ${i ? '' : 'pri'}" data-i="${i}"><span class="${i ? 'ink' : 'onlime'}">${esc(t.title)}</span></button>`).join('')}</div>

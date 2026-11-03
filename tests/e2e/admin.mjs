@@ -64,6 +64,8 @@ try {
   ok('смена тарифа пересчитала замеры', await until(async () => (await c.admin.from('checkpoints').select('id').eq('user_id', st1.id)).data.length === 5));
   await wait(2000); await page.waitForSelector('#aBlocks'); await page.click('#aBlocks'); await page.waitForSelector('[data-check="quote"]'); await page.click('[data-check="quote"]'); await page.click('#fSave');
   ok('блок интерфейса выключен у ученика', await until(async () => (await c.admin.from('profiles').select('ui_overrides').eq('id', st1.id).single()).data.ui_overrides.hide?.includes('quote')));
+  await wait(2000); await page.waitForSelector('#aTop'); await page.click('#aTop');
+  ok('админ скрывает ученика из рейтинга', await until(async () => (await c.admin.from('profiles').select('ui_overrides').eq('id', st1.id).single()).data.ui_overrides.top_hidden === true));
   await wait(2000); await page.waitForSelector('#aStatus'); await page.click('#aStatus');
   ok('пауза ставится', await until(async () => (await c.admin.from('profiles').select('status').eq('id', st1.id).single()).data.status === 'paused'));
   await wait(1800); await page.click('.back'); await page.waitForSelector('#page:not(.open)'); await wait(400);

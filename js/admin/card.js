@@ -78,6 +78,7 @@ export function openCard(id) {
       <button class="opt" id="aItem"><span class="grow"><span class="ink">Добавить персональный пункт программы</span></span></button>
       <button class="opt" id="aBlocks"><span class="grow"><span class="ink">Блоки интерфейса ученика</span><span class="cap dim">Выключено: ${hide.length ? hide.map((h) => BLOCKS.find((b) => b[0] === h)?.[1] || h).join(', ') : 'ничего'}</span></span></button>
       <button class="opt" id="aStatus"><span class="grow"><span class="ink">${p.status === 'paused' ? 'Снять с паузы' : 'Поставить на паузу'}</span></span></button>
+      <button class="opt" id="aTop"><span class="grow"><span class="ink">${p.ui_overrides?.top_hidden ? 'Вернуть в рейтинг' : 'Скрыть из рейтинга'}</span><span class="cap dim">${p.ui_overrides?.top_hidden ? 'Сейчас скрыт, другие ученики его не видят' : 'Сейчас виден другим ученикам'}</span></span></button>
       <button class="opt" id="aNotif"><span class="grow"><span class="ink">${p.prefs?.admin_mute ? 'Включить уведомления бота' : 'Отключить уведомления бота'}</span></span></button>
       ${link ? '<button class="opt" id="aCopy"><span class="grow"><span class="ink">Скопировать ссылку-приглашение</span></span></button>' : ''}
       <button class="opt" id="aReissue"><span class="grow"><span class="ink">Новая ссылка-приглашение</span><span class="cap dim">Старая перестанет работать, прошлый аккаунт Telegram отвяжется</span></span></button>
@@ -128,6 +129,7 @@ export function openCard(id) {
     act('#aBlocks', () => formSheet({ title: 'Что видит ученик', fields: BLOCKS.map(([k, t]) => ({ k, label: t, type: 'check' })), initial: Object.fromEntries(BLOCKS.map(([k]) => [k, !hide.includes(k)])),
       extra: '<p class="dim cap">Выключенный блок у этого ученика скрыт</p>', onSave: (v) => patch({ ui_overrides: { ...(p.ui_overrides || {}), hide: BLOCKS.map((b) => b[0]).filter((k) => !v[k]) } }) }));
     act('#aStatus', () => patch({ status: p.status === 'paused' ? 'active' : 'paused' }, p.status === 'paused' ? 'Пауза снята' : 'Поставлено на паузу'));
+    act('#aTop', () => patch({ ui_overrides: { ...(p.ui_overrides || {}), top_hidden: !p.ui_overrides?.top_hidden } }, p.ui_overrides?.top_hidden ? 'Возвращён в рейтинг' : 'Скрыт из рейтинга'));
     act('#aNotif', () => patch({ prefs: { ...(p.prefs || {}), admin_mute: !p.prefs?.admin_mute } }, 'Сохранено'));
     act('#aCopy', () => linkSheet('Ссылка-приглашение', link, `Для ученика ${p.display_name}`));
     act('#aReissue', async () => { if (!await confirmBox('Старая ссылка перестанет работать. Прошлый аккаунт Telegram отвяжется. Продолжить?')) return; const r = await callFn('admin', { action: 'reissue_invite', user_id: id }, true); if (!r.ok) return toast(r.message || 'Не получилось'); await state.app.reload(); linkSheet('Новая ссылка', r.invite_link, `Для ученика ${p.display_name}`); });

@@ -20,6 +20,7 @@ begin
     where p.status <> 'blocked' and not p.demo
       and not exists (select 1 from admins a where a.telegram_id = p.telegram_id)
       and not coalesce((p.prefs ->> 'hide_top')::boolean, false)
+      and not coalesce((p.ui_overrides ->> 'top_hidden')::boolean, false)
       and exists (select 1 from checkpoints c0 where c0.user_id = p.id and c0.idx = 0 and c0.submitted_at is not null)
   ),
   latest as (
