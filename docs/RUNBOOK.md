@@ -20,6 +20,7 @@ NODE_USE_ENV_PROXY=1 node tests/e2e/student.mjs   # ученик на насто
 NODE_USE_ENV_PROXY=1 node tests/e2e/admin.mjs     # админка
 NODE_USE_ENV_PROXY=1 node tests/e2e/pdf.mjs       # итоговый PDF
 NODE_USE_ENV_PROXY=1 node tests/e2e/journey.mjs   # челлендж до награды, пауза, закрытый доступ, вопросы, созвон, корзина, новая ссылка
+NODE_USE_ENV_PROXY=1 node tests/e2e/top.mjs       # рейтинг: общий зачёт, таблицы по метрикам, листание, скрытие
 NODE_USE_ENV_PROXY=1 node tests/e2e/calendar.mjs  # календарь на 7 ширинах экрана, ограничение до января 2027
 NODE_USE_ENV_PROXY=1 node tests/e2e/audit.mjs     # автоаудит читаемости: текст против фона на всех экранах и окнах ученика и админа
 ```

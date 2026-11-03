@@ -7,6 +7,7 @@ import { lineChart, barChart } from './charts.js';
 import { openVideoSheet, openVideoEdit } from './forms.js';
 import { achievementsHtml } from './progress.js';
 import { metricChart } from './path.js';
+import { topButtonHtml, bindTopButton } from './top.js';
 
 export function renderProgressTab(root) {
   const D = state.D, info = L.weekInfo(D.profile, D.profile.tariff, L.startOfDay());
@@ -20,6 +21,7 @@ export function renderProgressTab(root) {
   const { rows } = L.calcR(D);
 
   root.innerHTML = `<div class="stack"><div class="pagehead"><h1 class="h1s grow"><span class="ink">Прогресс</span>${cur >= 0 ? `<span class="plate" style="margin-left:12px"><span class="onlime">${esc(cur === 0 ? 'Модуль 0' : 'Неделя ' + cur + ' из ' + info.weeks)}</span></span>` : ''}</h1></div>
+    ${topButtonHtml(0, 'topBtnP')}
     <div class="stat-grid three">
       <div class="stat"><span class="dim cap">Пройдено</span><span class="big-num ink">${tot.done}<span class="dim" style="font-size:20px"> из ${tot.total}</span></span></div>
       <div class="stat"><span class="dim cap">Опыт</span><span class="big-num ink">${L.fmtNum(xp)}</span></div>
@@ -38,7 +40,8 @@ export function renderProgressTab(root) {
       <div class="h" style="margin-top:4px"><span class="ink">Мои видео</span></div>
       <div class="stack-s">${(showAll ? myVids : myVids.slice(0, 6)).map((v) => `<button class="row" data-vid="${v.id}" style="padding-right:20px"><span class="ico">${VIDEO_ICON[v.kind]}</span><span class="row-main"><span class="ink t">${L.VIDEO_KINDS[v.kind]}</span><span class="dim cap">${L.fmtDay(L.parseDay(v.logged_on))} · ${v.views != null ? 'просмотры ' + L.fmtNum(v.views) : 'добавить просмотры'}</span></span></button>`).join('') || '<p class="dim cap">Видео появятся здесь. Просмотры можно добавлять, когда они накопятся</p>'}${myVids.length > 6 && !showAll ? '<button class="btn sm" id="vAll"><span class="ink">Показать все</span></button>' : ''}</div></section>
     ${metrics.length ? `<div class="h"><span class="ink">Цифры</span></div><div class="grid-cards">${metrics.map((m) => { const { svg, ser, g } = metricChart(D, m, 130), last = ser.length ? ser[ser.length - 1].value : null, r = rows.find((x) => x.key === m.key);
-      return `<button class="card mc" data-m="${m.key}"><span class="title2 ink">${esc(m.name)}</span>${svg}<p class="dim cap">Старт ${esc(fmtMetric(m, g.a))}, сейчас ${esc(fmtMetric(m, last ?? g.a))}${g.b != null ? ', цель ' + esc(fmtMetric(m, g.b)) : ''}${r && r.progress != null ? `. Пройдено ${Math.round(r.progress * 100)}% до цели` : ''}</p></button>`; }).join('')}</div>` : ''}
+      return `<button class="card mc" data-m="${m.key}"><span class="title2 ink">${esc(m.name)}</span>${svg}<p class="dim cap">Старт ${esc(fmtMetric(m, g.a))}, сейчас ${esc(fmtMetric(m, last ?? g.a))}${g.b != null ? ', цель ' + esc(fmtMetric(m, g.b)) : ''}${r && r.progress != null ? `. Пройдено ${Math.round(r.progress * 100)}% до цели` : ''}</p></button>`;
+  bindTopButton(root, 'topBtnP'); }).join('')}</div>` : ''}
     ${achievementsHtml(D, 0)}</div>`;
 
   root.addEventListener('click', (e) => {

@@ -8,6 +8,7 @@ import { openCheckpoint, openVideoSheet } from './forms.js';
 import { itemSheet } from './program.js';
 import { progressMiniHtml, achievementsHtml } from './progress.js';
 import { pathCardHtml, bindPathCard } from './pathcard.js';
+import { topButtonHtml, bindTopButton } from './top.js';
 
 export const CALL_KIND = { call: 'Созвон', strategy: 'Стратегическая сессия', city_strategy: 'Стратегия под город', bonus: 'Дополнительный созвон' };
 const hiddenBlock = (name) => (state.D.profile.ui_overrides?.hide || []).includes(name);
@@ -87,6 +88,7 @@ export function renderToday(root) {
     ${bannerHtml(m)}
     ${pathCardHtml(D, info, m.R, { p: 't', order: 50 })}
     ${progressMiniHtml(D, info, 55)}
+    ${info.state === 'nostart' ? '' : topButtonHtml(57, 'topBtnT')}
     ${achievementsHtml(D, 60)}
     ${quote ? `<section class="card" style="order:65"><p class="quote ink">${esc(quote.quote.text)}</p><span class="dim cap">${esc(quote.quote.author)}${quote.quote.source ? ', ' + esc(quote.quote.source) : ''}</span></section>` : ''}
     ${movie ? `<section class="card" style="order:70"><span class="plate"><span class="onlime">${movieHit.byTag ? 'Следующий шаг' : movie.kind === 'book' ? 'Книга недели' : 'Фильм недели'}</span></span><p class="title2 ink">${esc(movie.title)}${movie.author ? ' · ' + esc(movie.author) : ''}${movie.year ? ', ' + movie.year : ''}</p><p class="dim cap">${esc(movie.why)}</p></section>` : ''}
@@ -203,6 +205,7 @@ export function renderToday(root) {
       });
     }, { title: 'Невыполненные', onClose: () => { renderPending(); } });
   }
+  bindTopButton(root, 'topBtnT');
   if (q('#pendBtn')) { q('#pendBtn').onclick = openPending; renderPending(); }
   function afterToggle(id, wasLevel) {
     renderPending();

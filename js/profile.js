@@ -40,6 +40,7 @@ export function renderProfile(root) {
       <button class="btn pri" id="pdfBtn" style="align-self:flex-start" ${pdfOpen ? '' : 'disabled'}><span class="onlime">Итог программы (PDF)</span></button></section>
     <section class="card"><div class="h"><span class="ink">Настройки</span></div>
       <div class="row static"><span class="row-main"><span class="ink t">Уведомления от бота</span><span class="dim cap">Сроки замеров и даты созвонов</span></span><button class="toggle ${prefs.notifications === false ? '' : 'on'}" id="notifT" aria-label="Уведомления"></button></div>
+      <div class="row static"><span class="row-main"><span class="ink t">Показывать меня в рейтинге</span><span class="dim cap">Другие видят только имя и прирост, цифры не видны</span></span><button class="toggle ${prefs.hide_top ? '' : 'on'}" id="topT" aria-label="Рейтинг"></button></div>
       <div class="row static"><span class="row-main"><span class="ink t">Валюта среднего чека</span></span><div class="btns"><button class="btn sm ${prefs.currency === 'KZT' ? '' : 'pri'}" data-cur="RUB"><span class="${prefs.currency === 'KZT' ? 'ink' : 'onlime'}">₽</span></button><button class="btn sm ${prefs.currency === 'KZT' ? 'pri' : ''}" data-cur="KZT"><span class="${prefs.currency === 'KZT' ? 'onlime' : 'ink'}">₸</span></button></div></div>
       <button class="row" id="tourBtn"><span class="row-main"><span class="ink t">Обучение по приложению</span><span class="dim cap">Пройти заново</span></span></button>
       <button class="row" id="trashBtn"><span class="row-main"><span class="ink t">Корзина</span></span></button></section></div>`;
@@ -51,6 +52,7 @@ export function renderProfile(root) {
     try { const m = await import('./pdf.js'); await m.makeSummaryPdf(); } catch (err) { console.warn(err); toast('Не получилось собрать PDF'); }
   };
   $('#notifT', root).onclick = async (e) => { const on = !e.currentTarget.classList.contains('on'); e.currentTarget.classList.toggle('on', on); await data.setPrefs({ notifications: on }); toast(on ? 'Уведомления включены' : 'Уведомления выключены'); };
+  $('#topT', root).onclick = async (e) => { const on = !e.currentTarget.classList.contains('on'); e.currentTarget.classList.toggle('on', on); await data.setPrefs({ hide_top: !on }); toast(on ? 'Ты в рейтинге' : 'Ты скрыт из рейтинга'); };
   root.querySelectorAll('[data-cur]').forEach((b) => b.onclick = async () => { await data.setPrefs({ currency: b.dataset.cur }); state.app.refresh(); });
   $('#tourBtn', root).onclick = () => import('./tour.js').then((m) => m.runTour());
   $('#trashBtn', root).onclick = trash;
