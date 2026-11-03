@@ -73,6 +73,13 @@ const HELP = {
   cp: ['Как заполнять замер', 'Цифры на сегодня. Каждое поле сохраняется само, можно выйти и вернуться. Что не знаешь, оставь пустым'],
   topHide: ['Рейтинг', 'Другие ученики видят только твоё имя и прирост в процентах. Цифры замеров не видны. Скрыться можно в любой момент'],
 };
+// Ссылки в описаниях: кликабельные, открываются во встроенном браузере Telegram
+export const linkify = (t) => esc(t).replace(/https?:\/\/[^\s<]+/g, (u) => `<a class="lnk" href="${u}" data-ext>${u}</a>`);
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-ext]'); if (!a) return;
+  e.preventDefault();
+  try { tg && tg.openLink ? tg.openLink(a.href) : window.open(a.href, '_blank'); } catch (err) { window.open(a.href, '_blank'); }
+});
 export const helpBtn = (key) => `<button class="qbtn" data-help="${key}" aria-label="Подсказка"><span class="dim">?</span></button>`;
 export const helpSheetHtml = (title, text) => `<h2 class="sh-title"><span class="ink">${esc(title)}</span></h2><p class="dim" style="white-space:pre-wrap">${text}</p>`;
 document.addEventListener('click', (e) => {

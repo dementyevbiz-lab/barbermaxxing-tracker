@@ -94,7 +94,7 @@ try {
   await page.locator('[data-help="ach"]').first().click(); await page.waitForSelector('#sheet.open'); ok('подсказка «?» у ачивок открывает описание', (await page.locator('#sheet').innerText()).includes('Награды за активность'));
   await page.evaluate(() => document.getElementById('scrim').click()); await wait(400);
   ok('цитата дня показана и только проверенная', await page.locator('.quote').count() === 1 && !(await page.locator('.quote').innerText()).includes('непроверенная'));
-  ok('фильм показан по метке ситуации', (await page.locator('text=E2E Фильм').count()) === 1);
+  ok('фильм показан по метке ситуации', (await page.locator('text=Следующий шаг').count()) === 1);
   ok('вопрос по триггеру показан', await page.locator('#bQuestion').count() === 1);
   const { data: qs } = await c.admin.from('quote_shown').select('*').eq('user_id', p.id); ok('цитата записана как показанная', qs.length === 1);
   const { data: tl } = await c.admin.from('trigger_log').select('*').eq('user_id', p.id); ok('показ вопроса записан в журнал', tl.length >= 1);

@@ -2,7 +2,7 @@
 import { $, esc, state, openSheet, setSheet, sheetOpen, toast, haptic } from './core.js';
 import * as L from './logic.js';
 import * as data from './data.js';
-import { ICON, KIND, checkSvg } from './ui.js';
+import { ICON, KIND, checkSvg, linkify } from './ui.js';
 
 export function itemSheet(id, { onChange, readOnly } = {}) {
   const D = state.D, it = D.items.find((i) => i.id === id); if (!it) return;
@@ -10,7 +10,7 @@ export function itemSheet(id, { onChange, readOnly } = {}) {
     const done = data.isDone(id), notes = data.hasNotes(id);
     const head = [KIND[it.kind], it.est_minutes ? it.est_minutes + ' мин' : '', L.itemXp(it, D.settings.xp) + ' опыта'].filter(Boolean).join(' · ');
     return `<span class="dim cap">${esc(head)}</span><h2 class="sh-title"><span class="ink">${esc(it.title)}</span></h2>
-      ${it.description ? `<p class="dim" style="white-space:pre-wrap">${esc(it.description)}</p>` : ''}
+      ${it.description ? `<p class="dim" style="white-space:pre-wrap">${linkify(it.description)}</p>` : ''}
       ${it.kind === 'short_task' ? [['Зачем', it.why], ['Как', it.how], ['Результат', it.result]].filter((x) => x[1]).map((x) => `<div class="kv" style="flex-direction:column;gap:2px"><span class="dim cap">${x[0]}</span><span class="ink">${esc(x[1])}</span></div>`).join('') : ''}
       ${it.kind === 'homework' ? '<p class="cap"><span class="dim">Проверяется публично, отмечаешь сам</span></p>' : ''}
       ${readOnly ? '' : `<div class="btns" style="margin-top:6px"><button class="btn ${done ? '' : 'pri'}" data-a="toggle"><span class="${done ? 'ink' : 'onlime'}">${done ? 'Снять отметку' : 'Отметить'}</span></button>
