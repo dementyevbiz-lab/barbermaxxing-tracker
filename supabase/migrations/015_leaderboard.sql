@@ -15,11 +15,12 @@ begin
   select coalesce((prefs ->> 'hide_top')::boolean, false) into my_hidden from profiles where id = me;
 
   with base as (
-    -- в рейтинге только ученики: без админов, демо и закрытого доступа, без тех, кто скрылся сам
+    -- в рейтинге только ученики, сдавшие точку А: без админов, демо и закрытого доступа, без тех, кто скрылся сам
     select p.id, p.display_name from profiles p
     where p.status <> 'blocked' and not p.demo
       and not exists (select 1 from admins a where a.telegram_id = p.telegram_id)
       and not coalesce((p.prefs ->> 'hide_top')::boolean, false)
+      and exists (select 1 from checkpoints c0 where c0.user_id = p.id and c0.idx = 0 and c0.submitted_at is not null)
   ),
   latest as (
     select distinct on (c.user_id, v.metric_key) c.user_id, v.metric_key, v.value
@@ -28,19 +29,20 @@ begin
     order by c.user_id, v.metric_key, c.idx desc
   ),
   gains as (
+    -- до первого замера после точки А прирост нулевой
     select b.id, m.key,
-      round(case when m.better = 'up' then l.value - g.a_value else g.a_value - l.value end / abs(g.a_value) * 100, 1) as gain,
+      round(case when m.better = 'up' then coalesce(l.value, g.a_value) - g.a_value else g.a_value - coalesce(l.value, g.a_value) end / abs(g.a_value) * 100, 1) as gain,
       coalesce((cfg -> 'weights' ->> m.key)::numeric, 1) as w
     from base b
     join goals g on g.user_id = b.id
     join metrics m on m.key = g.metric_key and m.active
-    join latest l on l.user_id = b.id and l.metric_key = m.key
+    left join latest l on l.user_id = b.id and l.metric_key = m.key
     where g.a_value is not null and g.a_value <> 0
   ),
   per_user as (
-    select id, jsonb_object_agg(key, gain) as gains,
-           round(sum(w * greatest(0, least(gain, cap)))) as total
-    from gains group by id
+    select b.id, coalesce(jsonb_object_agg(g.key, g.gain) filter (where g.key is not null), '{}'::jsonb) as gains,
+           coalesce(round(sum(g.w * greatest(0, least(g.gain, cap)))), 0) as total
+    from base b left join gains g on g.id = b.id group by b.id
   )
   select jsonb_build_object(
     'cap', cap, 'weights', coalesce(cfg -> 'weights', '{}'::jsonb), 'hidden', coalesce(my_hidden, false),

@@ -8,6 +8,7 @@ async function withGain(name, a, now) {
   const p = await makeStudent(c, { name, startDaysAgo: 20, onboardingDone: true });
   await c.admin.from('profiles').update({ demo: false }).eq('id', p.id); // демо в рейтинг не попадают
   await c.admin.from('goals').insert([{ user_id: p.id, metric_key: 'avg_check', a_value: a, b_value: a * 2 }, { user_id: p.id, metric_key: 'followers', a_value: 100, b_value: 1000 }]);
+  await c.admin.from('checkpoints').update({ submitted_at: new Date().toISOString() }).eq('user_id', p.id).eq('idx', 0);
   const { data: cp } = await c.admin.from('checkpoints').select('id').eq('user_id', p.id).eq('idx', 1).single();
   await c.admin.from('checkpoint_values').insert([{ checkpoint_id: cp.id, metric_key: 'avg_check', value: now }, { checkpoint_id: cp.id, metric_key: 'followers', value: 150 }]);
   await c.admin.from('checkpoints').update({ submitted_at: new Date().toISOString() }).eq('id', cp.id);
@@ -39,6 +40,11 @@ try {
   const metric = await page.locator('.pg').nth(1).innerText();
   ok('в таблице метрики виден прирост в процентах', metric.includes('+50') && metric.includes('+10'), metric.slice(0, 200));
   await page.screenshot({ path: '/tmp/top2.png' });
+  // кнопка во вкладке «Прогресс» тоже открывает рейтинг
+  await page.evaluate(() => document.querySelector('#page [data-back]')?.click()); await wait(300);
+  await page.click('[data-tab="progress"]'); await page.waitForSelector('#topBtnP'); await page.click('#topBtnP');
+  await page.waitForSelector('#pager .top-row', { timeout: 15000 });
+  ok('кнопка во вкладке «Прогресс» открывает рейтинг', (await page.locator('.pg').nth(0).innerText()).includes('E2E Топ Первый'));
   // скрыться из рейтинга
   await page.evaluate(() => document.querySelector('#page [data-back]')?.click()); await wait(300);
   await page.click('[data-tab="profile"]'); await page.waitForSelector('#topT'); await page.click('#topT'); await wait(900);

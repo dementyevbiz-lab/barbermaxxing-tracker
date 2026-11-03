@@ -53,11 +53,11 @@ export function openTop() {
     let top;
     try { top = await loadTop(); } catch (e) { console.warn(e); body.innerHTML = '<p class="dim">Не получилось загрузить рейтинг. Попробуй ещё раз позже</p>'; return; }
     const tables = buildTables(top, metrics), me = myPlace(top);
-    const msg = me.place ? `Ты на ${me.place} месте из ${me.total}` : me.hidden ? 'Ты скрыт из рейтинга. Включить можно в Профиле' : me.total ? 'Ты появишься в рейтинге после первого замера' : 'Рейтинг появится после первых замеров учеников';
+    const msg = me.place ? `Ты на ${me.place} месте из ${me.total}` : me.hidden ? 'Ты скрыт из рейтинга. Включить можно в Профиле' : me.total ? 'Ты появишься в рейтинге после точки А' : 'Рейтинг появится, когда ученики сдадут точку А';
     const w = top.weights || {};
     body.innerHTML = `<div class="h"><span class="dim cap">${esc(msg)}</span><span class="grow"></span>${helpBtn('top')}</div>
       <div class="top-chips" id="topChips">${tables.map((t, i) => `<button class="btn sm ${i ? '' : 'pri'}" data-i="${i}"><span class="${i ? 'ink' : 'onlime'}">${esc(t.title)}</span></button>`).join('')}</div>
-      <div class="pager" id="pager">${tables.map((t) => `<section class="pg"><div class="rows">${t.list.length ? t.list.map(rowHtml).join('') : '<p class="dim">Пока никого. Прирост появится после первого замера</p>'}</div></section>`).join('')}</div>`;
+      <div class="pager" id="pager">${tables.map((t) => `<section class="pg"><div class="rows">${t.list.length ? t.list.map(rowHtml).join('') : '<p class="dim">Пока никого. Прирост появится после замеров</p>'}</div></section>`).join('')}</div>`;
     const downs = metrics.filter((m) => m.better === 'down').map((m) => m.name);
     const helpText = `Общий зачёт считается в очках: прирост метрики в процентах от точки А × вес метрики. Вес показывает, насколько метрика влияет на результат.\n\n${metrics.map((m) => `${m.name} ×${w[m.key] ?? 1}`).join('\n')}\n\nПрирост больше ${top.cap ?? 100}% очков не добавляет.${downs.length ? ` Где лучше меньше (${downs.join(', ')}), снижение даёт прирост.` : ''}\n\nТаблицы по метрикам показывают только прирост. Начальные цифры никому не видны`;
     body.querySelector('[data-help="top"]').onclick = (e) => { e.stopPropagation(); openSheet(helpSheetHtml('Как считается рейтинг', esc(helpText))); };

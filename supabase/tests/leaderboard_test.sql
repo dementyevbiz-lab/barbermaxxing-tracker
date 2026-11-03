@@ -3,7 +3,7 @@ begin;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000c1', 'lb-a@example.com'), ('00000000-0000-0000-0000-0000000000c2', 'lb-b@example.com'),
   ('00000000-0000-0000-0000-0000000000c3', 'lb-adm@example.com'), ('00000000-0000-0000-0000-0000000000c4', 'lb-demo@example.com'),
-  ('00000000-0000-0000-0000-0000000000c5', 'lb-hid@example.com'), ('00000000-0000-0000-0000-0000000000c6', 'lb-new@example.com');
+  ('00000000-0000-0000-0000-0000000000c5', 'lb-hid@example.com'), ('00000000-0000-0000-0000-0000000000c6', 'lb-new@example.com'), ('00000000-0000-0000-0000-0000000000c7', 'lb-onlya@example.com');
 insert into admins (telegram_id, name) values (920000003, 'lb admin');
 insert into profiles (id, telegram_id, display_name, tariff_id, start_date, status, demo, prefs) values
   ('00000000-0000-0000-0000-0000000000c1', 920000001, 'Ученик А', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', false, '{}'),
@@ -11,17 +11,20 @@ insert into profiles (id, telegram_id, display_name, tariff_id, start_date, stat
   ('00000000-0000-0000-0000-0000000000c3', 920000003, 'Админ', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', false, '{}'),
   ('00000000-0000-0000-0000-0000000000c4', 920000004, 'Демо', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', true, '{}'),
   ('00000000-0000-0000-0000-0000000000c5', 920000005, 'Скрытый', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', false, '{"hide_top": true}'),
-  ('00000000-0000-0000-0000-0000000000c6', 920000006, 'Без замера', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', false, '{}');
+  ('00000000-0000-0000-0000-0000000000c6', 920000006, 'Без точки А', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', false, '{}'),
+  ('00000000-0000-0000-0000-0000000000c7', 920000007, 'Только А', (select id from tariffs where code = 'barbermax'), current_date - 20, 'active', false, '{}');
 
 -- точка А и первый замер: у А чек 1500 -> 1800 (+20%), рабочих дней 6 -> 5 (+16,7%), подписчики 100 -> 1000 (+900%, потолок 100)
 -- у Б чек 2000 -> 2100 (+5%). У остальных те же цифры, чтобы проверить исключения
 do $$
 declare u uuid; cp uuid;
 begin
-  foreach u in array array['00000000-0000-0000-0000-0000000000c1','00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-0000000000c3','00000000-0000-0000-0000-0000000000c4','00000000-0000-0000-0000-0000000000c5','00000000-0000-0000-0000-0000000000c6']::uuid[] loop
+  foreach u in array array['00000000-0000-0000-0000-0000000000c1','00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-0000000000c3','00000000-0000-0000-0000-0000000000c4','00000000-0000-0000-0000-0000000000c5','00000000-0000-0000-0000-0000000000c6','00000000-0000-0000-0000-0000000000c7']::uuid[] loop
     insert into goals (user_id, metric_key, a_value, b_value) values
       (u, 'avg_check', case when u = '00000000-0000-0000-0000-0000000000c2' then 2000 else 1500 end, 3000), (u, 'work_days', 6, 4), (u, 'followers', 100, 5000);
     if u = '00000000-0000-0000-0000-0000000000c6' then continue; end if;
+    update checkpoints set submitted_at = now() where user_id = u and idx = 0;
+    if u = '00000000-0000-0000-0000-0000000000c7' then continue; end if;
     select id into cp from checkpoints where user_id = u and idx = 1;
     insert into checkpoint_values (checkpoint_id, metric_key, value) values
       (cp, 'avg_check', case when u = '00000000-0000-0000-0000-0000000000c2' then 2100 else 1800 end), (cp, 'work_days', 5), (cp, 'followers', 1000);
@@ -35,11 +38,12 @@ do $$
 declare r jsonb; a jsonb;
 begin
   r := public.leaderboard();
-  assert jsonb_array_length(r -> 'rows') = 2, 'в рейтинге только два ученика: ' || (r -> 'rows')::text;
+  assert jsonb_array_length(r -> 'rows') = 3, 'в рейтинге три ученика: ' || (r -> 'rows')::text;
   assert not (r -> 'rows')::text like '%Админ%', 'админов нет';
   assert not (r -> 'rows')::text like '%Демо%', 'демо нет';
   assert not (r -> 'rows')::text like '%Скрытый%', 'скрывшийся не виден';
-  assert not (r -> 'rows')::text like '%Без замера%', 'без замера в таблице нет';
+  assert not (r -> 'rows')::text like '%Без точки А%', 'без точки А в таблице нет';
+  assert exists (select 1 from jsonb_array_elements(r -> 'rows') x where x ->> 'name' = 'Только А' and (x ->> 'total')::int = 0 and (x -> 'gains' ->> 'avg_check')::numeric = 0), 'после точки А виден с нулевым приростом';
   a := (r -> 'rows') -> 0;
   assert a ->> 'name' = 'Ученик А' and (a ->> 'me')::boolean, 'первый А и это я';
   assert (a -> 'gains' ->> 'avg_check')::numeric = 20.0, 'прирост чека +20%';
@@ -50,7 +54,7 @@ begin
   assert not (((r -> 'rows') -> 1 ->> 'me')::boolean), 'второй не я';
   -- админ тоже получает таблицу без админа
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c3","role":"authenticated","app_metadata":{"telegram_id":920000003}}', true);
-  assert jsonb_array_length(public.leaderboard() -> 'rows') = 2, 'админ видит тех же двоих';
+  assert jsonb_array_length(public.leaderboard() -> 'rows') = 3, 'админ видит тех же троих';
   -- скрывшийся видит пометку и не попадает в список
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c5","role":"authenticated","app_metadata":{"telegram_id":920000005}}', true);
   assert (public.leaderboard() ->> 'hidden')::boolean, 'скрывшийся видит, что скрыт';
